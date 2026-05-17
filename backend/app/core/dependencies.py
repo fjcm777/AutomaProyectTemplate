@@ -5,6 +5,8 @@ from app.core.database import SessionLocal
 
 
 def get_db() -> Generator[Session, None, None]:
+    """Provide one SQLAlchemy session per request and close it safely."""
+
     db = SessionLocal()
     try:
         yield db

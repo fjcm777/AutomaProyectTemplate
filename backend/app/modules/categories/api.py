@@ -12,6 +12,7 @@ router = APIRouter(prefix="/categories", tags=["categories"])
 
 @router.get("/", response_model=list[CategoryResponse])
 def list_categories(db: Session = Depends(get_db)):
+    # Service creation stays inside the route layer to keep module boundaries explicit.
     service = CategoryService(CategoryRepository(db))
     return service.list_categories()
 

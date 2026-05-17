@@ -1,9 +1,12 @@
-from app.modules.products.respository import ProductRepository
+from app.modules.products.repository import ProductRepository
 from app.modules.products.schemas import ProductCreate, ProductUpdate
 from app.modules.categories.repository import CategoryRepository
 from app.shared.exceptions import bad_request, not_found
 
+
 class ProductService:
+    """Business rules for product use cases."""
+
     def __init__(self, product_repository: ProductRepository, category_repository: CategoryRepository):
         self.product_repository = product_repository
         self.category_repository = category_repository
@@ -19,6 +22,7 @@ class ProductService:
 
     
     def create_product(self, data: ProductCreate):
+        # Guard FK integrity at service layer for clearer API errors.
         if data.category_id is not None:
             category = self.category_repository.get(data.category_id)
             if not category:

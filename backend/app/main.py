@@ -1,3 +1,9 @@
+"""FastAPI entrypoint for the template project.
+
+This file only composes global concerns (middleware, routers, app metadata).
+Business logic should stay inside each module (`modules/*`).
+"""
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -9,6 +15,7 @@ from app.modules.products.api import router as products_router
 
 app = FastAPI(title=settings.APP_NAME)
 
+# Global middleware shared by every endpoint.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.BACKEND_CORS_ORIGINS,
@@ -17,9 +24,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Feature routers are mounted under the configured API prefix.
 app.include_router(health_router, prefix=settings.API_V1_PREFIX)
 app.include_router(categories_router, prefix=settings.API_V1_PREFIX)
 app.include_router(products_router, prefix=settings.API_V1_PREFIX)
+
 
 @app.get("/")
 def root():

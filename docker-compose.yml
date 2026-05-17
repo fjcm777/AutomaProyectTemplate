@@ -29,17 +29,20 @@ services:
       db:
         condition: service_healthy
 
-  #frontend:
-    #build: ./frontend
-    #container_name: store_frontend
-    #restart: always
-    #ports:
-      #- "${FRONTEND_PORT}:5173"
-    #volumes:
-      #- ./frontend:/app
-      #- /app/node_modules
-   # depends_on:
-      #- backend
+  frontend:
+    build: ./frontend
+    container_name: store_frontend
+    restart: always
+    ports:
+      - "${FRONTEND_PORT}:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    command: npm run dev -- --host 0.0.0.0
 
 volumes:
   postgres_data:

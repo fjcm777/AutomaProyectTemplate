@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.orm import Session
 
 from app.core.dependencies import get_db
-from app.modules.products.respository import ProductRepository
+from app.modules.products.repository import ProductRepository
 from app.modules.products.schemas import ProductCreate, ProductResponse, ProductUpdate
 from app.modules.products.service import ProductService
 
@@ -13,6 +13,7 @@ router = APIRouter(prefix="/products", tags=["products"])
 
 
 def get_product_service(db: Session) -> ProductService:
+    # Build dependencies here so routes stay thin and easy to test.
     return ProductService(ProductRepository(db), CategoryRepository(db))
 
 
