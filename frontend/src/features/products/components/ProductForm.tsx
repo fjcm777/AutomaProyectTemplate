@@ -39,21 +39,15 @@ export function ProductForm({ onSubmit, isLoading = false, initialData }: Produc
     return Object.keys(newErrors).length === 0
   }
 
-  function handleChange(
-    event: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement
-    >
-  ) {
+  function handleChange(event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     const { name, value } = event.target
+
+    console.log(event)
 
     setForm((current) => ({
       ...current,
       // Keep numeric fields typed as numbers before sending to the API.
-      [name]:
-        name === "price" ||
-        name === "category_id"
-          ? Number(value)
-          : value,
+      [name]: name === "price" || name === "category_id" ? Number(value) : value,
     }))
 
     if (errors[name]) {

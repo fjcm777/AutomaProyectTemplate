@@ -4,11 +4,30 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Store</title>
+    <script>
+      (function () {
+        var storageKey = "app_theme"
+        var root = document.documentElement
+
+        try {
+          var storedTheme = localStorage.getItem(storageKey)
+          var useDark =
+            storedTheme === "dark" ||
+            (storedTheme !== "light" &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches)
+
+          root.classList.toggle("dark", useDark)
+        } catch (_error) {
+          var fallbackDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+          root.classList.toggle("dark", fallbackDark)
+        }
+      })()
+    </script>
   </head>
   <body>
     <div id="root">
       <!-- The React app will be rendered here -->
     </div>
-    <script type="module" src="/src/main.jsx"></script>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

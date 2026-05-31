@@ -3,7 +3,8 @@ import { ProductTable } from "../components/ProductTable"
 import { useProducts } from "../hooks/useProducts"
 
 export function ProductsPage() {
-  // Query ownership stays in the page; table only renders data.
+  // This line uses the custom hook 'useProducts' to fetch products data and manage 'loading' and 'error' states.
+  // data,isLoading AND error can be used like individual variables, but they are grouped together in an object for better organization and readability.
   const {
     data,
     isLoading,
@@ -31,10 +32,12 @@ export function ProductsPage() {
           + Crear Producto
         </Link>
       </div>
-
+      {/*products table component comes here, the file is ProductTable.tsx */}
       <ProductTable
         products={data || []}
       />
     </div>
   )
 }
+
+

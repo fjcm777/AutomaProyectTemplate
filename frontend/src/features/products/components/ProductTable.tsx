@@ -1,12 +1,17 @@
 import { Product } from "../types/product.types"
 import { useDeleteProduct } from "../hooks/useDeleteProduct"
 
-type ProductTableProps = {
+type ProductTableProps = { // The table component receives products as props, making it reusable and focused on presentation.
+  // this provides an standardized structure for the products data, ensuring type safety and clarity in what the component expects to receive.
   products: Product[]
 }
 
+// ProductTableProps: This gives format to the products data.
+// { products }: Where the data is stored, and is used to render the table rows.
 export function ProductTable({ products }: ProductTableProps) {
   const deleteProductMutation = useDeleteProduct()
+
+  console.log(products)
 
   const handleDelete = (id: number) => {
     if (confirm("¿Estás seguro de que deseas eliminar este producto?")) {
@@ -49,7 +54,7 @@ export function ProductTable({ products }: ProductTableProps) {
                   disabled={deleteProductMutation.isPending}
                   className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 disabled:bg-gray-400"
                 >
-                  {deleteProductMutation.isPending ? "Eliminando..." : "Eliminar"}
+                  {deleteProductMutation.isPending ? "Eliminadno..." : "Eliminar"}
                 </button>
               </td>
             </tr>
