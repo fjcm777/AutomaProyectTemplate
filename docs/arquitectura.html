@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AutomaProyectTemplate — Arquitectura del Sistema</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      line-height: 1.6;
+    }
+
+    /* ── Portada ── */
+    .cover {
+      background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 60%, #3b82f6 100%);
+      color: white;
+      padding: 64px 48px 56px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cover::after {
+      content: "";
+      position: absolute;
+      bottom: -60px; right: -60px;
+      width: 320px; height: 320px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+    }
+    .cover-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 99px;
+      padding: 4px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .cover h1 {
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -.02em;
+      margin-bottom: 10px;
+    }
+    .cover p {
+      font-size: 16px;
+      opacity: .8;
+      max-width: 560px;
+    }
+    .cover-meta {
+      margin-top: 32px;
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .cover-meta span {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      opacity: .75;
+    }
+
+    /* ── Layout ── */
+    .container { max-width: 1040px; margin: 0 auto; padding: 0 32px; }
+
+    /* ── Índice ── */
+    .toc {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 28px 32px;
+      margin: 36px auto;
+      max-width: 1040px;
+      margin-left: 32px;
+      margin-right: 32px;
+    }
+    .toc h2 { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #64748b; margin-bottom: 14px; }
+    .toc ol { padding-left: 20px; }
+    .toc li { margin-bottom: 6px; }
+    .toc a { color: #2563eb; text-decoration: none; font-size: 14px; }
+    .toc a:hover { text-decoration: underline; }
+
+    /* ── Secciones ── */
+    .section {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      margin: 28px 32px;
+      overflow: hidden;
+    }
+    .section-header {
+      padding: 24px 32px 20px;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .section-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .icon-blue   { background: #eff6ff; }
+    .icon-green  { background: #f0fdf4; }
+    .icon-purple { background: #faf5ff; }
+    .icon-orange { background: #fff7ed; }
+    .icon-slate  { background: #f8fafc; }
+
+    .section-header h2 { font-size: 20px; font-weight: 700; color: #0f172a; }
+    .section-header p  { font-size: 13px; color: #64748b; margin-top: 2px; }
+
+    .section-body { padding: 28px 32px; }
+
+    /* ── Diagramas Mermaid ── */
+    .diagram-wrap {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 24px;
+      margin: 20px 0;
+      overflow-x: auto;
+      display: flex;
+      justify-content: center;
+    }
+    .diagram-wrap .mermaid { min-width: 300px; }
+    .diagram-label {
+      font-size: 12px;
+      color: #94a3b8;
+      text-align: center;
+      margin-top: 10px;
+      font-style: italic;
+    }
+
+    /* ── Tarjetas de reglas ── */
+    .rules-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+      margin-top: 20px;
+    }
+    .rule-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 16px;
+      background: #fafbfc;
+    }
+    .rule-card h4 {
+      font-size: 13px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .rule-card p { font-size: 12px; color: #475569; line-height: 1.5; }
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-blue   { background: #3b82f6; }
+    .dot-green  { background: #22c55e; }
+    .dot-purple { background: #a855f7; }
+    .dot-orange { background: #f97316; }
+    .dot-red    { background: #ef4444; }
+
+    /* ── Tabla de pasos ── */
+    .steps { margin-top: 20px; }
+    .step {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 14px;
+      align-items: flex-start;
+    }
+    .step-num {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: #2563eb;
+      color: white;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .step-content h4 { font-size: 14px; font-weight: 600; color: #0f172a; }
+    .step-content p  { font-size: 13px; color: #475569; margin-top: 2px; }
+
+    /* ── Stack chips ── */
+    .stack-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 12px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid;
+    }
+    .chip-blue   { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+    .chip-green  { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+    .chip-purple { background: #faf5ff; color: #7e22ce; border-color: #e9d5ff; }
+    .chip-orange { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
+    .chip-slate  { background: #f8fafc; color: #475569; border-color: #cbd5e1; }
+
+    /* ── Divider ── */
+    .divider { border: none; border-top: 1px solid #f1f5f9; margin: 24px 0; }
+
+    h3 { font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 10px; margin-top: 24px; }
+    h3:first-child { margin-top: 0; }
+
+    /* ── Footer ── */
+    .footer {
+      text-align: center;
+      padding: 32px;
+      color: #94a3b8;
+      font-size: 13px;
+    }
+
+    /* ── Print ── */
+    @media print {
+      body { background: white; }
+      .section { break-inside: avoid; margin: 16px 0; border: 1px solid #ccc; }
+      .cover { background: #1e3a5f !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .diagram-wrap { background: #f8fafc !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════ PORTADA ══════════════════════ -->
+<div class="cover">
+  <div class="cover-badge">Documentación Técnica</div>
+  <h1>AutomaProyectTemplate</h1>
+  <p>Arquitectura, flujos y guía de mantenimiento del sistema full-stack para gestión de inventario y facturación.</p>
+  <div class="cover-meta">
+    <span>⚙️ FastAPI + PostgreSQL</span>
+    <span>⚛️ React + TypeScript</span>
+    <span>🐳 Docker Compose</span>
+  </div>
+</div>
+
+<!-- ══════════════════════ ÍNDICE ══════════════════════ -->
+<div class="toc">
+  <h2>Contenido</h2>
+  <ol>
+    <li><a href="#stack">Stack tecnológico</a></li>
+    <li><a href="#infra">Infraestructura — Servicios Docker</a></li>
+    <li><a href="#backend-flow">Backend — Flujo de una petición HTTP</a></li>
+    <li><a href="#backend-modules">Backend — Estructura de módulos</a></li>
+    <li><a href="#frontend-flow">Frontend — Flujo de datos</a></li>
+    <li><a href="#frontend-features">Frontend — Arquitectura de features</a></li>
+    <li><a href="#database">Base de datos — Modelo entidad-relación</a></li>
+    <li><a href="#rules">Reglas de desarrollo</a></li>
+  </ol>
+</div>
+
+<div class="container" style="max-width:100%;padding:0;">
+
+<!-- ══════════════════════ 1. STACK ══════════════════════ -->
+<div class="section" id="stack">
+  <div class="section-header">
+    <div class="section-icon icon-slate">🛠️</div>
+    <div>
+      <h2>1. Stack Tecnológico</h2>
+      <p>Tecnologías principales del proyecto</p>
+    </div>
+  </div>
+  <div class="section-body">
+    <h3>Backend</h3>
+    <div class="stack-row">
+      <span class="chip chip-blue">🐍 Python 3.12</span>
+      <span class="chip chip-blue">⚡ FastAPI 0.115</span>
+      <span class="chip chip-blue">🦄 Uvicorn (ASGI)</span>
+      <span class="chip chip-blue">🗄️ SQLAlchemy 2.0</span>
+      <span class="chip chip-blue">✅ Pydantic 2.10</span>
+      <span class="chip chip-blue">📦 Alembic (migraciones)</span>
+    </div>
+    <h3 style="margin-top:20px;">Frontend</h3>
+    <div class="stack-row">
+      <span class="chip chip-purple">⚛️ React 18</span>
+      <span class="chip chip-purple">📝 TypeScript 5.4</span>
+      <span class="chip chip-purple">⚡ Vite 6</span>
+      <span class="chip chip-purple">🔄 React Query 5</span>
+      <span class="chip chip-purple">🗺️ React Router 6</span>
+      <span class="chip chip-purple">🎨 Tailwind CSS 3</span>
+    </div>
+    <h3 style="margin-top:20px;">Infraestructura</h3>
+    <div class="stack-row">
+      <span class="chip chip-orange">🐳 Docker</span>
+      <span class="chip chip-orange">🐘 PostgreSQL 16</span>
+      <span class="chip chip-green">🔗 Docker Compose</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ 2. INFRAESTRUCTURA ══════════════════════ -->
+<div class="section" id="infra">
+  <div class="section-header">
+    <div class="section-icon icon-orange">🐳</div>
+    <div>
+      <h2>2. Infraestructura — Servicios Docker</h2>
+      <p>Cómo se conectan los tres contenedores del sistema</p>
+    </div>
+  </div>
+  <div class="section-body">
+    <div class="diagram-wrap">
+      <div class="mermaid">
+graph LR
+    Browser(["🌐 Navegador"])
+
+    subgraph Docker ["Docker Compose Network"]
+        FE["⚛️ store_frontend\nReact + Vite\npuerto 5173"]
+        BE["⚡ store_backend\nFastAPI + Uvicorn\npuerto 8000"]
+        DB[("🐘 store_db\nPostgreSQL 16\npuerto 5432")]
+    end
+
+    Browser -- "HTTP :5173" --> FE
+    FE -- "HTTP REST :8000\n/api/v1/..." --> BE
+    BE -- "SQLAlchemy\nORM" --> DB
+    DB -. "healthcheck\npg_isready" .-> BE
+
+    style Browser fill:#f0f9ff,stroke:#0369a1
+    style FE fill:#faf5ff,stroke:#7c3aed
+    style BE fill:#eff6ff,stroke:#1d4ed8
+    style DB fill:#f0fdf4,stroke:#15803d
+      </div>
+    </div>
+    <p class="diagram-label">El backend espera a que la BD pase el healthcheck antes de iniciar</p>
+
+    <hr class="divider">
+    <h3>Orden de arranque</h3>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h4>store_db arranca</h4>
+          <p>PostgreSQL 16 inicia y espera conexiones. Docker ejecuta <code>pg_isready</code> cada 10s.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h4>store_backend arranca (cuando DB = healthy)</h4>
+          <p>FastAPI + Uvicorn con <code>--reload</code>. Cambios en Python se recargan automáticamente.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h4>store_frontend arranca</h4>
+          <p>Vite dev server con HMR. Cambios en React/TypeScript actualizan el navegador al instante.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ 3. BACKEND FLUJO ══════════════════════ -->
+<div class="section" id="backend-flow">
+  <div class="section-header">
+    <div class="section-icon icon-blue">⚡</div>
+    <div>
+      <h2>3. Backend — Flujo de una Petición HTTP</h2>
+      <p>Cómo viaja una petición desde el cliente hasta la base de datos y de regreso</p>
+    </div>
+  </div>
+  <div class="section-body">
+    <div class="diagram-wrap">
+      <div class="mermaid">
+sequenceDiagram
+    actor C as Cliente (Frontend)
+    participant A as api.py<br/>Router FastAPI
+    participant S as service.py<br/>Lógica de negocio
+    participant R as repository.py<br/>Acceso a datos
+    participant DB as PostgreSQL
+
+    C->>A: POST /api/v1/products/
+    Note over A: Valida payload con<br/>ProductCreate (Pydantic)<br/>Inyecta Session via get_db()
+    A->>S: service.create_product(payload)
+    Note over S: Verifica que category_id existe<br/>Aplica reglas de negocio
+    S->>R: repository.create(data)
+    R->>DB: INSERT INTO products (...)
+    DB-->>R: Fila creada
+    R-->>S: Product ORM object
+    S-->>A: Product ORM object
+    Note over A: Serializa con ProductResponse<br/>(response_model)
+    A-->>C: 201 Created — JSON
+      </div>
+    </div>
+    <p class="diagram-label">Flujo completo para crear un producto. El mismo patrón aplica para GET, PUT y DELETE.</p>
+
+    <hr class="divider">
+    <h3>Responsabilidades por capa</h3>
+    <div class="rules-grid">
+      <div class="rule-card">
+        <h4><span class="dot dot-blue"></span>api.py</h4>
+        <p>Solo recibe la petición HTTP, valida el payload con Pydantic, inyecta dependencias y devuelve la respuesta. Sin lógica de negocio.</p>
+      </div>
+      <div class="rule-card">
+        <h4><span class="dot dot-purple"></span>service.py</h4>
+        <p>Contiene las reglas de negocio: validaciones cruzadas, integridad de FK, cálculos. Nunca toca la BD directamente.</p>
+      </div>
+      <div class="rule-card">
+        <h4><span class="dot dot-green"></span>repository.py</h4>
+        <p>Único responsable de queries SQLAlchemy. Llama <code>db.commit()</code>. Sin lógica de negocio.</p>
+      </div>
+      <div class="rule-card">
+        <h4><span class="dot dot-orange"></span>models.py</h4>
+        <p>Mapea tablas de PostgreSQL a clases Python. Hereda <code>TimestampMixin, Base</code> para timestamps automáticos.</p>
+      </div>
+      <div class="rule-card">
+        <h4><span class="dot dot-red"></span>schemas.py</h4>
+        <p>Define la forma de los datos de entrada (Create, Update) y salida (Response). Valida tipos con Pydantic.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ 4. BACKEND MÓDULOS ══════════════════════ -->
+<div class="section" id="backend-modules">
+  <div class="section-header">
+    <div class="section-icon icon-blue">📦</div>
+    <div>
+      <h2>4. Backend — Estructura de Módulos</h2>
+      <p>Organización interna del backend y cómo se conectan los archivos</p>
+    </div>
+  </div>
+  <div class="section-body">
+    <div class="diagram-wrap">
+      <div class="mermaid">
+graph TD
+    MAIN["app/main.py\n🚀 FastAPI App"]
+
+    subgraph CORE["app/core/"]
+        CFG["config.py\nSettings via .env"]
+        DBO["database.py\nBase · TimestampMixin\nSessionLocal · Engine"]
+        DEP["dependencies.py\nget_db()"]
+    end
+
+    subgraph SHARED["app/shared/"]
+        EXC["exceptions.py\nnot_found()\nbad_request()"]
+        PAG["pagination.py\nPaginatedResponse[T]"]
+    end
+
+    subgraph MOD["app/modules/  (un directorio por dominio)"]
+        direction LR
+        subgraph M1["products/"]
+            P_API["api.py"]
+            P_SVC["service.py"]
+            P_REP["repository.py"]
+            P_MDL["models.py"]
+            P_SCH["schemas.py"]
+        end
+        subgraph M2["categories/"]
+            C_API["api.py"]
+            C_SVC["service.py"]
+            C_REP["repository.py"]
+            C_MDL["models.py"]
+            C_SCH["schemas.py"]
+        end
+        subgraph M3["🔜 nuevo módulo"]
+            N["api · service\nrepository · models\nschemas"]
+        end
+    end
+
+    DB["app/db/base.py\nRegistra modelos para Alembic"]
+    MIG["migrations/versions/\n📄 archivos .py generados"]
+
+    MAIN --> CFG
+    MAIN --> P_API
+    MAIN --> C_API
+    DEP --> DBO
+    P_API --> DEP
+    P_API --> P_SVC
+    P_SVC --> P_REP
+    P_SVC --> EXC
+    P_REP --> DBO
+    P_MDL --> DBO
+    DB --> P_MDL
+    DB --> C_MDL
+    DB --> MIG
+
+    style MAIN fill:#dbeafe,stroke:#1d4ed8
+    style CORE fill:#f8fafc,stroke:#cbd5e1
+    style SHARED fill:#fefce8,stroke:#ca8a04
+    style MOD fill:#f0fdf4,stroke:#15803d
+      </div>
+    </div>
+    <p class="diagram-label">Cada módulo nuevo se agrega en <code>app/modules/</code> y se registra en <code>main.py</code> y <code>db/base.py</code></p>
+  </div>
+</div>
+
+<!-- ══════════════════════ 5. FRONTEND FLUJO ══════════════════════ -->
+<div class="section" id="frontend-flow">
+  <div class="section-header">
+    <div class="section-icon icon-purple">⚛️</div>
+    <div>
+      <h2>5. Frontend — Flujo de Datos</h2>
+      <p>Cómo viajan los datos desde el backend hasta la pantalla del usuario</p>
+    </div>
+  </div>
+  <div class="section-body">
+    <div class="diagram-wrap">
+      <div class="mermaid">
+sequenceDiagram
+    actor U as Usuario
+    participant P as Page Component
+    participant H as Hook (React Query)
+    participant A as api/products.ts
+    participant C as shared/clients.ts<br/>apiFetch
+    participant BE as Backend API
+
+    U->>P: Visita /products
+    P->>H: useProducts()
+    H->>A: getProducts()
+    A->>C: apiFetch("/products/")
+    C->>BE: GET /api/v1/products/
+    BE-->>C: 200 OK — JSON[]
+    C-->>A: Product[]
+    A-->>H: Product[]
+    H-->>P: &#123; data, isLoading, error &#125;
+    P-->>U: Renderiza tabla con productos
+
+    Note over H: React Query cachea el resultado.<br/>Próximas visitas son instantáneas.
+      </div>
+    </div>
+    <p class="diagram-label">El hook devuelve &#123;data, isLoading, error&#125;. La página solo renderiza según ese estado.</p>
+
+    <hr class="divider">
+
+    <h3>Flujo de una mutación (crear / editar / eliminar)</h3>
+    <div class="diagram-wrap">
+      <div class="mermaid">
+sequenceDiagram
+    actor U as Usuario
+    participant P as ProductCreatePage
+    participant H as useCreateProduct()
+    participant A as api/products.ts
+    participant C as apiFetch
+    participant BE as Backend
+    participant QC as QueryClient Cache
+
+    U->>P: Submit formulario
+    P->>H: mutate(payload)
+    H->>A: createProduct(payload)
+    A->>C: apiFetch POST /products/
+    C->>BE: POST /api/v1/products/
+    BE-->>C: 201 Created
+    C-->>H: Product creado
+    H->>QC: invalidateQueries(["products"])
+    QC-->>P: Lista actualizada automáticamente
+    P-->>U: Redirige a /products
+      </div>
+    </div>
+    <p class="diagram-label">invalidateQueries hace que la lista se refresque sola sin recargar la página</p>
+  </div>
+</div>
+
+<!-- ══════════════════════ 6. FRONTEND FEATURES ══════════════════════ -->
+<div class="section" id="frontend-features">
+  <div class="section-header">
+    <div class="section-icon icon-purple">🗂️</div>
+    <div>
+      <h2>6. Frontend — Arquitectura de Features</h2>
+      <p>Organización por dominios de negocio y shared</p>
+    </div>
+  </div>
+  <div class="section-body">
+    <div class="diagram-wrap">
+      <div class="mermaid">
+graph TD
+    MAIN["main.tsx\n⚡ React · QueryClient\nThemeProvider · Router"]
+
+    subgraph APP["src/app/"]
+        LAYOUT["app.tsx\nSidebar + Header\n&lt;Outlet /&gt;"]
+        ROUTER["router/router.tsx\nDefinición de rutas"]
+    end
+
+    subgraph FEATURES["src/features/  (un directorio por dominio)"]
+        direction LR
+        subgraph FP["products/"]
+            FP_API["api/\nproducts.ts"]
+            FP_HOO["hooks/\nuseProducts\nuseCreateProduct\n..."]
+            FP_COM["components/\nProductForm\nProductTable"]
+            FP_PAG["pages/\nProductsPage\nCreatePage\nEditPage\nDetailPage"]
+            FP_TYP["types/\nproduct.types.ts"]
+        end
+        subgraph FN["🔜 nueva feature"]
+            FN_S["api · hooks\ncomponents · pages\ntypes · index.ts"]
+        end
+    end
+
+    subgraph SHARED["src/shared/"]
+        SH_API["api/clients.ts\napiFetch()"]
+        SH_CTX["contexts/\nThemeContext"]
+        SH_COM["components/\nUI reutilizable"]
+        SH_HOO["hooks/\nhooks genéricos"]
+        SH_TYP["types/\ntipos compartidos"]
+    end
+
+    MAIN --> LAYOUT
+    LAYOUT --> ROUTER
+    ROUTER --> FP_PAG
+    FP_PAG --> FP_HOO
+    FP_HOO --> FP_API
+    FP_API --> SH_API
+    SH_API -.->|"HTTP"| BE["🖥️ Backend API"]
+
+    style MAIN fill:#dbeafe,stroke:#1d4ed8
+    style APP fill:#f8fafc,stroke:#cbd5e1
+    style FEATURES fill:#faf5ff,stroke:#7c3aed
+    style SHARED fill:#fefce8,stroke:#ca8a04
+      </div>
+    </div>
+    <p class="diagram-label">Cada feature es autónoma. Se comunica con el backend solo a través de <code>apiFetch</code></p>
+  </div>
+</div>
+
+<!-- ══════════════════════ 7. BASE DE DATOS ══════════════════════ -->
+<div class="section" id="database">
+  <div class="section-header">
+    <div class="section-icon icon-green">🗄️</div>
+    <div>
+      <h2>7. Base de Datos — Modelo Entidad-Relación</h2>
+      <p>Estado actual del esquema y campos de auditoría</p>
+    </div>
+  </div>
+  <div class="section-body">
+    <div class="diagram-wrap">
+      <div class="mermaid">
+erDiagram
+    CATEGORIES {
+        int id PK
+        string name "UNIQUE"
+        datetime created_at
+        datetime updated_at
+    }
+
+    PRODUCTS {
+        int id PK
+        string name
+        string description
+        numeric price "10,2"
+        string image_url
+        int category_id FK
+        datetime created_at
+        datetime updated_at
+    }
+
+    CATEGORIES ||--o{ PRODUCTS : "tiene"
+      </div>
+    </div>
+    <p class="diagram-label">El campo <code>price</code> usa <code>Numeric(10,2)</code> para precisión exacta. Nunca <code>Float</code>.</p>
+
+    <hr class="divider">
+    <h3>Reglas del modelo de datos</h3>
+    <div class="rules-grid">
+      <div class="rule-card">
+        <h4><span class="dot dot-green"></span>TimestampMixin obligatorio</h4>
+        <p>Todo modelo hereda <code>TimestampMixin, Base</code>. Los campos <code>created_at</code> y <code>updated_at</code> se gestionan automáticamente por la BD.</p>
+      </div>
+      <div class="rule-card">
+        <h4><span class="dot dot-blue"></span>Precios con Numeric</h4>
+        <p>Cualquier campo monetario usa <code>Numeric(10, 2)</code> en el modelo y <code>Decimal</code> en el schema. Serializar a <code>float</code> en la respuesta JSON con <code>@field_serializer</code>.</p>
+      </div>
+      <div class="rule-card">
+        <h4><span class="dot dot-orange"></span>Migraciones con Alembic</h4>
+        <p>Nunca modificar la BD manualmente. Siempre: cambiar el modelo → <code>alembic revision --autogenerate</code> → <code>alembic upgrade head</code>.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ 8. REGLAS ══════════════════════ -->
+<div class="section" id="rules">
+  <div class="section-header">
+    <div class="section-icon icon-slate">📋</div>
+    <div>
+      <h2>8. Reglas de Desarrollo</h2>
+      <p>Convenciones a seguir en todo el proyecto</p>
+    </div>
+  </div>
+  <div class="section-body">
+    <h3>Backend</h3>
+    <div class="rules-grid">
+      <div class="rule-card">
+        <h4><span class="dot dot-blue"></span>Separación de capas</h4>
+        <p><code>api.py</code> nunca llama a <code>repository</code> directamente. Siempre pasa por <code>service</code>.</p>
+      </div>
+      <div class="rule-card">
+        <h4><span class="dot dot-blue"></span>Solo el repository hace commit</h4>
+        <p><code>db.commit()</code> únicamente en <code>repository.py</code>. Service y api no tocan la transacción.</p>
+      </div>
+      <div class="rule-card">
+        <h4><span class="dot dot-blue"></span>Errores desde shared</h4>
+        <p>Usar <code>not_found()</code> y <code>bad_request()</code> de <code>shared/exceptions.py</code>. Sin <code>HTTPException</code> directa en el código.</p>
+      </div>
+      <div class="rule-card">
+        <h4><span class="dot dot-blue"></span>response_model siempre</h4>
+        <p>Cada endpoint declara <code>response_model</code>. Nunca devolver un objeto ORM sin pasar por un schema Pydantic.</p>
+      </div>
+      <div class="rule-card">
+        <h4><span class="dot dot-blue"></span>Registro en db/base.py</h4>
+        <p>Todo modelo nuevo debe importarse en <code>db/base.py</code> para que Alembic lo detecte al generar migraciones.</p>
+      </div>
+      <div class="rule-card">
+        <h4><span class="dot dot-blue"></span>Prefijos de router</h4>
+        <p>Módulo en singular (<code>product</code>). Router con prefijo en plural (<code>/products</code>). Tags en plural también.</p>
+      </div>
+    </div>
+
+    <h3>Frontend</h3>
+    <div class="rules-grid">
+      <div class="rule-card">
+        <h4><span class="dot dot-purple"></span>React Query para servidor</h4>
+        <p>Todo dato de la API vive en React Query. Nunca <code>useState</code> para datos remotos.</p>
+      </div>
+      <div class="rule-card">
+        <h4><span class="dot dot-purple"></span>apiFetch centralizado</h4>
+        <p>Toda llamada HTTP usa <code>apiFetch</code> de <code>shared/api/clients.ts</code>. Sin <code>fetch</code> directo en hooks o componentes.</p>
+      </div>
+      <div class="rule-card">
+        <h4><span class="dot dot-purple"></span>Alias @/ para imports</h4>
+        <p>Usar <code>@/</code> para rutas absolutas desde <code>src/</code>. Nunca rutas relativas que suban más de un nivel.</p>
+      </div>
+      <div class="rule-card">
+        <h4><span class="dot dot-purple"></span>queryKey consistente</h4>
+        <p>Lista: <code>["entidad"]</code>. Detalle: <code>["entidad", id]</code>. Siempre array. Esencial para que el caché se invalide correctamente.</p>
+      </div>
+      <div class="rule-card">
+        <h4><span class="dot dot-purple"></span>Solo Tailwind para estilos</h4>
+        <p>Sin CSS inline ni archivos <code>.css</code> por componente. Clases condicionales con template literals o <code>.join(" ")</code>.</p>
+      </div>
+      <div class="rule-card">
+        <h4><span class="dot dot-purple"></span>Barrel exports</h4>
+        <p>Cada feature expone su API pública vía <code>index.ts</code>. Otras features importan desde <code>@/features/products</code>, nunca desde rutas internas.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<div class="footer">
+  AutomaProyectTemplate · Para exportar como PDF usar Ctrl+P → Guardar como PDF
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: "base",
+    themeVariables: {
+      primaryColor: "#eff6ff",
+      primaryTextColor: "#1e293b",
+      primaryBorderColor: "#93c5fd",
+      lineColor: "#64748b",
+      secondaryColor: "#f0fdf4",
+      tertiaryColor: "#faf5ff",
+      background: "#ffffff",
+      mainBkg: "#f8fafc",
+      nodeBorder: "#94a3b8",
+      clusterBkg: "#f8fafc",
+      titleColor: "#0f172a",
+      edgeLabelBackground: "#ffffff",
+      fontSize: "14px",
+    },
+    flowchart: { curve: "basis", padding: 20 },
+    sequence: { actorMargin: 60, messageMargin: 30, mirrorActors: false },
+  })
+</script>
+</body>
+</html>

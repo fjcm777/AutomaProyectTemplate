@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { Router } from "./app/router/router"
 import { ThemeProvider } from "./shared/contexts/theme-context"
 
-import "./styles/globals.css"
+import "./styles/globals.css" 
 
 const queryClient = new QueryClient({
   defaultOptions: {

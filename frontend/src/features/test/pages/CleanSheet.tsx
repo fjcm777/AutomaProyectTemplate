@@ -1,5 +1,5 @@
 import {useState, useRef, useEffect, useReducer, useContext} from "react"
-
+  
 /*
 
 useState is a React hook that allows you to add state to functional components. 
@@ -9,7 +9,8 @@ useRef is a React hook that provides a way to access and manipulate DOM elements
 It returns a mutable ref object whose .current property is initialized to the passed argument (initialValue). 
 The ref object can be used to store a reference to a DOM element or any mutable value that persists across renders.
 
-useEffect is a React hook that allows you to perform side effects in functional components. 
+useEffect is a React hook that allows you to perform side effects in functional components, 
+this are used most commonly for data fetching, subscriptions, or manually changing the DOM in React components.
 It takes a function as an argument and runs that function after the component renders. 
 You can also specify dependencies for the effect, so it only runs when those dependencies change.
 
