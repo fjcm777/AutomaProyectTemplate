@@ -66,19 +66,19 @@ backend/
 │   │   │
 │   │   ├── inventory/
 │   │   │   ├── api.py
-│   │   │   ├── models.py           ← Product, Category, Warehouse
-│   │   │   │                          Stock, StockMovement
-│   │   │   ├── schemas.py          ← ProductCreate, ProductOut, StockOut
-│   │   │   │                          StockMovementOut, WarehouseOut
+│   │   │   ├── models.py           ← Product, ProductVariant, Category
+│   │   │   │                          Warehouse, Stock, StockMovement
+│   │   │   ├── schemas.py          ← ProductCreate, ProductOut, ProductVariantOut
+│   │   │   │                          StockOut, StockMovementOut, WarehouseOut
 │   │   │   ├── repository.py
 │   │   │   └── service.py
 │   │   │
 │   │   ├── sales/
 │   │   │   ├── api.py
 │   │   │   ├── models.py           ← Invoice, InvoiceItem
-│   │   │   │                          Quote, QuoteItem, CustomerPayment
+│   │   │   │                          SalesReturn, SalesReturnItem, CustomerPayment
 │   │   │   ├── schemas.py          ← InvoiceCreate, InvoiceOut
-│   │   │   │                          QuoteCreate, PaymentCreate
+│   │   │   │                          SalesReturnCreate, PaymentCreate
 │   │   │   ├── repository.py
 │   │   │   └── service.py
 │   │   │
@@ -93,9 +93,9 @@ backend/
 │   │   ├── suppliers/
 │   │   │   ├── api.py
 │   │   │   ├── models.py           ← Supplier, PurchaseOrder
-│   │   │   │                          PurchaseOrderItem, SupplierPayment
+│   │   │   │                          PurchaseOrderItem, PurchaseReturn, SupplierPayment
 │   │   │   ├── schemas.py          ← SupplierCreate, PurchaseOrderCreate
-│   │   │   │                          PurchaseOrderOut
+│   │   │   │                          PurchaseOrderOut, PurchaseReturnOut
 │   │   │   ├── repository.py
 │   │   │   └── service.py
 │   │   │
@@ -162,7 +162,7 @@ frontend/
 │   │   │   │   ├── InvoicesPage.tsx
 │   │   │   │   ├── InvoiceDetailPage.tsx
 │   │   │   │   ├── CreateInvoicePage.tsx
-│   │   │   │   └── QuotesPage.tsx
+│   │   │   │   └── SalesReturnsPage.tsx
 │   │   │   ├── components/
 │   │   │   │   ├── InvoiceForm.tsx
 │   │   │   │   ├── InvoiceTable.tsx
@@ -170,7 +170,7 @@ frontend/
 │   │   │   │   └── PaymentModal.tsx
 │   │   │   ├── hooks/
 │   │   │   │   ├── useInvoices.ts
-│   │   │   │   └── useQuotes.ts
+│   │   │   │   └── useSalesReturns.ts
 │   │   │   ├── api/
 │   │   │   │   └── salesApi.ts
 │   │   │   └── types/
@@ -194,10 +194,12 @@ frontend/
 │   │   ├── suppliers/
 │   │   │   ├── pages/
 │   │   │   │   ├── SuppliersPage.tsx
-│   │   │   │   └── PurchaseOrdersPage.tsx
+│   │   │   │   ├── PurchaseOrdersPage.tsx
+│   │   │   │   └── PurchaseReturnsPage.tsx
 │   │   │   ├── components/
 │   │   │   │   ├── SupplierForm.tsx
-│   │   │   │   └── PurchaseOrderForm.tsx
+│   │   │   │   ├── PurchaseOrderForm.tsx
+│   │   │   │   └── PurchaseReturnForm.tsx
 │   │   │   ├── hooks/
 │   │   │   │   └── useSuppliers.ts
 │   │   │   ├── api/

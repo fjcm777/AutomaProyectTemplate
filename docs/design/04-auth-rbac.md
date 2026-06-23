@@ -124,7 +124,7 @@ Todos los permisos.
 ---
 
 ### Seller
-> Ventas, cobro en punto de venta y consulta de clientes
+> Rol completo de punto de venta: crea facturas, aplica descuentos, cobra, gestiona clientes y consulta reportes de ventas
 
 | Módulo | Permisos |
 |--------|---------|
@@ -136,7 +136,7 @@ Todos los permisos.
 ---
 
 ### Cashier
-> Cobro y registro de pagos
+> Solo cobra: registra pagos de facturas y abonos de clientes. No puede crear facturas, editar clientes ni ver reportes. Útil para separar la función de caja cuando el negocio escala
 
 | Módulo | Permisos |
 |--------|---------|

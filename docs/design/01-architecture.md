@@ -116,8 +116,8 @@ frontend/src/
 | Módulo | Carpeta backend | Carpeta frontend | Tablas principales |
 |--------|----------------|-----------------|-------------------|
 | Autenticación | `auth/` | `auth/` | `users`, `roles`, `permissions` |
-| Inventario | `inventory/` | `inventory/` | `products`, `stock`, `stock_movements` |
-| Ventas | `sales/` | `sales/` | `invoices`, `invoice_items`, `quotes` |
+| Inventario | `inventory/` | `inventory/` | `products`, `product_variants`, `stock`, `stock_movements` |
+| Ventas | `sales/` | `sales/` | `invoices`, `invoice_items`, `sales_returns`, `customer_payments` |
 | Clientes | `customers/` | `customers/` | `customers`, `customer_credit_log` |
-| Proveedores | `suppliers/` | `suppliers/` | `suppliers`, `purchase_orders` |
+| Proveedores | `suppliers/` | `suppliers/` | `suppliers`, `purchase_orders`, `purchase_returns` |
 | Reportes | `reports/` | `reports/` | *(vistas/queries, sin tablas propias)* |

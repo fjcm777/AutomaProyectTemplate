@@ -95,6 +95,16 @@ npm run dev
 3. Define contratos API en `schemas.py` antes de codificar UI.
 4. Extiende primero backend y luego conecta frontend por feature.
 
+## Contexto importado de ChatGPT
+
+El contexto recuperado del proyecto web de ChatGPT `Sistema proyect` esta guardado en:
+
+- [Resumen de importacion](docs/chatgpt-import/README.md)
+- [Contexto tecnico consolidado](docs/chatgpt-import/project-context.md)
+- [Instrucciones locales para agentes](AGENTS.md)
+
+Ese import es una recuperacion de contexto, no un clon archivo-por-archivo del proyecto web.
+
 ## Documentacion adicional
 
 - [Playbook de arquitectura](docs/TEMPLATE_PLAYBOOK.md)

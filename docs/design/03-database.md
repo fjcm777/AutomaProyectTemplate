@@ -11,22 +11,28 @@ erDiagram
 
     products }o--|| categories : "pertenece a"
     categories }o--o| categories : "subcategoría de"
-    stock }o--|| products : "de"
+    products ||--o{ product_variants : "tiene"
+    stock }o--|| product_variants : "de"
     stock }o--|| warehouses : "en"
-    stock_movements }o--|| products : "afecta"
+    stock_movements }o--|| product_variants : "afecta"
     stock_movements }o--|| warehouses : "en"
 
     invoices }o--|| customers : "de"
     invoices }o--|| users : "vendedor"
-    invoices }o--o| quotes : "originada en"
     invoice_items }o--|| invoices : "pertenece a"
-    invoice_items }o--|| products : "contiene"
+    invoice_items }o--|| product_variants : "contiene"
     customer_payments }o--|| invoices : "abona a"
+    sales_returns }o--|| invoices : "devuelve"
+    sales_return_items }o--|| sales_returns : "pertenece a"
+    sales_return_items }o--|| product_variants : "contiene"
     customer_payments }o--|| customers : "de"
 
     purchase_orders }o--|| suppliers : "a"
     purchase_order_items }o--|| purchase_orders : "pertenece a"
-    purchase_order_items }o--|| products : "incluye"
+    purchase_order_items }o--|| product_variants : "incluye"
+    purchase_returns }o--|| suppliers : "a"
+    purchase_return_items }o--|| purchase_returns : "pertenece a"
+    purchase_return_items }o--|| product_variants : "contiene"
     supplier_payments }o--|| suppliers : "a"
 
     customer_credit_log }o--|| customers : "de"
@@ -133,11 +139,24 @@ CREATE TABLE products (
     category_id   UUID           REFERENCES categories(id) ON DELETE SET NULL,
     cost_price    NUMERIC(12, 2) NOT NULL DEFAULT 0,
     sale_price    NUMERIC(12, 2) NOT NULL DEFAULT 0,
-    min_stock     NUMERIC(12, 2) NOT NULL DEFAULT 0,
     unit          VARCHAR(20)    NOT NULL DEFAULT 'unit',
     is_active     BOOLEAN        NOT NULL DEFAULT TRUE,
     created_at    TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
     updated_at    TIMESTAMPTZ    NOT NULL DEFAULT NOW()
+);
+
+-- Variantes comercializables: talla/color para calzado o variante default para accesorios
+CREATE TABLE product_variants (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    product_id  UUID           NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    sku         VARCHAR(80)    NOT NULL UNIQUE,
+    size        VARCHAR(30),
+    color       VARCHAR(50),
+    min_stock   NUMERIC(12, 2) NOT NULL DEFAULT 0,
+    is_active   BOOLEAN        NOT NULL DEFAULT TRUE,
+    created_at  TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+    UNIQUE (product_id, size, color)
 );
 
 -- Bodegas o puntos de almacenamiento
@@ -149,35 +168,37 @@ CREATE TABLE warehouses (
     created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
--- Stock actual por producto y bodega
+-- Stock actual por variante y bodega
 CREATE TABLE stock (
-    id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    product_id   UUID           NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-    warehouse_id UUID           NOT NULL REFERENCES warehouses(id) ON DELETE CASCADE,
-    quantity     NUMERIC(12, 2) NOT NULL DEFAULT 0,
-    updated_at   TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
-    UNIQUE (product_id, warehouse_id)
+    id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    product_variant_id UUID           NOT NULL REFERENCES product_variants(id) ON DELETE CASCADE,
+    warehouse_id       UUID           NOT NULL REFERENCES warehouses(id) ON DELETE CASCADE,
+    quantity           NUMERIC(12, 2) NOT NULL DEFAULT 0,
+    updated_at         TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+    UNIQUE (product_variant_id, warehouse_id)
 );
 
 -- Kardex: historial completo de movimientos de inventario
 CREATE TABLE stock_movements (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    product_id      UUID           NOT NULL REFERENCES products(id),
-    warehouse_id    UUID           NOT NULL REFERENCES warehouses(id),
-    type            VARCHAR(30)    NOT NULL, -- 'in', 'out', 'adjustment', 'transfer'
-    quantity        NUMERIC(12, 2) NOT NULL,
-    quantity_before NUMERIC(12, 2) NOT NULL,
-    ref_type        VARCHAR(30),             -- 'purchase_order', 'invoice', 'adjustment'
-    ref_id          UUID,
-    user_id         UUID           REFERENCES users(id) ON DELETE SET NULL,
-    notes           TEXT,
-    created_at      TIMESTAMPTZ    NOT NULL DEFAULT NOW()
+    id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    product_variant_id UUID           NOT NULL REFERENCES product_variants(id),
+    warehouse_id       UUID           NOT NULL REFERENCES warehouses(id),
+    type               VARCHAR(30)    NOT NULL, -- 'in', 'out', 'adjustment', 'transfer'
+    quantity           NUMERIC(12, 2) NOT NULL,
+    quantity_before    NUMERIC(12, 2) NOT NULL,
+    ref_type           VARCHAR(30),             -- 'purchase_order', 'invoice', 'sales_return', 'purchase_return', 'adjustment'
+    ref_id             UUID,
+    user_id            UUID           REFERENCES users(id) ON DELETE SET NULL,
+    notes              TEXT,
+    created_at         TIMESTAMPTZ    NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX idx_products_code         ON products(code);
 CREATE INDEX idx_products_category     ON products(category_id);
-CREATE INDEX idx_stock_product         ON stock(product_id);
-CREATE INDEX idx_stock_movements_prod  ON stock_movements(product_id);
+CREATE INDEX idx_variants_product      ON product_variants(product_id);
+CREATE INDEX idx_variants_sku          ON product_variants(sku);
+CREATE INDEX idx_stock_variant         ON stock(product_variant_id);
+CREATE INDEX idx_stock_movements_var   ON stock_movements(product_variant_id);
 CREATE INDEX idx_stock_movements_date  ON stock_movements(created_at DESC);
 ```
 
@@ -258,13 +279,35 @@ CREATE TABLE purchase_orders (
 
 -- Líneas de la orden de compra
 CREATE TABLE purchase_order_items (
+    id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    purchase_order_id  UUID           NOT NULL REFERENCES purchase_orders(id) ON DELETE CASCADE,
+    product_variant_id UUID           NOT NULL REFERENCES product_variants(id),
+    quantity           NUMERIC(12, 2) NOT NULL,
+    quantity_received  NUMERIC(12, 2) NOT NULL DEFAULT 0,
+    unit_price         NUMERIC(12, 2) NOT NULL,
+    subtotal           NUMERIC(12, 2) GENERATED ALWAYS AS (quantity * unit_price) STORED
+);
+
+-- Devoluciones o correcciones a proveedor
+CREATE TABLE purchase_returns (
     id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    purchase_order_id UUID           NOT NULL REFERENCES purchase_orders(id) ON DELETE CASCADE,
-    product_id        UUID           NOT NULL REFERENCES products(id),
-    quantity          NUMERIC(12, 2) NOT NULL,
-    quantity_received NUMERIC(12, 2) NOT NULL DEFAULT 0,
-    unit_price        NUMERIC(12, 2) NOT NULL,
-    subtotal          NUMERIC(12, 2) GENERATED ALWAYS AS (quantity * unit_price) STORED
+    supplier_id       UUID           NOT NULL REFERENCES suppliers(id),
+    purchase_order_id UUID           REFERENCES purchase_orders(id) ON DELETE SET NULL,
+    user_id           UUID           REFERENCES users(id) ON DELETE SET NULL,
+    status            VARCHAR(20)    NOT NULL DEFAULT 'posted', -- draft, posted, cancelled
+    reason            TEXT           NOT NULL,
+    total             NUMERIC(12, 2) NOT NULL DEFAULT 0,
+    created_at        TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+    updated_at        TIMESTAMPTZ    NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE purchase_return_items (
+    id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    purchase_return_id UUID           NOT NULL REFERENCES purchase_returns(id) ON DELETE CASCADE,
+    product_variant_id UUID           NOT NULL REFERENCES product_variants(id),
+    quantity           NUMERIC(12, 2) NOT NULL,
+    unit_price         NUMERIC(12, 2) NOT NULL,
+    subtotal           NUMERIC(12, 2) NOT NULL
 );
 
 -- Pagos registrados a proveedores
@@ -281,6 +324,7 @@ CREATE TABLE supplier_payments (
 
 CREATE INDEX idx_purchase_orders_supplier ON purchase_orders(supplier_id);
 CREATE INDEX idx_purchase_orders_status   ON purchase_orders(status);
+CREATE INDEX idx_purchase_returns_supplier ON purchase_returns(supplier_id);
 ```
 
 ---
@@ -288,33 +332,6 @@ CREATE INDEX idx_purchase_orders_status   ON purchase_orders(status);
 ## SQL — Módulo SALES
 
 ```sql
--- Cotizaciones / presupuestos
-CREATE TABLE quotes (
-    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    customer_id UUID           REFERENCES customers(id) ON DELETE SET NULL,
-    user_id     UUID           REFERENCES users(id) ON DELETE SET NULL,
-    status      VARCHAR(20)    NOT NULL DEFAULT 'draft', -- draft, sent, approved, rejected, expired
-    subtotal    NUMERIC(12, 2) NOT NULL DEFAULT 0,
-    discount    NUMERIC(12, 2) NOT NULL DEFAULT 0,
-    tax         NUMERIC(12, 2) NOT NULL DEFAULT 0,
-    total       NUMERIC(12, 2) NOT NULL DEFAULT 0,
-    expires_at  DATE,
-    notes       TEXT,
-    created_at  TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMPTZ    NOT NULL DEFAULT NOW()
-);
-
--- Líneas de cotización
-CREATE TABLE quote_items (
-    id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    quote_id   UUID           NOT NULL REFERENCES quotes(id) ON DELETE CASCADE,
-    product_id UUID           NOT NULL REFERENCES products(id),
-    quantity   NUMERIC(12, 2) NOT NULL,
-    unit_price NUMERIC(12, 2) NOT NULL,
-    discount   NUMERIC(12, 2) NOT NULL DEFAULT 0,
-    subtotal   NUMERIC(12, 2) NOT NULL
-);
-
 -- Facturas de venta
 CREATE TABLE invoices (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -322,7 +339,6 @@ CREATE TABLE invoices (
     number              VARCHAR(20)    NOT NULL,
     customer_id         UUID           REFERENCES customers(id) ON DELETE SET NULL,
     user_id             UUID           REFERENCES users(id) ON DELETE SET NULL,
-    quote_id            UUID           REFERENCES quotes(id) ON DELETE SET NULL,
     type                VARCHAR(20)    NOT NULL DEFAULT 'invoice', -- invoice, credit_note
     status              VARCHAR(20)    NOT NULL DEFAULT 'issued',  -- issued, paid, partial, cancelled
     subtotal            NUMERIC(12, 2) NOT NULL DEFAULT 0,
@@ -340,13 +356,13 @@ CREATE TABLE invoices (
 
 -- Líneas de factura
 CREATE TABLE invoice_items (
-    id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    invoice_id UUID           NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
-    product_id UUID           NOT NULL REFERENCES products(id),
-    quantity   NUMERIC(12, 2) NOT NULL,
-    unit_price NUMERIC(12, 2) NOT NULL,
-    discount   NUMERIC(12, 2) NOT NULL DEFAULT 0,
-    subtotal   NUMERIC(12, 2) NOT NULL
+    id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    invoice_id         UUID           NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
+    product_variant_id UUID           NOT NULL REFERENCES product_variants(id),
+    quantity           NUMERIC(12, 2) NOT NULL,
+    unit_price         NUMERIC(12, 2) NOT NULL,
+    discount           NUMERIC(12, 2) NOT NULL DEFAULT 0,
+    subtotal           NUMERIC(12, 2) NOT NULL
 );
 
 -- Pagos recibidos de clientes (soporta pagos parciales)
@@ -362,11 +378,34 @@ CREATE TABLE customer_payments (
     created_at  TIMESTAMPTZ    NOT NULL DEFAULT NOW()
 );
 
+-- Devoluciones de cliente / notas de crédito sobre una factura emitida
+CREATE TABLE sales_returns (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    invoice_id  UUID           NOT NULL REFERENCES invoices(id),
+    customer_id UUID           REFERENCES customers(id) ON DELETE SET NULL,
+    user_id     UUID           REFERENCES users(id) ON DELETE SET NULL,
+    status      VARCHAR(20)    NOT NULL DEFAULT 'posted', -- draft, posted, cancelled
+    reason      TEXT           NOT NULL,
+    total       NUMERIC(12, 2) NOT NULL DEFAULT 0,
+    created_at  TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ    NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE sales_return_items (
+    id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    sales_return_id    UUID           NOT NULL REFERENCES sales_returns(id) ON DELETE CASCADE,
+    product_variant_id UUID           NOT NULL REFERENCES product_variants(id),
+    quantity           NUMERIC(12, 2) NOT NULL,
+    unit_price         NUMERIC(12, 2) NOT NULL,
+    subtotal           NUMERIC(12, 2) NOT NULL
+);
+
 CREATE INDEX idx_invoices_customer        ON invoices(customer_id);
 CREATE INDEX idx_invoices_status          ON invoices(status);
 CREATE INDEX idx_invoices_issued_at       ON invoices(issued_at DESC);
 CREATE INDEX idx_invoices_series_num      ON invoices(series, number);
 CREATE INDEX idx_customer_payments_invoice ON customer_payments(invoice_id);
+CREATE INDEX idx_sales_returns_invoice    ON sales_returns(invoice_id);
 ```
 
 ---
@@ -377,8 +416,11 @@ CREATE INDEX idx_customer_payments_invoice ON customer_payments(invoice_id);
 |--------|-------|-------|
 | `UUID` como PK | Todas las tablas | Seguridad, no expone IDs secuenciales, facilita distribución |
 | `is_active` (soft delete) | `products`, `customers`, `suppliers`, `users` | Preservar historial sin eliminar registros |
+| `product_variants` | Inventario | Permite stock por talla/color y una variante default para artículos sin variante visible |
 | `outstanding_balance` en `invoices` | Ventas | Evitar JOIN costoso para saber si una factura tiene saldo |
 | `quantity_before` en `stock_movements` | Inventario | Auditoría completa sin recalcular el kardex |
 | `ref_type` + `ref_id` en movimientos | Inventario | Referencia polimórfica: saber el origen de cada movimiento |
 | `credit_balance` en `customers` | Clientes | Saldo de crédito usado, actualizado en cada factura/pago |
 | `GENERATED ALWAYS AS` en `subtotal` | `purchase_order_items` | Columna calculada automáticamente por PostgreSQL |
+| Sin tablas de cotización | Ventas | El negocio opera con venta directa al público; no se modelan presupuestos en la primera versión |
+| Documentos transaccionales explícitos | Ventas, compras, inventario | Facilita integrar contabilidad después mediante eventos de facturas, pagos, devoluciones y ajustes |

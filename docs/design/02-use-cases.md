@@ -1,4 +1,4 @@
-# 02 — Casos de Uso
+ # 02 — Casos de Uso
 
 > **Contexto del negocio:** Tienda de calzado y artículos complementarios (bolsos, accesorios, etc.).
 > Venta directa al público — **no se manejan cotizaciones**.
@@ -9,8 +9,8 @@
 |-------|-------------|
 | **Admin** | Acceso total al sistema |
 | **Manager** | Supervisión, reportes y administración de clientes, sin gestión de usuarios |
-| **Seller** | Ventas, cobro y consulta de clientes en punto de venta |
-| **Cashier** | Cobro y registro de pagos |
+| **Seller** | Crea facturas, aplica descuentos, cobra, gestiona clientes y ve reportes de ventas. Rol completo de punto de venta |
+| **Cashier** | Solo cobra: registra pagos de facturas y abonos de clientes. No puede crear facturas, editar clientes ni ver reportes. Ideal para empleado dedicado exclusivamente a caja |
 | **Warehouse** | Gestión completa de inventario |
 | **Purchasing** | Gestión de proveedores y órdenes de compra |
 | **System** | Acciones automáticas del sistema |
