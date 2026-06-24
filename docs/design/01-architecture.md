@@ -2,65 +2,73 @@
 
 ## Stack Tecnológico
 
-| Capa | Tecnología | Versión |
-|------|-----------|---------|
-| Backend | FastAPI + Python | 3.12 / 0.115 |
-| ORM | SQLAlchemy | 2.0 |
-| Migraciones | Alembic | 1.15 |
-| Validación | Pydantic v2 | 2.10 |
-| Base de datos | PostgreSQL | 16 |
-| Frontend | React + TypeScript | 18.3 / 5.4 |
-| Build tool | Vite | 6.2 |
+| Capa | Tecnología | Versión sugerida |
+|------|------------|------------------|
+| Backend | FastAPI + Python | Python 3.12 / FastAPI 0.115+ |
+| ORM | SQLAlchemy | 2.x |
+| Migraciones | Alembic | 1.x |
+| Validación | Pydantic | v2 |
+| Base de datos | PostgreSQL | 16+ |
+| Frontend | React + TypeScript | React 18 / TS 5.x |
+| Build tool | Vite | 6.x |
 | State / Fetching | TanStack Query | v5 |
-| Estilos | Tailwind CSS | 3.4 |
+| Estilos | Tailwind CSS | 3.x |
 | Infraestructura | Docker + Docker Compose | v2 |
 
 ---
 
 ## Patrón Arquitectónico
 
-El sistema usa **Modular Monolith con Vertical Slice** tanto en backend como frontend.
+El sistema usa **Modular Monolith con Vertical Slice** tanto en backend como en frontend.
 
-Cada módulo es completamente independiente y sigue el mismo patrón de 5 capas:
+Cada dominio funcional vive en su propio módulo y mantiene separación por capas:
 
-```
+```text
 Model → Schema → Repository → Service → API
 ```
 
-### Ventajas de este patrón
+### Ventajas
 
-- Agregar un módulo nuevo no afecta los existentes
-- Cada módulo puede evolucionar de forma independiente
-- Facilita el mantenimiento y las pruebas unitarias
-- Permite migrar módulos a microservicios en el futuro si es necesario
+- Agregar módulos nuevos sin reescribir los existentes.
+- Mantener reglas de negocio encapsuladas por dominio.
+- Facilitar pruebas unitarias e integración.
+- Permitir una futura separación hacia microservicios si fuera necesario.
+- Evitar dependencias directas entre módulos usando eventos internos.
 
 ---
 
-## Estructura de Carpetas
+## Estructura Backend
 
-### Backend
-
-```
+```text
 backend/app/
 ├── core/
-│   ├── config.py           ← Variables de entorno y settings
-│   ├── database.py         ← Engine y sesión de SQLAlchemy
-│   └── dependencies.py     ← Dependencias compartidas
+│   ├── config.py
+│   ├── database.py
+│   └── dependencies.py
 ├── db/
-│   └── base.py             ← Registro de modelos para Alembic
+│   └── base.py
 ├── modules/
-│   ├── auth/               ← Autenticación y usuarios
-│   ├── inventory/          ← Inventario
-│   ├── sales/              ← Ventas y facturación
-│   ├── customers/          ← Clientes y crédito
-│   ├── suppliers/          ← Proveedores
-│   └── reports/            ← Reportes
-└── main.py                 ← Registro de routers y configuración de la app
+│   ├── auth/
+│   ├── inventory/
+│   ├── sales/
+│   ├── customers/
+│   ├── suppliers/
+│   ├── reports/
+│   └── accounting/          ← módulo futuro / fase posterior
+├── shared/
+│   ├── events/              ← infraestructura interna, no módulo funcional
+│   ├── audit/
+│   ├── notifications/
+│   ├── exceptions.py
+│   └── pagination.py
+└── main.py
 ```
 
-### Frontend
+---
 
-```
+## Estructura Frontend
+
+```text
 frontend/src/
 ├── app/
 │   ├── app.tsx
@@ -70,54 +78,82 @@ frontend/src/
 │   ├── auth/
 │   ├── inventory/
 │   ├── sales/
+│   │   ├── invoices/
+│   │   ├── payments/
+│   │   ├── returns/
+│   │   └── layaways/        ← subproceso de ventas
 │   ├── customers/
 │   ├── suppliers/
-│   └── reports/
+│   ├── reports/
+│   └── accounting/          ← futuro
 └── shared/
     ├── api/
-    │   └── apiClient.ts    ← Cliente HTTP centralizado
-    ├── components/         ← Componentes reutilizables (Button, Table, Modal...)
-    ├── hooks/              ← Hooks genéricos (usePagination, useDebounce...)
-    ├── types/              ← Tipos globales
+    ├── components/
+    ├── hooks/
+    ├── types/
     └── utils/
 ```
 
 ---
 
-## Convenciones de Nombres
+## Módulos Funcionales
 
-### Backend (Python)
-
-| Elemento | Convención | Ejemplo |
-|----------|-----------|---------|
-| Carpetas de módulos | `snake_case` | `inventory/`, `sales/` |
-| Archivos | `snake_case` | `api.py`, `models.py` |
-| Modelos SQLAlchemy | `PascalCase` | `Product`, `SalesInvoice` |
-| Tablas en DB | `snake_case` plural | `products`, `invoice_items` |
-| Columnas en DB | `snake_case` | `unit_price`, `created_at` |
-| Schemas Pydantic | `PascalCase` + sufijo | `ProductCreate`, `InvoiceOut` |
-| Funciones / variables | `snake_case` | `get_current_user()` |
-
-### Frontend (TypeScript)
-
-| Elemento | Convención | Ejemplo |
-|----------|-----------|---------|
-| Carpetas features | `kebab-case` | `inventory/`, `sales/` |
-| Componentes | `PascalCase` | `InvoiceTable.tsx` |
-| Hooks | `camelCase` + `use` | `useInvoices.ts` |
-| Archivos API | `camelCase` | `invoicesApi.ts` |
-| Types / Interfaces | `PascalCase` | `Invoice`, `Product` |
-| Variables / funciones | `camelCase` | `fetchInvoices()` |
+| Módulo | Backend | Frontend | Tablas principales |
+|--------|---------|----------|-------------------|
+| Autenticación | `auth/` | `auth/` | `users`, `roles`, `permissions`, `refresh_tokens`, `activity_log` |
+| Inventario | `inventory/` | `inventory/` | `products`, `categories`, `sizes`, `colors`, `product_variants`, `stock`, `stock_reservations`, `stock_movements` |
+| Ventas | `sales/` | `sales/` | `invoices`, `invoice_items`, `customer_payments`, `sales_returns`, `layaways`, `layaway_items`, `layaway_payments`, `layaway_alerts` |
+| Clientes | `customers/` | `customers/` | `customers`, `customer_credit_log` |
+| Proveedores | `suppliers/` | `suppliers/` | `suppliers`, `purchase_orders`, `purchase_order_items`, `purchase_returns`, `supplier_payments` |
+| Reportes | `reports/` | `reports/` | vistas, queries y agregaciones |
+| Contabilidad | `accounting/` | `accounting/` | `chart_of_accounts`, `accounting_rules`, `journal_entries`, `journal_entry_lines`, `fiscal_periods` |
 
 ---
 
-## Mapeo de Módulos
+## Infraestructura Interna
 
-| Módulo | Carpeta backend | Carpeta frontend | Tablas principales |
-|--------|----------------|-----------------|-------------------|
-| Autenticación | `auth/` | `auth/` | `users`, `roles`, `permissions` |
-| Inventario | `inventory/` | `inventory/` | `products`, `product_variants`, `stock`, `stock_movements` |
-| Ventas | `sales/` | `sales/` | `invoices`, `invoice_items`, `sales_returns`, `customer_payments` |
-| Clientes | `customers/` | `customers/` | `customers`, `customer_credit_log` |
-| Proveedores | `suppliers/` | `suppliers/` | `suppliers`, `purchase_orders`, `purchase_returns` |
-| Reportes | `reports/` | `reports/` | *(vistas/queries, sin tablas propias)* |
+| Componente | Ubicación sugerida | Propósito |
+|------------|--------------------|-----------|
+| Eventos de dominio | `shared/events/` | Registrar eventos como `invoice_issued`, `layaway_created`, `customer_payment_received` |
+| Auditoría | `shared/audit/` o `auth/activity_log` | Registrar acciones sensibles del sistema |
+| Notificaciones | `shared/notifications/` | Alertas internas: apartados vencidos, stock bajo, saldos vencidos |
+| Paginación | `shared/pagination.py` | Respuestas paginadas reutilizables |
+| Excepciones | `shared/exceptions.py` | Errores comunes de dominio/API |
+
+`shared/events` no debe considerarse módulo funcional; es una pieza técnica para desacoplar procesos.
+
+---
+
+## Convenciones de Nombres
+
+### Backend
+
+| Elemento | Convención | Ejemplo |
+|----------|------------|---------|
+| Módulos | `snake_case` | `inventory`, `sales` |
+| Archivos | `snake_case` | `api.py`, `models.py` |
+| Modelos SQLAlchemy | `PascalCase` | `ProductVariant`, `Layaway` |
+| Tablas | `snake_case` plural | `product_variants`, `layaway_payments` |
+| Columnas | `snake_case` | `created_at`, `outstanding_balance` |
+| Schemas Pydantic | `PascalCase` + sufijo | `LayawayCreate`, `InvoiceOut` |
+| Funciones | `snake_case` | `create_layaway()` |
+
+### Frontend
+
+| Elemento | Convención | Ejemplo |
+|----------|------------|---------|
+| Features | `kebab-case` o `snake_case` consistente | `sales`, `inventory` |
+| Componentes | `PascalCase` | `LayawayTable.tsx` |
+| Hooks | `camelCase` con prefijo `use` | `useLayaways.ts` |
+| API files | `camelCase` | `layawaysApi.ts` |
+| Tipos | `PascalCase` | `Layaway`, `Invoice` |
+
+---
+
+## Decisiones Arquitectónicas
+
+1. **El sistema de apartado pertenece a ventas.** No se recomienda crear un módulo separado `layaway`; es una modalidad de venta.
+2. **La reserva de inventario pertenece a inventario.** Ventas crea el apartado, pero inventario controla la reserva física mediante `stock_reservations`.
+3. **Eventos internos desacoplan los módulos.** Ventas no debe llamar directamente a contabilidad.
+4. **Contabilidad puede ser fase futura.** Debe consumir eventos operativos ya confirmados.
+5. **Reportes no deben duplicar reglas de negocio.** Deben consultar datos consolidados o vistas preparadas.

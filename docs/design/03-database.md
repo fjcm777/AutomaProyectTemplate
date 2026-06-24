@@ -1,5 +1,9 @@
 # 03 — Base de Datos
 
+> **Contexto:** Modelo de base de datos actualizado con base en los casos de uso del proyecto, incluyendo venta en efectivo, venta a crédito, venta por sistema de apartado, devoluciones, auditoría, eventos de integración y preparación para un futuro módulo de contabilidad.
+
+---
+
 ## Diagrama General (ERD)
 
 ```mermaid
@@ -8,16 +12,25 @@ erDiagram
     roles ||--o{ user_roles : "asignado a"
     roles ||--o{ role_permissions : "incluye"
     permissions ||--o{ role_permissions : "asignado a"
+    users ||--o{ activity_log : "genera"
 
     products }o--|| categories : "pertenece a"
     categories }o--o| categories : "subcategoría de"
     products ||--o{ product_variants : "tiene"
+    sizes ||--o{ product_variants : "define"
+    colors ||--o{ product_variants : "define"
     stock }o--|| product_variants : "de"
     stock }o--|| warehouses : "en"
     stock_movements }o--|| product_variants : "afecta"
     stock_movements }o--|| warehouses : "en"
+    stock_reservations }o--|| product_variants : "reserva"
+    stock_reservations }o--|| warehouses : "en"
 
-    invoices }o--|| customers : "de"
+    customers ||--o{ invoices : "tiene"
+    customers ||--o{ layaways : "tiene"
+    customers ||--o{ customer_payments : "realiza"
+    customers ||--o{ customer_credit_log : "registra"
+
     invoices }o--|| users : "vendedor"
     invoice_items }o--|| invoices : "pertenece a"
     invoice_items }o--|| product_variants : "contiene"
@@ -25,7 +38,14 @@ erDiagram
     sales_returns }o--|| invoices : "devuelve"
     sales_return_items }o--|| sales_returns : "pertenece a"
     sales_return_items }o--|| product_variants : "contiene"
-    customer_payments }o--|| customers : "de"
+
+    layaways }o--|| customers : "de"
+    layaways }o--|| users : "vendedor"
+    layaway_items }o--|| layaways : "pertenece a"
+    layaway_items }o--|| product_variants : "reserva"
+    layaway_payments }o--|| layaways : "abona a"
+    layaway_alerts }o--|| layaways : "alerta"
+    stock_reservations }o--|| layaways : "origen"
 
     purchase_orders }o--|| suppliers : "a"
     purchase_order_items }o--|| purchase_orders : "pertenece a"
@@ -35,7 +55,12 @@ erDiagram
     purchase_return_items }o--|| product_variants : "contiene"
     supplier_payments }o--|| suppliers : "a"
 
-    customer_credit_log }o--|| customers : "de"
+    domain_events }o--|| users : "generado por"
+
+    journal_entries }o--|| fiscal_periods : "periodo"
+    journal_entries }o--|| users : "creado por"
+    journal_entry_lines }o--|| journal_entries : "pertenece a"
+    journal_entry_lines }o--|| chart_of_accounts : "cuenta"
 ```
 
 ---
@@ -49,7 +74,8 @@ CREATE TABLE roles (
     name        VARCHAR(50)  NOT NULL UNIQUE,
     description TEXT,
     is_active   BOOLEAN      NOT NULL DEFAULT TRUE,
-    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
 -- Permisos granulares por módulo y acción
@@ -80,7 +106,7 @@ CREATE TABLE users (
     updated_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
--- Relación N:N entre usuarios y roles (un usuario puede tener múltiples roles)
+-- Relación N:N entre usuarios y roles
 CREATE TABLE user_roles (
     user_id  UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     role_id  UUID NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
@@ -94,6 +120,7 @@ CREATE TABLE refresh_tokens (
     token_hash  TEXT        NOT NULL UNIQUE,
     expires_at  TIMESTAMPTZ NOT NULL,
     revoked     BOOLEAN     NOT NULL DEFAULT FALSE,
+    revoked_at  TIMESTAMPTZ,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -105,15 +132,17 @@ CREATE TABLE activity_log (
     module      VARCHAR(50),
     detail      JSONB,
     ip_address  INET,
-    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+    user_agent  TEXT,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_users_email     ON users(email);
-CREATE INDEX idx_user_roles_user ON user_roles(user_id);
-CREATE INDEX idx_user_roles_role ON user_roles(role_id);
-CREATE INDEX idx_refresh_token_hash  ON refresh_tokens(token_hash);
-CREATE INDEX idx_activity_user       ON activity_log(user_id);
-CREATE INDEX idx_activity_date       ON activity_log(created_at DESC);
+CREATE INDEX idx_users_email          ON users(email);
+CREATE INDEX idx_user_roles_user      ON user_roles(user_id);
+CREATE INDEX idx_user_roles_role      ON user_roles(role_id);
+CREATE INDEX idx_refresh_token_hash   ON refresh_tokens(token_hash);
+CREATE INDEX idx_activity_user        ON activity_log(user_id);
+CREATE INDEX idx_activity_module      ON activity_log(module);
+CREATE INDEX idx_activity_date        ON activity_log(created_at DESC);
 ```
 
 ---
@@ -121,13 +150,36 @@ CREATE INDEX idx_activity_date       ON activity_log(created_at DESC);
 ## SQL — Módulo INVENTORY
 
 ```sql
--- Categorías con soporte de jerarquía (subcategorías)
+-- Categorías con soporte de jerarquía
 CREATE TABLE categories (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name        VARCHAR(100) NOT NULL,
     parent_id   UUID         REFERENCES categories(id) ON DELETE SET NULL,
     is_active   BOOLEAN      NOT NULL DEFAULT TRUE,
-    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+-- Catálogo global de tallas
+CREATE TABLE sizes (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    code        VARCHAR(30)  NOT NULL UNIQUE,
+    name        VARCHAR(50)  NOT NULL,
+    sort_order  INTEGER      NOT NULL DEFAULT 0,
+    is_active   BOOLEAN      NOT NULL DEFAULT TRUE,
+    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+-- Catálogo global de colores
+CREATE TABLE colors (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    code        VARCHAR(30)  NOT NULL UNIQUE,
+    name        VARCHAR(50)  NOT NULL,
+    hex_code    VARCHAR(7),
+    is_active   BOOLEAN      NOT NULL DEFAULT TRUE,
+    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
 -- Catálogo de productos
@@ -142,7 +194,9 @@ CREATE TABLE products (
     unit          VARCHAR(20)    NOT NULL DEFAULT 'unit',
     is_active     BOOLEAN        NOT NULL DEFAULT TRUE,
     created_at    TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
-    updated_at    TIMESTAMPTZ    NOT NULL DEFAULT NOW()
+    updated_at    TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+    CHECK (cost_price >= 0),
+    CHECK (sale_price >= 0)
 );
 
 -- Variantes comercializables: talla/color para calzado o variante default para accesorios
@@ -150,13 +204,14 @@ CREATE TABLE product_variants (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     product_id  UUID           NOT NULL REFERENCES products(id) ON DELETE CASCADE,
     sku         VARCHAR(80)    NOT NULL UNIQUE,
-    size        VARCHAR(30),
-    color       VARCHAR(50),
+    size_id     UUID           REFERENCES sizes(id) ON DELETE SET NULL,
+    color_id    UUID           REFERENCES colors(id) ON DELETE SET NULL,
     min_stock   NUMERIC(12, 2) NOT NULL DEFAULT 0,
     is_active   BOOLEAN        NOT NULL DEFAULT TRUE,
     created_at  TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
     updated_at  TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
-    UNIQUE (product_id, size, color)
+    UNIQUE (product_id, size_id, color_id),
+    CHECK (min_stock >= 0)
 );
 
 -- Bodegas o puntos de almacenamiento
@@ -165,7 +220,8 @@ CREATE TABLE warehouses (
     name        VARCHAR(100) NOT NULL,
     location    VARCHAR(200),
     is_active   BOOLEAN      NOT NULL DEFAULT TRUE,
-    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
 -- Stock actual por variante y bodega
@@ -174,8 +230,26 @@ CREATE TABLE stock (
     product_variant_id UUID           NOT NULL REFERENCES product_variants(id) ON DELETE CASCADE,
     warehouse_id       UUID           NOT NULL REFERENCES warehouses(id) ON DELETE CASCADE,
     quantity           NUMERIC(12, 2) NOT NULL DEFAULT 0,
+    reserved_quantity  NUMERIC(12, 2) NOT NULL DEFAULT 0,
     updated_at         TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
-    UNIQUE (product_variant_id, warehouse_id)
+    UNIQUE (product_variant_id, warehouse_id),
+    CHECK (quantity >= 0),
+    CHECK (reserved_quantity >= 0),
+    CHECK (reserved_quantity <= quantity)
+);
+
+-- Reservas de stock: usado principalmente por ventas por apartado
+CREATE TABLE stock_reservations (
+    id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    product_variant_id UUID           NOT NULL REFERENCES product_variants(id),
+    warehouse_id       UUID           NOT NULL REFERENCES warehouses(id),
+    quantity           NUMERIC(12, 2) NOT NULL,
+    source_type        VARCHAR(30)    NOT NULL, -- 'layaway'
+    source_id          UUID           NOT NULL,
+    status             VARCHAR(20)    NOT NULL DEFAULT 'active', -- active, released, consumed, cancelled
+    created_at         TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+    released_at        TIMESTAMPTZ,
+    CHECK (quantity > 0)
 );
 
 -- Kardex: historial completo de movimientos de inventario
@@ -183,23 +257,29 @@ CREATE TABLE stock_movements (
     id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     product_variant_id UUID           NOT NULL REFERENCES product_variants(id),
     warehouse_id       UUID           NOT NULL REFERENCES warehouses(id),
-    type               VARCHAR(30)    NOT NULL, -- 'in', 'out', 'adjustment', 'transfer'
+    type               VARCHAR(30)    NOT NULL, -- 'in', 'out', 'adjustment', 'transfer', 'reservation', 'release'
     quantity           NUMERIC(12, 2) NOT NULL,
     quantity_before    NUMERIC(12, 2) NOT NULL,
-    ref_type           VARCHAR(30),             -- 'purchase_order', 'invoice', 'sales_return', 'purchase_return', 'adjustment'
+    quantity_after     NUMERIC(12, 2) NOT NULL,
+    ref_type           VARCHAR(30),             -- 'purchase_order', 'invoice', 'sales_return', 'purchase_return', 'adjustment', 'layaway'
     ref_id             UUID,
     user_id            UUID           REFERENCES users(id) ON DELETE SET NULL,
     notes              TEXT,
-    created_at         TIMESTAMPTZ    NOT NULL DEFAULT NOW()
+    created_at         TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+    CHECK (quantity > 0)
 );
 
-CREATE INDEX idx_products_code         ON products(code);
-CREATE INDEX idx_products_category     ON products(category_id);
-CREATE INDEX idx_variants_product      ON product_variants(product_id);
-CREATE INDEX idx_variants_sku          ON product_variants(sku);
-CREATE INDEX idx_stock_variant         ON stock(product_variant_id);
-CREATE INDEX idx_stock_movements_var   ON stock_movements(product_variant_id);
-CREATE INDEX idx_stock_movements_date  ON stock_movements(created_at DESC);
+CREATE INDEX idx_products_code              ON products(code);
+CREATE INDEX idx_products_category          ON products(category_id);
+CREATE INDEX idx_variants_product           ON product_variants(product_id);
+CREATE INDEX idx_variants_sku               ON product_variants(sku);
+CREATE INDEX idx_stock_variant              ON stock(product_variant_id);
+CREATE INDEX idx_stock_warehouse            ON stock(warehouse_id);
+CREATE INDEX idx_stock_reservations_source  ON stock_reservations(source_type, source_id);
+CREATE INDEX idx_stock_reservations_status  ON stock_reservations(status);
+CREATE INDEX idx_stock_movements_var        ON stock_movements(product_variant_id);
+CREATE INDEX idx_stock_movements_ref        ON stock_movements(ref_type, ref_id);
+CREATE INDEX idx_stock_movements_date       ON stock_movements(created_at DESC);
 ```
 
 ---
@@ -221,14 +301,16 @@ CREATE TABLE customers (
     credit_enabled  BOOLEAN        NOT NULL DEFAULT FALSE,
     is_active       BOOLEAN        NOT NULL DEFAULT TRUE,
     created_at      TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
-    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT NOW()
+    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+    CHECK (credit_limit >= 0),
+    CHECK (credit_balance >= 0)
 );
 
 -- Historial de cambios en crédito del cliente
 CREATE TABLE customer_credit_log (
     id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     customer_id    UUID           NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
-    type           VARCHAR(30)    NOT NULL, -- 'limit_change', 'payment', 'charge'
+    type           VARCHAR(30)    NOT NULL, -- 'limit_change', 'payment', 'charge', 'adjustment'
     amount         NUMERIC(12, 2) NOT NULL,
     balance_before NUMERIC(12, 2) NOT NULL,
     balance_after  NUMERIC(12, 2) NOT NULL,
@@ -239,8 +321,10 @@ CREATE TABLE customer_credit_log (
     created_at     TIMESTAMPTZ    NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_customers_code   ON customers(code);
-CREATE INDEX idx_customers_tax_id ON customers(tax_id);
+CREATE INDEX idx_customers_code       ON customers(code);
+CREATE INDEX idx_customers_tax_id     ON customers(tax_id);
+CREATE INDEX idx_credit_log_customer  ON customer_credit_log(customer_id);
+CREATE INDEX idx_credit_log_date      ON customer_credit_log(created_at DESC);
 ```
 
 ---
@@ -261,7 +345,8 @@ CREATE TABLE suppliers (
     outstanding_balance NUMERIC(12, 2) NOT NULL DEFAULT 0,
     is_active           BOOLEAN        NOT NULL DEFAULT TRUE,
     created_at          TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
-    updated_at          TIMESTAMPTZ    NOT NULL DEFAULT NOW()
+    updated_at          TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+    CHECK (outstanding_balance >= 0)
 );
 
 -- Órdenes de compra a proveedores
@@ -274,7 +359,8 @@ CREATE TABLE purchase_orders (
     expected_at  DATE,
     notes        TEXT,
     created_at   TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
-    updated_at   TIMESTAMPTZ    NOT NULL DEFAULT NOW()
+    updated_at   TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+    CHECK (total >= 0)
 );
 
 -- Líneas de la orden de compra
@@ -285,7 +371,11 @@ CREATE TABLE purchase_order_items (
     quantity           NUMERIC(12, 2) NOT NULL,
     quantity_received  NUMERIC(12, 2) NOT NULL DEFAULT 0,
     unit_price         NUMERIC(12, 2) NOT NULL,
-    subtotal           NUMERIC(12, 2) GENERATED ALWAYS AS (quantity * unit_price) STORED
+    subtotal           NUMERIC(12, 2) GENERATED ALWAYS AS (quantity * unit_price) STORED,
+    CHECK (quantity > 0),
+    CHECK (quantity_received >= 0),
+    CHECK (quantity_received <= quantity),
+    CHECK (unit_price >= 0)
 );
 
 -- Devoluciones o correcciones a proveedor
@@ -298,7 +388,8 @@ CREATE TABLE purchase_returns (
     reason            TEXT           NOT NULL,
     total             NUMERIC(12, 2) NOT NULL DEFAULT 0,
     created_at        TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
-    updated_at        TIMESTAMPTZ    NOT NULL DEFAULT NOW()
+    updated_at        TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+    CHECK (total >= 0)
 );
 
 CREATE TABLE purchase_return_items (
@@ -307,7 +398,10 @@ CREATE TABLE purchase_return_items (
     product_variant_id UUID           NOT NULL REFERENCES product_variants(id),
     quantity           NUMERIC(12, 2) NOT NULL,
     unit_price         NUMERIC(12, 2) NOT NULL,
-    subtotal           NUMERIC(12, 2) NOT NULL
+    subtotal           NUMERIC(12, 2) NOT NULL,
+    CHECK (quantity > 0),
+    CHECK (unit_price >= 0),
+    CHECK (subtotal >= 0)
 );
 
 -- Pagos registrados a proveedores
@@ -319,12 +413,16 @@ CREATE TABLE supplier_payments (
     reference   VARCHAR(100),
     user_id     UUID           REFERENCES users(id) ON DELETE SET NULL,
     paid_at     TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
-    created_at  TIMESTAMPTZ    NOT NULL DEFAULT NOW()
+    created_at  TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+    CHECK (amount > 0)
 );
 
-CREATE INDEX idx_purchase_orders_supplier ON purchase_orders(supplier_id);
-CREATE INDEX idx_purchase_orders_status   ON purchase_orders(status);
-CREATE INDEX idx_purchase_returns_supplier ON purchase_returns(supplier_id);
+CREATE INDEX idx_suppliers_code              ON suppliers(code);
+CREATE INDEX idx_purchase_orders_supplier    ON purchase_orders(supplier_id);
+CREATE INDEX idx_purchase_orders_status      ON purchase_orders(status);
+CREATE INDEX idx_purchase_returns_supplier   ON purchase_returns(supplier_id);
+CREATE INDEX idx_supplier_payments_supplier  ON supplier_payments(supplier_id);
+CREATE INDEX idx_supplier_payments_paid_at   ON supplier_payments(paid_at DESC);
 ```
 
 ---
@@ -340,18 +438,23 @@ CREATE TABLE invoices (
     customer_id         UUID           REFERENCES customers(id) ON DELETE SET NULL,
     user_id             UUID           REFERENCES users(id) ON DELETE SET NULL,
     type                VARCHAR(20)    NOT NULL DEFAULT 'invoice', -- invoice, credit_note
-    status              VARCHAR(20)    NOT NULL DEFAULT 'issued',  -- issued, paid, partial, cancelled
+    sale_type           VARCHAR(20)    NOT NULL DEFAULT 'cash', -- cash, credit, layaway_completion
+    status              VARCHAR(20)    NOT NULL DEFAULT 'issued', -- issued, paid, partial, cancelled
     subtotal            NUMERIC(12, 2) NOT NULL DEFAULT 0,
     discount            NUMERIC(12, 2) NOT NULL DEFAULT 0,
     tax                 NUMERIC(12, 2) NOT NULL DEFAULT 0,
     total               NUMERIC(12, 2) NOT NULL DEFAULT 0,
     outstanding_balance NUMERIC(12, 2) NOT NULL DEFAULT 0,
-    payment_method      VARCHAR(30)    NOT NULL DEFAULT 'cash', -- cash, credit, transfer
     notes               TEXT,
     issued_at           TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
     created_at          TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
     updated_at          TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
-    UNIQUE (series, number)
+    UNIQUE (series, number),
+    CHECK (subtotal >= 0),
+    CHECK (discount >= 0),
+    CHECK (tax >= 0),
+    CHECK (total >= 0),
+    CHECK (outstanding_balance >= 0)
 );
 
 -- Líneas de factura
@@ -362,20 +465,99 @@ CREATE TABLE invoice_items (
     quantity           NUMERIC(12, 2) NOT NULL,
     unit_price         NUMERIC(12, 2) NOT NULL,
     discount           NUMERIC(12, 2) NOT NULL DEFAULT 0,
-    subtotal           NUMERIC(12, 2) NOT NULL
+    subtotal           NUMERIC(12, 2) NOT NULL,
+    CHECK (quantity > 0),
+    CHECK (unit_price >= 0),
+    CHECK (discount >= 0),
+    CHECK (subtotal >= 0)
 );
 
--- Pagos recibidos de clientes (soporta pagos parciales)
+-- Ventas por sistema de apartado
+CREATE TABLE layaways (
+    id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    number                  VARCHAR(30)    NOT NULL UNIQUE,
+    customer_id             UUID           NOT NULL REFERENCES customers(id),
+    user_id                 UUID           REFERENCES users(id) ON DELETE SET NULL,
+    status                  VARCHAR(20)    NOT NULL DEFAULT 'active', -- active, paid, overdue, cancelled, converted
+    subtotal                NUMERIC(12, 2) NOT NULL DEFAULT 0,
+    discount                NUMERIC(12, 2) NOT NULL DEFAULT 0,
+    tax                     NUMERIC(12, 2) NOT NULL DEFAULT 0,
+    total                   NUMERIC(12, 2) NOT NULL DEFAULT 0,
+    initial_payment_percent NUMERIC(5, 2)  NOT NULL DEFAULT 0,
+    initial_payment_amount  NUMERIC(12, 2) NOT NULL DEFAULT 0,
+    paid_amount             NUMERIC(12, 2) NOT NULL DEFAULT 0,
+    outstanding_balance     NUMERIC(12, 2) NOT NULL DEFAULT 0,
+    due_date                DATE           NOT NULL,
+    completed_at            TIMESTAMPTZ,
+    cancelled_at            TIMESTAMPTZ,
+    converted_invoice_id    UUID           REFERENCES invoices(id) ON DELETE SET NULL,
+    notes                   TEXT,
+    created_at              TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+    updated_at              TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+    CHECK (subtotal >= 0),
+    CHECK (discount >= 0),
+    CHECK (tax >= 0),
+    CHECK (total >= 0),
+    CHECK (initial_payment_percent >= 0),
+    CHECK (initial_payment_percent <= 100),
+    CHECK (initial_payment_amount >= 0),
+    CHECK (paid_amount >= 0),
+    CHECK (outstanding_balance >= 0)
+);
+
+-- Productos apartados
+CREATE TABLE layaway_items (
+    id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    layaway_id         UUID           NOT NULL REFERENCES layaways(id) ON DELETE CASCADE,
+    product_variant_id UUID           NOT NULL REFERENCES product_variants(id),
+    warehouse_id       UUID           NOT NULL REFERENCES warehouses(id),
+    quantity           NUMERIC(12, 2) NOT NULL,
+    unit_price         NUMERIC(12, 2) NOT NULL,
+    discount           NUMERIC(12, 2) NOT NULL DEFAULT 0,
+    subtotal           NUMERIC(12, 2) NOT NULL,
+    CHECK (quantity > 0),
+    CHECK (unit_price >= 0),
+    CHECK (discount >= 0),
+    CHECK (subtotal >= 0)
+);
+
+-- Pagos de apartado
+CREATE TABLE layaway_payments (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    layaway_id  UUID           NOT NULL REFERENCES layaways(id) ON DELETE CASCADE,
+    amount      NUMERIC(12, 2) NOT NULL,
+    method      VARCHAR(30)    NOT NULL, -- cash, transfer, card
+    reference   VARCHAR(100),
+    user_id     UUID           REFERENCES users(id) ON DELETE SET NULL,
+    paid_at     TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+    created_at  TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+    CHECK (amount > 0)
+);
+
+-- Alertas de apartado vencido o próximo a vencer
+CREATE TABLE layaway_alerts (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    layaway_id  UUID        NOT NULL REFERENCES layaways(id) ON DELETE CASCADE,
+    type        VARCHAR(30) NOT NULL, -- due_soon, overdue
+    status      VARCHAR(20) NOT NULL DEFAULT 'open', -- open, acknowledged, resolved
+    message     TEXT        NOT NULL,
+    generated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    resolved_at  TIMESTAMPTZ,
+    user_id       UUID REFERENCES users(id) ON DELETE SET NULL
+);
+
+-- Pagos recibidos de clientes para facturas
 CREATE TABLE customer_payments (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     invoice_id  UUID           NOT NULL REFERENCES invoices(id),
     customer_id UUID           NOT NULL REFERENCES customers(id),
     amount      NUMERIC(12, 2) NOT NULL,
-    method      VARCHAR(30)    NOT NULL, -- 'cash', 'transfer', 'card'
+    method      VARCHAR(30)    NOT NULL, -- cash, transfer, card
     reference   VARCHAR(100),
     user_id     UUID           REFERENCES users(id) ON DELETE SET NULL,
     paid_at     TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
-    created_at  TIMESTAMPTZ    NOT NULL DEFAULT NOW()
+    created_at  TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+    CHECK (amount > 0)
 );
 
 -- Devoluciones de cliente / notas de crédito sobre una factura emitida
@@ -388,7 +570,8 @@ CREATE TABLE sales_returns (
     reason      TEXT           NOT NULL,
     total       NUMERIC(12, 2) NOT NULL DEFAULT 0,
     created_at  TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMPTZ    NOT NULL DEFAULT NOW()
+    updated_at  TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+    CHECK (total >= 0)
 );
 
 CREATE TABLE sales_return_items (
@@ -397,16 +580,165 @@ CREATE TABLE sales_return_items (
     product_variant_id UUID           NOT NULL REFERENCES product_variants(id),
     quantity           NUMERIC(12, 2) NOT NULL,
     unit_price         NUMERIC(12, 2) NOT NULL,
-    subtotal           NUMERIC(12, 2) NOT NULL
+    subtotal           NUMERIC(12, 2) NOT NULL,
+    CHECK (quantity > 0),
+    CHECK (unit_price >= 0),
+    CHECK (subtotal >= 0)
 );
 
-CREATE INDEX idx_invoices_customer        ON invoices(customer_id);
-CREATE INDEX idx_invoices_status          ON invoices(status);
-CREATE INDEX idx_invoices_issued_at       ON invoices(issued_at DESC);
-CREATE INDEX idx_invoices_series_num      ON invoices(series, number);
-CREATE INDEX idx_customer_payments_invoice ON customer_payments(invoice_id);
-CREATE INDEX idx_sales_returns_invoice    ON sales_returns(invoice_id);
+CREATE INDEX idx_invoices_customer           ON invoices(customer_id);
+CREATE INDEX idx_invoices_status             ON invoices(status);
+CREATE INDEX idx_invoices_sale_type          ON invoices(sale_type);
+CREATE INDEX idx_invoices_issued_at          ON invoices(issued_at DESC);
+CREATE INDEX idx_invoices_series_num         ON invoices(series, number);
+CREATE INDEX idx_customer_payments_invoice   ON customer_payments(invoice_id);
+CREATE INDEX idx_customer_payments_customer  ON customer_payments(customer_id);
+CREATE INDEX idx_customer_payments_paid_at   ON customer_payments(paid_at DESC);
+CREATE INDEX idx_sales_returns_invoice       ON sales_returns(invoice_id);
+CREATE INDEX idx_layaways_customer           ON layaways(customer_id);
+CREATE INDEX idx_layaways_status             ON layaways(status);
+CREATE INDEX idx_layaways_due_date           ON layaways(due_date);
+CREATE INDEX idx_layaway_items_layaway       ON layaway_items(layaway_id);
+CREATE INDEX idx_layaway_payments_layaway    ON layaway_payments(layaway_id);
+CREATE INDEX idx_layaway_alerts_status       ON layaway_alerts(status);
 ```
+
+---
+
+## SQL — Módulo INTEGRATION EVENTS
+
+```sql
+-- Eventos internos para integrar módulos y preparar contabilidad futura
+CREATE TABLE domain_events (
+    id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_type     VARCHAR(100) NOT NULL,
+    source_module  VARCHAR(50)  NOT NULL,
+    source_type    VARCHAR(50)  NOT NULL,
+    source_id      UUID         NOT NULL,
+    payload        JSONB        NOT NULL DEFAULT '{}'::jsonb,
+    status         VARCHAR(20)  NOT NULL DEFAULT 'pending', -- pending, processed, failed
+    attempts       INTEGER      NOT NULL DEFAULT 0,
+    error_message  TEXT,
+    created_by     UUID         REFERENCES users(id) ON DELETE SET NULL,
+    created_at     TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    processed_at   TIMESTAMPTZ
+);
+
+CREATE INDEX idx_domain_events_type        ON domain_events(event_type);
+CREATE INDEX idx_domain_events_status      ON domain_events(status);
+CREATE INDEX idx_domain_events_source      ON domain_events(source_module, source_type, source_id);
+CREATE INDEX idx_domain_events_created_at  ON domain_events(created_at DESC);
+```
+
+### Eventos sugeridos
+
+| Evento | Módulo origen | Uso esperado |
+|--------|---------------|--------------|
+| `invoice_issued` | sales | Factura emitida |
+| `invoice_cancelled` | sales | Reversa de factura |
+| `credit_note_issued` | sales | Nota de crédito o devolución |
+| `customer_payment_received` | sales / customers | Pago recibido de cliente |
+| `layaway_created` | sales | Apartado creado y stock reservado |
+| `layaway_payment_received` | sales | Abono recibido para apartado |
+| `layaway_completed` | sales | Apartado pagado y listo para cierre/facturación |
+| `layaway_overdue` | sales | Apartado vencido luego de 2 meses |
+| `purchase_order_received` | suppliers / inventory | Mercancía recibida |
+| `supplier_invoice_registered` | suppliers | Factura de proveedor registrada |
+| `supplier_payment_registered` | suppliers | Pago a proveedor registrado |
+| `inventory_adjustment_registered` | inventory | Ajuste de inventario |
+
+---
+
+## SQL — Módulo ACCOUNTING (propuesta futura)
+
+```sql
+-- Plan de cuentas contables
+CREATE TABLE chart_of_accounts (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    code        VARCHAR(30)  NOT NULL UNIQUE,
+    name        VARCHAR(150) NOT NULL,
+    type        VARCHAR(30)  NOT NULL, -- asset, liability, equity, revenue, expense
+    parent_id   UUID         REFERENCES chart_of_accounts(id) ON DELETE SET NULL,
+    is_active   BOOLEAN      NOT NULL DEFAULT TRUE,
+    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+-- Períodos fiscales
+CREATE TABLE fiscal_periods (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name        VARCHAR(100) NOT NULL,
+    start_date  DATE         NOT NULL,
+    end_date    DATE         NOT NULL,
+    status      VARCHAR(20)  NOT NULL DEFAULT 'open', -- open, closed
+    closed_at   TIMESTAMPTZ,
+    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    CHECK (end_date >= start_date)
+);
+
+-- Reglas para mapear eventos operativos a cuentas contables
+CREATE TABLE accounting_rules (
+    id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_type     VARCHAR(100) NOT NULL,
+    description    TEXT,
+    debit_account_id  UUID REFERENCES chart_of_accounts(id) ON DELETE RESTRICT,
+    credit_account_id UUID REFERENCES chart_of_accounts(id) ON DELETE RESTRICT,
+    is_active      BOOLEAN      NOT NULL DEFAULT TRUE,
+    created_at     TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_at     TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+-- Encabezado de asiento contable
+CREATE TABLE journal_entries (
+    id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    entry_number   VARCHAR(30)  NOT NULL UNIQUE,
+    period_id      UUID         REFERENCES fiscal_periods(id) ON DELETE SET NULL,
+    source_event_id UUID        REFERENCES domain_events(id) ON DELETE SET NULL,
+    source_module  VARCHAR(50),
+    source_type    VARCHAR(50),
+    source_id      UUID,
+    description    TEXT,
+    status         VARCHAR(20)  NOT NULL DEFAULT 'draft', -- draft, posted, reversed
+    created_by     UUID         REFERENCES users(id) ON DELETE SET NULL,
+    posted_at      TIMESTAMPTZ,
+    reversed_at    TIMESTAMPTZ,
+    created_at     TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_at     TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+-- Líneas débito/crédito de asiento contable
+CREATE TABLE journal_entry_lines (
+    id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    journal_entry_id UUID           NOT NULL REFERENCES journal_entries(id) ON DELETE CASCADE,
+    account_id       UUID           NOT NULL REFERENCES chart_of_accounts(id) ON DELETE RESTRICT,
+    description      TEXT,
+    debit            NUMERIC(12, 2) NOT NULL DEFAULT 0,
+    credit           NUMERIC(12, 2) NOT NULL DEFAULT 0,
+    CHECK (debit >= 0),
+    CHECK (credit >= 0),
+    CHECK ((debit > 0 AND credit = 0) OR (credit > 0 AND debit = 0))
+);
+
+CREATE INDEX idx_accounts_code          ON chart_of_accounts(code);
+CREATE INDEX idx_journal_entries_period ON journal_entries(period_id);
+CREATE INDEX idx_journal_entries_source ON journal_entries(source_module, source_type, source_id);
+CREATE INDEX idx_journal_lines_entry    ON journal_entry_lines(journal_entry_id);
+CREATE INDEX idx_journal_lines_account  ON journal_entry_lines(account_id);
+```
+
+---
+
+## Reglas sugeridas para venta por sistema de apartado
+
+| Regla | Descripción |
+|-------|-------------|
+| Porcentaje inicial | El sistema debe exigir un porcentaje mínimo del total para crear el apartado. El porcentaje debe ser configurable por el negocio. |
+| Plazo máximo | El cliente tiene un máximo de 2 meses para completar el pago restante. |
+| Pagos parciales | El sistema debe permitir registrar múltiples abonos hasta completar el saldo. |
+| Reserva de inventario | Los productos apartados deben quedar reservados mientras el apartado esté activo. |
+| Alerta de vencimiento | Al cumplirse 2 meses sin pago completo, el sistema debe marcar el apartado como vencido y generar una alerta. |
+| Liberación de inventario | La liberación del inventario de un apartado vencido debe depender de una política configurable del negocio. |
+| Conversión a factura | Al completar el pago del apartado, el sistema debe permitir cerrar el apartado y generar la factura o documento final según el flujo operativo definido. |
 
 ---
 
@@ -415,12 +747,43 @@ CREATE INDEX idx_sales_returns_invoice    ON sales_returns(invoice_id);
 | Patrón | Dónde | Razón |
 |--------|-------|-------|
 | `UUID` como PK | Todas las tablas | Seguridad, no expone IDs secuenciales, facilita distribución |
-| `is_active` (soft delete) | `products`, `customers`, `suppliers`, `users` | Preservar historial sin eliminar registros |
+| `is_active` (soft delete) | `products`, `customers`, `suppliers`, `users`, catálogos | Preservar historial sin eliminar registros |
+| `sizes` y `colors` | Inventario | Catálogos reutilizables para variantes de calzado |
 | `product_variants` | Inventario | Permite stock por talla/color y una variante default para artículos sin variante visible |
+| `reserved_quantity` en `stock` | Inventario | Permite controlar productos apartados sin descontarlos todavía del inventario físico |
+| `stock_reservations` | Inventario / Apartados | Trazabilidad de productos reservados por apartado |
 | `outstanding_balance` en `invoices` | Ventas | Evitar JOIN costoso para saber si una factura tiene saldo |
-| `quantity_before` en `stock_movements` | Inventario | Auditoría completa sin recalcular el kardex |
-| `ref_type` + `ref_id` en movimientos | Inventario | Referencia polimórfica: saber el origen de cada movimiento |
+| `layaways` | Ventas | Modela el sistema de apartado sin mezclarlo con factura final |
+| `layaway_alerts` | Ventas | Permite alertar apartados próximos a vencer o vencidos |
+| `quantity_before` y `quantity_after` | Inventario | Auditoría completa sin recalcular kardex |
+| `ref_type` + `ref_id` | Inventario y eventos | Referencia polimórfica al documento origen |
 | `credit_balance` en `customers` | Clientes | Saldo de crédito usado, actualizado en cada factura/pago |
+| `domain_events` | Integración | Permite desacoplar contabilidad y otros procesos futuros |
+| `chart_of_accounts` y `journal_entries` | Contabilidad | Preparan el módulo contable sin acoplarlo a ventas o inventario |
 | `GENERATED ALWAYS AS` en `subtotal` | `purchase_order_items` | Columna calculada automáticamente por PostgreSQL |
-| Sin tablas de cotización | Ventas | El negocio opera con venta directa al público; no se modelan presupuestos en la primera versión |
-| Documentos transaccionales explícitos | Ventas, compras, inventario | Facilita integrar contabilidad después mediante eventos de facturas, pagos, devoluciones y ajustes |
+| Sin tablas de cotización | Ventas | El negocio opera con venta directa, crédito y apartado; no se modelan presupuestos en la primera versión |
+
+---
+
+## Mejoras y observaciones adicionales
+
+1. **Agregar restricciones `CHECK`**  
+   Es recomendable validar montos positivos, porcentajes entre 0 y 100, saldos no negativos y cantidades mayores a cero desde la base de datos.
+
+2. **Separar modalidad de venta y método de pago**  
+   La modalidad de venta (`cash`, `credit`, `layaway`) no debe confundirse con el método de pago (`cash`, `transfer`, `card`). Por eso se propone `sale_type` en facturas y `method` en tablas de pagos.
+
+3. **No descontar inventario físico al crear apartado**  
+   La venta por apartado debe reservar inventario, no descontarlo definitivamente hasta completar el pago o convertirlo en factura final.
+
+4. **Configurar porcentaje inicial y plazo**  
+   El porcentaje mínimo inicial y la política de liberación de inventario deberían ser configurables en una tabla futura de parámetros del sistema.
+
+5. **Usar eventos de dominio para contabilidad**  
+   En lugar de llamar directamente a un módulo contable desde ventas o inventario, se recomienda guardar eventos en `domain_events`.
+
+6. **Evitar eliminación física de documentos transaccionales**  
+   Facturas, devoluciones, pagos, apartados y movimientos de stock deben anularse o revertirse, pero no eliminarse.
+
+7. **Agregar índices por estado y fechas**  
+   Es clave para reportes: facturas por fecha, apartados vencidos, pagos por fecha, órdenes por estado y movimientos de inventario por fecha.

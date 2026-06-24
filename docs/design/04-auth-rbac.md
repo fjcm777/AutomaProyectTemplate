@@ -2,72 +2,39 @@
 
 ## Flujo de Autenticación
 
-```
+```text
 Login
   │
-  ├── POST /auth/login  { email, password }
-  │         │
-  │         ├── Verificar credenciales (bcrypt)
-  │         ├── Generar Access Token  (JWT · expira en 30 min)
-  │         └── Generar Refresh Token (JWT · expira en 7 días)
+  ├── POST /auth/login { email, password }
+  │     ├── Verificar credenciales
+  │     ├── Generar Access Token
+  │     └── Generar Refresh Token
   │
-  │   Cada request protegido:
-  │         │
-  │         ├── Header: Authorization: Bearer <access_token>
-  │         ├── Decodificar JWT → obtener user_id + role
-  │         ├── Verificar permiso requerido del rol
-  │         └── ✅ Continúa  /  ❌ 401 / 403
+  ├── Requests protegidos
+  │     ├── Authorization: Bearer <token>
+  │     ├── Decodificar JWT
+  │     ├── Verificar usuario activo
+  │     ├── Verificar permisos
+  │     └── Continuar / 401 / 403
   │
-  └── POST /auth/refresh  { refresh_token }
-            └── Emitir nuevo access_token sin re-login
+  └── POST /auth/refresh { refresh_token }
 ```
 
 ---
 
-## Flujo de Verificación de Permiso
-
-```
-Request con JWT
-      │
-      ▼
-¿Token válido y no expirado?
-      │
-   No ──→ 401 Unauthorized
-      │
-     Sí
-      │
-      ▼
-¿Usuario activo?
-      │
-   No ──→ 403 Forbidden
-      │
-     Sí
-      │
-      ▼
-¿El rol del usuario tiene el permiso requerido?
-      │
-   No ──→ 403 Forbidden  "No tienes permiso para esta acción"
-      │
-     Sí
-      │
-      ▼
-✅ Ejecutar endpoint
-```
-
----
-
-## Endpoints del Módulo Auth
+## Endpoints de Auth
 
 | Método | Endpoint | Permiso requerido | Descripción |
 |--------|----------|-------------------|-------------|
-| `POST` | `/auth/login` | Público | Login, retorna access y refresh token |
-| `POST` | `/auth/logout` | Autenticado | Revoca el refresh token |
-| `POST` | `/auth/refresh` | Público | Renueva el access token |
-| `GET` | `/auth/me` | Autenticado | Info del usuario actual + permisos |
-| `GET` | `/users` | `users.view` | Lista de usuarios |
+| `POST` | `/auth/login` | Público | Login |
+| `POST` | `/auth/logout` | Autenticado | Revoca refresh token |
+| `POST` | `/auth/refresh` | Público | Renueva access token |
+| `GET` | `/auth/me` | Autenticado | Usuario actual y permisos |
+| `GET` | `/users` | `users.view` | Lista usuarios |
 | `POST` | `/users` | `users.manage` | Crear usuario |
 | `PUT` | `/users/{id}` | `users.manage` | Editar usuario |
-| `GET` | `/roles` | `users.manage` | Lista de roles con sus permisos |
+| `GET` | `/roles` | `users.manage` | Lista roles |
+| `POST` | `/auth/revoke-sessions/{user_id}` | `users.manage` | Revoca sesiones activas de usuario |
 
 ---
 
@@ -75,172 +42,107 @@ Request con JWT
 
 | Módulo | Acción | Descripción |
 |--------|--------|-------------|
-| `users` | `view` | Ver lista de usuarios |
-| `users` | `manage` | Crear, editar y desactivar usuarios |
+| `users` | `view` | Ver usuarios |
+| `users` | `manage` | Crear, editar, desactivar usuarios y revocar sesiones |
 | `inventory` | `view` | Ver productos y stock |
 | `inventory` | `edit` | Crear y editar productos |
-| `inventory` | `adjust` | Realizar ajustes de inventario |
-| `inventory` | `transfer` | Trasladar stock entre bodegas |
-| `sales` | `view` | Ver facturas y cotizaciones |
-| `sales` | `create` | Crear facturas y cotizaciones |
-| `sales` | `cancel` | Anular facturas emitidas |
-| `sales` | `discount` | Aplicar descuentos en ventas |
-| `sales` | `collect` | Registrar pagos de clientes |
-| `customers` | `view` | Ver ficha de clientes |
+| `inventory` | `adjust` | Ajustes de inventario |
+| `inventory` | `transfer` | Traslados entre bodegas |
+| `inventory` | `reserve` | Reservar o liberar stock por apartado |
+| `sales` | `view` | Ver facturas, pagos y apartados |
+| `sales` | `create` | Crear ventas/facturas |
+| `sales` | `cancel` | Anular facturas |
+| `sales` | `discount` | Aplicar descuentos |
+| `sales` | `collect` | Registrar pagos |
+| `sales` | `layaway_create` | Crear apartados |
+| `sales` | `layaway_pay` | Registrar pagos de apartados |
+| `sales` | `layaway_cancel` | Cancelar apartados |
+| `sales` | `layaway_release` | Liberar inventario de apartados vencidos/cancelados |
+| `customers` | `view` | Ver clientes |
 | `customers` | `manage` | Crear y editar clientes |
 | `customers` | `credit_view` | Ver crédito y estado de cuenta |
-| `customers` | `credit_approve` | Aprobar o modificar límite de crédito |
-| `suppliers` | `view` | Ver proveedores y órdenes de compra |
+| `customers` | `credit_approve` | Aprobar o modificar crédito |
+| `suppliers` | `view` | Ver proveedores y órdenes |
 | `suppliers` | `manage` | Crear y editar proveedores |
 | `suppliers` | `purchase_order` | Crear órdenes de compra |
 | `suppliers` | `pay` | Registrar pagos a proveedores |
-| `reports` | `sales` | Ver reportes de ventas |
-| `reports` | `inventory` | Ver reportes de inventario |
-| `reports` | `financial` | Ver reportes financieros, CxC y CxP |
-| `reports` | `dashboard` | Ver dashboard general |
+| `reports` | `sales` | Reportes de ventas |
+| `reports` | `inventory` | Reportes de inventario |
+| `reports` | `financial` | CxC, CxP y reportes financieros operativos |
+| `reports` | `dashboard` | Dashboard |
+| `reports` | `audit` | Reporte de auditoría |
+| `accounting` | `view` | Ver información contable |
+| `accounting` | `manage_accounts` | Gestionar plan de cuentas |
+| `accounting` | `manage_rules` | Configurar reglas contables |
+| `accounting` | `post_entries` | Crear/aprobar asientos |
+| `accounting` | `cancel_entries` | Anular asientos |
+| `accounting` | `reports` | Ver reportes contables |
+| `accounting` | `close_period` | Cierre de período |
 
 ---
 
-## Roles y sus Permisos
+## Roles y Permisos
 
 ### Admin
-> Acceso total al sistema
 
-Todos los permisos.
-
----
+Acceso total.
 
 ### Manager
-> Supervisión, reportes y administración de clientes, sin gestión de usuarios
 
 | Módulo | Permisos |
-|--------|---------|
+|--------|----------|
 | `inventory` | `view` |
 | `sales` | `view`, `cancel` |
 | `customers` | `view`, `manage`, `credit_view`, `credit_approve` |
 | `suppliers` | `view` |
-| `reports` | `sales`, `inventory`, `financial`, `dashboard` |
-
----
+| `reports` | `sales`, `inventory`, `financial`, `dashboard`, `audit` |
 
 ### Seller
-> Rol completo de punto de venta: crea facturas, aplica descuentos, cobra, gestiona clientes y consulta reportes de ventas
 
 | Módulo | Permisos |
-|--------|---------|
+|--------|----------|
 | `inventory` | `view` |
-| `sales` | `view`, `create`, `discount`, `collect` |
+| `sales` | `view`, `create`, `discount`, `collect`, `layaway_create`, `layaway_pay` |
 | `customers` | `view`, `manage`, `credit_view` |
 | `reports` | `sales` |
 
----
-
 ### Cashier
-> Solo cobra: registra pagos de facturas y abonos de clientes. No puede crear facturas, editar clientes ni ver reportes. Útil para separar la función de caja cuando el negocio escala
 
 | Módulo | Permisos |
-|--------|---------|
-| `sales` | `view`, `collect` |
+|--------|----------|
+| `sales` | `view`, `collect`, `layaway_pay` |
 | `customers` | `view`, `credit_view` |
 
----
-
 ### Warehouse
-> Gestión completa de inventario
 
 | Módulo | Permisos |
-|--------|---------|
-| `inventory` | `view`, `edit`, `adjust`, `transfer` |
+|--------|----------|
+| `inventory` | `view`, `edit`, `adjust`, `transfer`, `reserve` |
 | `suppliers` | `view`, `purchase_order` |
 | `reports` | `inventory` |
 
----
-
 ### Purchasing
-> Gestión de proveedores y órdenes de compra
 
 | Módulo | Permisos |
-|--------|---------|
+|--------|----------|
 | `inventory` | `view` |
 | `suppliers` | `view`, `manage`, `purchase_order`, `pay` |
 
----
+### Accountant
 
-## Estructura del Módulo en FastAPI
-
-```
-backend/app/modules/auth/
-├── api.py           ← Endpoints: /login, /logout, /refresh, /me, /users, /roles
-├── models.py        ← User, Role, Permission, UserRoles, RolePermission, RefreshToken, ActivityLog
-├── schemas.py       ← LoginRequest, TokenResponse, UserOut, UserCreate, RoleOut...
-├── repository.py    ← Queries a la base de datos
-├── service.py       ← Lógica: verificar password, generar JWT, unificar permisos de múltiples roles
-└── dependencies.py  ← get_current_user(), require_permission()
-```
-
-### Uso de `require_permission()` en otros módulos
-
-```python
-# Cualquier endpoint del sistema usa el mismo patrón:
-
-@router.post("/invoices")
-async def create_invoice(
-    data: InvoiceCreate,
-    user = Depends(require_permission("sales.create"))
-):
-    ...
-
-@router.delete("/invoices/{id}")
-async def cancel_invoice(
-    id: UUID,
-    user = Depends(require_permission("sales.cancel"))
-):
-    ...
-
-@router.get("/reports/financial")
-async def financial_report(
-    user = Depends(require_permission("reports.financial"))
-):
-    ...
-```
+| Módulo | Permisos |
+|--------|----------|
+| `sales` | `view` |
+| `customers` | `view`, `credit_view` |
+| `suppliers` | `view` |
+| `reports` | `financial` |
+| `accounting` | `view`, `manage_accounts`, `manage_rules`, `post_entries`, `cancel_entries`, `reports`, `close_period` |
 
 ---
 
-## Seed Data
+## Observaciones
 
-```sql
--- Roles base del sistema
-INSERT INTO roles (name, description) VALUES
-('admin',      'Acceso total al sistema'),
-('manager',    'Supervisión y reportes, sin gestión de usuarios'),
-('seller',     'Ventas, cotizaciones y consulta de clientes'),
-('cashier',    'Cobro y registro de pagos'),
-('warehouse',  'Gestión completa de inventario'),
-('purchasing', 'Gestión de proveedores y órdenes de compra');
-
--- Permisos del sistema
-INSERT INTO permissions (module, action, description) VALUES
-('users',       'view',           'Ver lista de usuarios'),
-('users',       'manage',         'Crear, editar y desactivar usuarios'),
-('inventory',   'view',           'Ver productos y stock'),
-('inventory',   'edit',           'Crear y editar productos'),
-('inventory',   'adjust',         'Realizar ajustes de inventario'),
-('inventory',   'transfer',       'Trasladar stock entre bodegas'),
-('sales',       'view',           'Ver facturas y cotizaciones'),
-('sales',       'create',         'Crear facturas y cotizaciones'),
-('sales',       'cancel',         'Anular facturas emitidas'),
-('sales',       'discount',       'Aplicar descuentos en ventas'),
-('sales',       'collect',        'Registrar pagos de clientes'),
-('customers',   'view',           'Ver ficha de clientes'),
-('customers',   'manage',         'Crear y editar clientes'),
-('customers',   'credit_view',    'Ver crédito y estado de cuenta'),
-('customers',   'credit_approve', 'Aprobar o modificar límite de crédito'),
-('suppliers',   'view',           'Ver proveedores y órdenes de compra'),
-('suppliers',   'manage',         'Crear y editar proveedores'),
-('suppliers',   'purchase_order', 'Crear órdenes de compra'),
-('suppliers',   'pay',            'Registrar pagos a proveedores'),
-('reports',     'sales',          'Ver reportes de ventas'),
-('reports',     'inventory',      'Ver reportes de inventario'),
-('reports',     'financial',      'Ver reportes financieros, CxC y CxP'),
-('reports',     'dashboard',      'Ver dashboard general');
-```
+- `Accountant` es un rol preparado para una fase futura.
+- Los permisos de apartado pertenecen a `sales`.
+- La reserva/liberación de inventario por apartado requiere permiso de inventario o acción automática del sistema.
+- La revocación de sesiones se implementa revocando refresh tokens activos.
