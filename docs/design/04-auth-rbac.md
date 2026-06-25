@@ -168,3 +168,26 @@ Notas:
 - `Seller` debe tener `inventory.view` para confirmar existencia de productos a clientes.
 - Las devoluciones sobre ventas deben quedar auditadas y generar efectos en inventario y contabilidad.
 - Los permisos de cierre contable y conciliación bancaria pertenecen a segunda etapa.
+
+
+---
+
+## Permisos adicionales para caja y arqueo
+
+| Módulo | Acción | Descripción |
+|--------|--------|-------------|
+| `cash` | `open` | Abrir caja del día operativo |
+| `cash` | `view` | Consultar resumen esperado de caja |
+| `cash` | `movement` | Registrar movimientos manuales de caja |
+| `cash` | `count` | Realizar arqueo de caja |
+| `cash` | `close` | Cerrar caja |
+| `cash` | `reopen` | Reabrir caja con permiso especial |
+| `cash` | `approve_difference` | Aprobar diferencias de caja |
+
+| Rol | Permisos sugeridos |
+|-----|--------------------|
+| Cashier | `cash.open`, `cash.view`, `cash.movement`, `cash.count`, `cash.close` |
+| Seller | Consulta de caja asociada a sus ventas |
+| Manager | `cash.view`, `cash.count`, `cash.close`, `cash.approve_difference`, `cash.reopen` |
+| Admin | Todos los permisos de caja |
+| Accountant | Consulta de caja y diferencias, principalmente para segunda etapa contable |

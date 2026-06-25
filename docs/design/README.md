@@ -104,3 +104,17 @@ Los eventos de integración no deben tratarse como módulo funcional. Su propós
 | Proceso de cierre contable | Aplicable como **(Segunda etapa)** |
 
 Los procesos marcados como **(Segunda etapa)** forman parte del diseño general, pero no son obligatorios para el MVP.
+
+
+---
+
+## Arqueo de caja
+
+Se incorpora el proceso de arqueo de caja dentro de ventas. El sistema debe soportar cortes de caja antes del final del día calendario usando `business_date`.
+
+| Concepto | Descripción |
+|----------|-------------|
+| `created_at` | Fecha y hora real del registro |
+| `business_date` | Fecha operativa usada para ventas, caja, reportes y cortes |
+
+El arqueo pertenece a primera etapa como control operativo. Los asientos por sobrantes/faltantes pueden quedar para segunda etapa.

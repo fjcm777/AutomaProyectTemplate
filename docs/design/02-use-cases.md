@@ -87,6 +87,14 @@
 | CU-208 | Admin | Configurar impuestos y series de factura |
 | CU-209 | System | Descontar inventario al emitir factura |
 | CU-210 | System | Generar PDF de factura |
+| CU-211 | Cashier / Admin | Abrir caja del día operativo |
+| CU-212 | Cashier / Admin | Registrar movimientos manuales de caja |
+| CU-213 | Cashier / Manager / Admin | Consultar resumen esperado de caja |
+| CU-214 | Cashier / Manager / Admin | Realizar arqueo de caja |
+| CU-215 | Cashier / Manager / Admin | Registrar diferencia de caja: sobrante o faltante |
+| CU-216 | Cashier / Manager / Admin | Cerrar caja |
+| CU-217 | System | Asignar ventas posteriores al siguiente día operativo después del cierre de caja |
+| CU-218 | Admin / Manager | Reabrir caja con permiso especial |
 
 ### Modalidades de venta
 
@@ -107,6 +115,20 @@
 | Vencimiento | Si no se completa el pago en 2 meses, se genera alerta |
 | Liberación | La liberación de inventario por vencimiento debe ser configurable |
 | Cierre | Al completar el pago, el apartado se convierte en venta cerrada/factura según el flujo definido |
+
+
+### Reglas de caja y arqueo
+
+| Regla | Descripción |
+|-------|-------------|
+| Apertura de caja | Toda operación de cobro debe asociarse a una caja abierta o sesión de caja válida |
+| Fecha operativa | El sistema debe manejar `business_date` para separar la fecha real de la fecha operativa |
+| Arqueo antes de fin de día | Si la caja se cierra antes del final del día calendario, las ventas posteriores deben registrarse con el siguiente `business_date` |
+| Efectivo esperado | Se calcula con apertura de caja + pagos en efectivo + entradas manuales - salidas manuales - reembolsos en efectivo |
+| Diferencia de caja | El sistema debe registrar sobrante o faltante cuando el efectivo contado no coincida con el esperado |
+| Métodos de pago | El arqueo debe resumir efectivo, transferencia y tarjeta, aunque la diferencia física aplica principalmente al efectivo |
+| Reapertura | Reabrir caja debe requerir permiso especial y quedar auditado |
+| Contabilidad | Sobrantes y faltantes pueden generar eventos contables en segunda etapa |
 
 ### Reglas de devoluciones sobre ventas
 
@@ -214,6 +236,11 @@
 
 | Evento | Origen | Propósito |
 |--------|--------|-----------|
+| `caja_abierta` | Sales / Cash Register | Registrar apertura de caja |
+| `arqueo_caja_realizado` | Sales / Cash Register | Registrar arqueo de caja |
+| `caja_cerrada` | Sales / Cash Register | Registrar cierre de caja |
+| `diferencia_caja_registrada` | Sales / Cash Register | Registrar sobrante o faltante de caja |
+| `venta_asignada_siguiente_dia_operativo` | Sales / System | Registrar venta posterior al cierre con siguiente `business_date` |
 | `factura_emitida` | Sales | Registrar emisión de factura |
 | `apartado_creado` | Sales | Registrar creación de apartado y reserva de stock |
 | `apartado_vencido` | Sales / System | Registrar vencimiento de apartado |
@@ -236,6 +263,7 @@
 | Clientes, proveedores, reportes básicos y RBAC | Primera etapa |
 | Consulta de disponibilidad para vendedores | Primera etapa |
 | Devoluciones con efecto en inventario | Primera etapa |
+| Arqueo de caja operativo | Primera etapa |
 | Catálogo de cuentas, reglas contables y asientos | Segunda etapa |
 | Cierre contable formal | Segunda etapa |
 | Conciliación bancaria | Segunda etapa |

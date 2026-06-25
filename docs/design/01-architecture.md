@@ -199,3 +199,24 @@ asiento_cierre_generado
 | Conciliación bancaria | Segunda etapa |
 
 La conciliación bancaria puede ubicarse como subárea futura de `accounting` o como soporte interno en `shared/bank_reconciliation`.
+
+
+---
+
+## Arquitectura de caja y arqueo
+
+El arqueo de caja se modela como subproceso de `sales`, no como módulo funcional independiente en la primera etapa.
+
+```text
+backend/app/modules/sales/cash_register/
+frontend/src/features/sales/cash-register/
+```
+
+El sistema debe manejar `business_date` para separar la fecha real (`created_at`) de la fecha operativa de caja. Esto permite cerrar caja antes del final del día y asignar las ventas posteriores al siguiente día operativo.
+
+| Área | Etapa |
+|------|-------|
+| Apertura, arqueo y cierre de caja | Primera etapa |
+| Asignación automática al siguiente `business_date` | Primera etapa |
+| Asientos por sobrantes/faltantes | Segunda etapa |
+| Conciliación bancaria contra caja | Segunda etapa |

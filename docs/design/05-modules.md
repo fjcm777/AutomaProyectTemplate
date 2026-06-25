@@ -257,3 +257,63 @@ bank_transactions
 bank_reconciliations
 bank_reconciliation_items
 ```
+
+
+---
+
+## Subproceso `sales/cash_register`
+
+El arqueo de caja se implementa como subproceso de ventas.
+
+### Backend
+
+```text
+backend/app/modules/sales/cash_register/
+├── models.py
+├── schemas.py
+├── repository.py
+├── service.py
+└── api.py
+```
+
+Modelos sugeridos:
+
+```text
+CashRegister
+CashSession
+CashSessionPayment
+CashMovement
+CashCount
+```
+
+### Frontend
+
+```text
+frontend/src/features/sales/cash-register/
+├── api/
+├── hooks/
+├── components/
+├── pages/
+├── types/
+└── index.ts
+```
+
+Pantallas sugeridas:
+
+```text
+Apertura de caja
+Resumen de caja
+Registro de movimiento manual
+Arqueo de caja
+Cierre de caja
+Historial de cajas
+Diferencias de caja
+```
+
+Reglas:
+
+- Toda venta o pago debe asociarse a una `cash_session` cuando corresponda.
+- El sistema debe usar `business_date` para determinar el día operativo.
+- Si una caja ya fue cerrada, las ventas posteriores deben asignarse al siguiente `business_date`.
+- Las diferencias de caja deben quedar auditadas.
+- Los efectos contables por sobrantes/faltantes pueden implementarse en segunda etapa.

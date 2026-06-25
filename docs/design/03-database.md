@@ -922,3 +922,98 @@ erDiagram
     bank_reconciliations ||--o{ bank_reconciliation_items : "contiene"
     bank_transactions ||--o{ bank_reconciliation_items : "comparado con"
 ```
+
+
+---
+
+## SQL — SALES / Caja y Arqueo
+
+El arqueo de caja se incorpora como subproceso de ventas. Permite comparar el efectivo esperado por el sistema contra el efectivo contado físicamente.
+
+### Regla principal
+
+El sistema debe manejar `business_date` para separar la fecha real del registro (`created_at`) de la fecha operativa de caja. Si la caja se cierra antes del final del día calendario, las ventas posteriores deben registrarse con el siguiente `business_date`.
+
+```sql
+CREATE TABLE cash_registers (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name        VARCHAR(100) NOT NULL,
+    location    VARCHAR(150),
+    is_active   BOOLEAN      NOT NULL DEFAULT TRUE,
+    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE cash_sessions (
+    id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    cash_register_id  UUID           NOT NULL REFERENCES cash_registers(id),
+    opened_by         UUID           REFERENCES users(id) ON DELETE SET NULL,
+    closed_by         UUID           REFERENCES users(id) ON DELETE SET NULL,
+    business_date     DATE           NOT NULL,
+    status            VARCHAR(20)    NOT NULL DEFAULT 'open', -- open, counted, closed, reopened
+    opening_amount    NUMERIC(12, 2) NOT NULL DEFAULT 0,
+    expected_cash     NUMERIC(12, 2) NOT NULL DEFAULT 0,
+    counted_cash      NUMERIC(12, 2),
+    difference        NUMERIC(12, 2),
+    opened_at         TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+    counted_at        TIMESTAMPTZ,
+    closed_at         TIMESTAMPTZ,
+    notes             TEXT,
+    created_at        TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+    updated_at        TIMESTAMPTZ    NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE cash_session_payments (
+    id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    cash_session_id  UUID           NOT NULL REFERENCES cash_sessions(id) ON DELETE CASCADE,
+    payment_type     VARCHAR(30)    NOT NULL, -- customer_payment, layaway_payment, direct_sale_payment
+    payment_id       UUID           NOT NULL,
+    amount           NUMERIC(12, 2) NOT NULL,
+    method           VARCHAR(30)    NOT NULL, -- cash, transfer, card
+    registered_at    TIMESTAMPTZ    NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE cash_movements (
+    id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    cash_session_id  UUID           NOT NULL REFERENCES cash_sessions(id) ON DELETE CASCADE,
+    type             VARCHAR(30)    NOT NULL, -- cash_in, cash_out, adjustment, expense, withdrawal
+    amount           NUMERIC(12, 2) NOT NULL,
+    reason           TEXT           NOT NULL,
+    user_id          UUID           REFERENCES users(id) ON DELETE SET NULL,
+    created_at       TIMESTAMPTZ    NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE cash_counts (
+    id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    cash_session_id  UUID           NOT NULL REFERENCES cash_sessions(id) ON DELETE CASCADE,
+    denomination     NUMERIC(12, 2) NOT NULL,
+    quantity         INTEGER        NOT NULL,
+    total            NUMERIC(12, 2) NOT NULL
+);
+```
+
+Campos sugeridos en documentos transaccionales:
+
+```sql
+ALTER TABLE invoices ADD COLUMN business_date DATE;
+ALTER TABLE invoices ADD COLUMN cash_session_id UUID REFERENCES cash_sessions(id) ON DELETE SET NULL;
+
+ALTER TABLE customer_payments ADD COLUMN business_date DATE;
+ALTER TABLE customer_payments ADD COLUMN cash_session_id UUID REFERENCES cash_sessions(id) ON DELETE SET NULL;
+
+ALTER TABLE layaway_payments ADD COLUMN business_date DATE;
+ALTER TABLE layaway_payments ADD COLUMN cash_session_id UUID REFERENCES cash_sessions(id) ON DELETE SET NULL;
+
+ALTER TABLE sales_returns ADD COLUMN business_date DATE;
+ALTER TABLE sales_returns ADD COLUMN cash_session_id UUID REFERENCES cash_sessions(id) ON DELETE SET NULL;
+```
+
+Eventos internos sugeridos:
+
+| Evento | Propósito |
+|--------|-----------|
+| `caja_abierta` | Registrar apertura de caja |
+| `arqueo_caja_realizado` | Registrar arqueo de caja |
+| `caja_cerrada` | Registrar cierre de caja |
+| `diferencia_caja_registrada` | Registrar sobrante o faltante |
+| `venta_asignada_siguiente_dia_operativo` | Registrar venta posterior al cierre asignada al siguiente `business_date` |
