@@ -89,3 +89,18 @@ Los eventos de integración no deben tratarse como módulo funcional. Su propós
 5. Las facturas, pagos, devoluciones, apartados y movimientos de stock deben anularse o revertirse; no eliminarse físicamente.
 6. Los eventos internos deben usarse para preparar integraciones futuras, especialmente contabilidad.
 7. La contabilidad puede implementarse después, siempre que desde ahora se documenten los eventos necesarios.
+
+
+---
+
+## Observaciones incorporadas al diseño
+
+| Observación | Estado |
+|-------------|--------|
+| Devoluciones sobre ventas deben afectar inventario y contabilidad | Aplicable |
+| Seller debe consultar productos disponibles | Aplicable |
+| Conciliación bancaria | Aplicable como **(Segunda etapa)** |
+| CU-601 debe nombrarse “Gestionar catálogo de cuentas contables” | Aplicable |
+| Proceso de cierre contable | Aplicable como **(Segunda etapa)** |
+
+Los procesos marcados como **(Segunda etapa)** forman parte del diseño general, pero no son obligatorios para el MVP.

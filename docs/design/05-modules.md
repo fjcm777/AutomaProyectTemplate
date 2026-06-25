@@ -225,3 +225,35 @@ frontend/src/features/sales/
 - No eliminar documentos transaccionales; anular o revertir.
 - Mantener el sistema de apartado dentro de ventas.
 - Mantener reserva de inventario dentro de inventario.
+
+
+---
+
+## Ajustes derivados de observaciones
+
+1. Las devoluciones de venta deben afectar ventas, inventario y contabilidad.
+2. `Seller` debe poder consultar disponibilidad de productos mediante `inventory.view`.
+3. La conciliación bancaria se documenta como subproceso de contabilidad en **segunda etapa**.
+4. `CU-601` debe llamarse **Gestionar catálogo de cuentas contables**.
+5. El cierre contable se documenta como subproceso de contabilidad en **segunda etapa**.
+
+### Subestructura futura de `accounting`
+
+```text
+backend/app/modules/accounting/
+├── accounts/                ← catálogo de cuentas contables
+├── rules/                   ← reglas contables
+├── journal/                 ← asientos de diario
+├── fiscal_periods/          ← períodos fiscales
+├── closing/                 ← cierre contable (Segunda etapa)
+└── bank_reconciliation/     ← conciliación bancaria (Segunda etapa)
+```
+
+### Tablas futuras para conciliación bancaria
+
+```text
+bank_accounts
+bank_transactions
+bank_reconciliations
+bank_reconciliation_items
+```

@@ -157,3 +157,45 @@ frontend/src/
 3. **Eventos internos desacoplan los módulos.** Ventas no debe llamar directamente a contabilidad.
 4. **Contabilidad puede ser fase futura.** Debe consumir eventos operativos ya confirmados.
 5. **Reportes no deben duplicar reglas de negocio.** Deben consultar datos consolidados o vistas preparadas.
+
+
+---
+
+## Arquitectura de Eventos Internos
+
+Los eventos de integración no son un módulo funcional visible para el usuario. Se implementan como infraestructura interna en:
+
+```text
+backend/app/shared/events/
+```
+
+Su propósito es desacoplar procesos entre módulos. Por ejemplo, cuando `sales` emite una factura, no debe llamar directamente a `accounting`. En su lugar, registra un evento como `factura_emitida`, que puede ser procesado posteriormente por contabilidad, reportes, auditoría o notificaciones.
+
+Eventos internos sugeridos:
+
+```text
+factura_emitida
+apartado_creado
+apartado_vencido
+pago_cliente_recibido
+orden_compra_recibida
+ajuste_inventario_registrado
+devolucion_venta_registrada
+periodo_cerrado
+asiento_cierre_generado
+```
+
+---
+
+## Alcance por etapas
+
+| Área | Etapa |
+|------|-------|
+| Ventas directas, crédito y apartado | Primera etapa |
+| Inventario, stock, reservas y kardex | Primera etapa |
+| Clientes, proveedores, reportes básicos y RBAC | Primera etapa |
+| Catálogo de cuentas, reglas contables y asientos base | Segunda etapa |
+| Cierre contable formal | Segunda etapa |
+| Conciliación bancaria | Segunda etapa |
+
+La conciliación bancaria puede ubicarse como subárea futura de `accounting` o como soporte interno en `shared/bank_reconciliation`.

@@ -72,7 +72,7 @@ Login
 | `reports` | `dashboard` | Dashboard |
 | `reports` | `audit` | Reporte de auditoría |
 | `accounting` | `view` | Ver información contable |
-| `accounting` | `manage_accounts` | Gestionar plan de cuentas |
+| `accounting` | `manage_accounts` | Gestionar catálogo de cuentas |
 | `accounting` | `manage_rules` | Configurar reglas contables |
 | `accounting` | `post_entries` | Crear/aprobar asientos |
 | `accounting` | `cancel_entries` | Anular asientos |
@@ -146,3 +146,25 @@ Acceso total.
 - Los permisos de apartado pertenecen a `sales`.
 - La reserva/liberación de inventario por apartado requiere permiso de inventario o acción automática del sistema.
 - La revocación de sesiones se implementa revocando refresh tokens activos.
+
+
+---
+
+## Permisos adicionales por observaciones
+
+| Módulo | Acción | Descripción |
+|--------|--------|-------------|
+| `inventory` | `view` | Permite a Seller consultar productos disponibles |
+| `sales` | `return` | Registrar devoluciones de venta |
+| `accounting` | `close_period` | Cerrar período contable **(Segunda etapa)** |
+| `accounting` | `reopen_period` | Reabrir período contable con permiso especial **(Segunda etapa)** |
+| `accounting` | `generate_closing_entries` | Generar asientos de cierre **(Segunda etapa)** |
+| `accounting` | `bank_reconciliation_view` | Ver conciliaciones bancarias **(Segunda etapa)** |
+| `accounting` | `bank_reconciliation_manage` | Gestionar conciliaciones bancarias **(Segunda etapa)** |
+| `accounting` | `import_bank_transactions` | Importar movimientos bancarios **(Segunda etapa)** |
+
+Notas:
+
+- `Seller` debe tener `inventory.view` para confirmar existencia de productos a clientes.
+- Las devoluciones sobre ventas deben quedar auditadas y generar efectos en inventario y contabilidad.
+- Los permisos de cierre contable y conciliación bancaria pertenecen a segunda etapa.

@@ -652,7 +652,7 @@ CREATE INDEX idx_domain_events_created_at  ON domain_events(created_at DESC);
 ## SQL — Módulo ACCOUNTING (propuesta futura)
 
 ```sql
--- Plan de cuentas contables
+-- Catálogo de cuentas contables
 CREATE TABLE chart_of_accounts (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     code        VARCHAR(30)  NOT NULL UNIQUE,
@@ -787,3 +787,138 @@ CREATE INDEX idx_journal_lines_account  ON journal_entry_lines(account_id);
 
 7. **Agregar índices por estado y fechas**  
    Es clave para reportes: facturas por fecha, apartados vencidos, pagos por fecha, órdenes por estado y movimientos de inventario por fecha.
+
+
+---
+
+## Ajustes de diseño incorporados
+
+### Devoluciones sobre ventas
+
+Toda devolución de venta debe afectar:
+
+1. `sales_returns` y `sales_return_items`, para registrar la devolución comercial.
+2. `stock_movements`, para reflejar reingreso o ajuste de inventario.
+3. `domain_events`, con un evento como `devolucion_venta_registrada`.
+4. `journal_entries` y `journal_entry_lines`, cuando contabilidad esté activa.
+
+Si el producto devuelto vuelve a estar disponible, debe reingresar al stock. Si no está disponible para reventa, debe registrarse como devolución defectuosa o inventario no disponible según política del negocio.
+
+### Consulta de disponibilidad por Seller
+
+El vendedor puede consultar disponibilidad usando:
+
+```text
+products
+product_variants
+stock
+warehouses
+stock_reservations
+```
+
+La cantidad disponible debe calcularse como:
+
+```text
+quantity - reserved_quantity
+```
+
+---
+
+## Proceso de cierre contable (Segunda etapa)
+
+El cierre contable se documenta como segunda etapa. Debe incluir:
+
+1. Validar que el período fiscal esté abierto.
+2. Verificar que no existan asientos en borrador dentro del período.
+3. Verificar que todos los asientos cuadren en débito y crédito.
+4. Revisar saldos de CxC, CxP, inventario y pagos.
+5. Generar asientos de cierre para ingresos y gastos.
+6. Cambiar el estado del período a `closed`.
+7. Bloquear modificaciones sobre documentos contables del período cerrado.
+8. Generar asiento de apertura del nuevo período.
+9. Permitir reapertura solo con permiso especial y auditoría.
+
+Campos sugeridos para `fiscal_periods`:
+
+```sql
+closed_by UUID REFERENCES users(id) ON DELETE SET NULL,
+reopened_at TIMESTAMPTZ,
+reopened_by UUID REFERENCES users(id) ON DELETE SET NULL,
+closing_entry_id UUID REFERENCES journal_entries(id) ON DELETE SET NULL,
+opening_entry_id UUID REFERENCES journal_entries(id) ON DELETE SET NULL
+```
+
+Campo sugerido para `journal_entries`:
+
+```sql
+entry_type VARCHAR(30) NOT NULL DEFAULT 'manual'
+-- manual, automatic, adjustment, closing, opening, reversal
+```
+
+---
+
+## SQL — Conciliación Bancaria (Segunda etapa)
+
+> Esta sección pertenece a una segunda etapa. Se documenta desde ahora para dejar claro el diseño futuro, pero no es obligatoria para el MVP.
+
+```sql
+CREATE TABLE bank_accounts (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name        VARCHAR(100) NOT NULL,
+    bank_name   VARCHAR(100) NOT NULL,
+    account_no  VARCHAR(50),
+    currency    VARCHAR(10)  NOT NULL DEFAULT 'USD',
+    is_active   BOOLEAN      NOT NULL DEFAULT TRUE,
+    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE bank_transactions (
+    id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    bank_account_id  UUID           NOT NULL REFERENCES bank_accounts(id) ON DELETE CASCADE,
+    transaction_date DATE           NOT NULL,
+    description      TEXT,
+    amount           NUMERIC(12, 2) NOT NULL,
+    type             VARCHAR(20)    NOT NULL, -- deposit, withdrawal, fee, adjustment
+    reference        VARCHAR(100),
+    status           VARCHAR(20)    NOT NULL DEFAULT 'unmatched', -- unmatched, matched, ignored
+    created_at       TIMESTAMPTZ    NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE bank_reconciliations (
+    id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    bank_account_id   UUID           NOT NULL REFERENCES bank_accounts(id),
+    period_id         UUID           REFERENCES fiscal_periods(id) ON DELETE SET NULL,
+    statement_start   DATE           NOT NULL,
+    statement_end     DATE           NOT NULL,
+    statement_balance NUMERIC(12, 2) NOT NULL DEFAULT 0,
+    system_balance    NUMERIC(12, 2) NOT NULL DEFAULT 0,
+    difference        NUMERIC(12, 2) NOT NULL DEFAULT 0,
+    status            VARCHAR(20)    NOT NULL DEFAULT 'draft', -- draft, reconciled, cancelled
+    created_by        UUID           REFERENCES users(id) ON DELETE SET NULL,
+    reconciled_at     TIMESTAMPTZ,
+    created_at        TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+    updated_at        TIMESTAMPTZ    NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE bank_reconciliation_items (
+    id                     UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    bank_reconciliation_id UUID NOT NULL REFERENCES bank_reconciliations(id) ON DELETE CASCADE,
+    bank_transaction_id    UUID REFERENCES bank_transactions(id) ON DELETE SET NULL,
+    system_ref_type        VARCHAR(50), -- customer_payment, supplier_payment, journal_entry
+    system_ref_id          UUID,
+    matched_amount         NUMERIC(12, 2) NOT NULL DEFAULT 0,
+    notes                  TEXT,
+    created_at             TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+```
+
+Relaciones ERD sugeridas para segunda etapa:
+
+```mermaid
+erDiagram
+    bank_accounts ||--o{ bank_transactions : "tiene"
+    bank_accounts ||--o{ bank_reconciliations : "conciliada en"
+    bank_reconciliations ||--o{ bank_reconciliation_items : "contiene"
+    bank_transactions ||--o{ bank_reconciliation_items : "comparado con"
+```
