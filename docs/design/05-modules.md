@@ -317,3 +317,55 @@ Reglas:
 - Si una caja ya fue cerrada, las ventas posteriores deben asignarse al siguiente `business_date`.
 - Las diferencias de caja deben quedar auditadas.
 - Los efectos contables por sobrantes/faltantes pueden implementarse en segunda etapa.
+
+
+---
+
+## Subprocesos adicionales
+
+### `inventory/loaned_goods`
+
+```text
+backend/app/modules/inventory/loaned_goods/
+frontend/src/features/inventory/loaned-goods/
+```
+
+Usa:
+
+```text
+StockReservation
+StockMovement
+Invoice, si se convierte en venta
+```
+
+### `inventory/damaged_goods`
+
+```text
+backend/app/modules/inventory/damaged_goods/
+frontend/src/features/inventory/damaged-goods/
+```
+
+Usa:
+
+```text
+Warehouse
+Stock
+StockMovement
+```
+
+### `suppliers/supplier_returns`
+
+```text
+backend/app/modules/suppliers/supplier_returns/
+frontend/src/features/suppliers/supplier-returns/
+```
+
+Usa:
+
+```text
+PurchaseReturn
+PurchaseReturnItem
+SupplierCredit
+SupplierCreditApplication
+StockMovement
+```

@@ -191,3 +191,32 @@ Notas:
 | Manager | `cash.view`, `cash.count`, `cash.close`, `cash.approve_difference`, `cash.reopen` |
 | Admin | Todos los permisos de caja |
 | Accountant | Consulta de caja y diferencias, principalmente para segunda etapa contable |
+
+
+---
+
+## Permisos adicionales para mercadería prestada, dañada y retorno a proveedor
+
+| Módulo | Acción | Descripción |
+|---|---|---|
+| `inventory` | `loan_goods_create` | Registrar mercadería prestada |
+| `inventory` | `loan_goods_return` | Registrar devolución de mercadería prestada |
+| `inventory` | `loan_goods_convert_sale` | Convertir mercadería prestada en venta |
+| `inventory` | `loan_goods_view` | Consultar mercadería prestada |
+| `inventory` | `damaged_goods_create` | Registrar mercadería dañada |
+| `inventory` | `damaged_goods_view` | Consultar mercadería dañada |
+| `inventory` | `damaged_goods_write_off` | Dar de baja mercadería dañada |
+| `suppliers` | `supplier_return_create` | Registrar retorno a proveedor |
+| `suppliers` | `supplier_return_manage` | Gestionar estados de retorno |
+| `suppliers` | `supplier_credit_create` | Registrar crédito a favor |
+| `suppliers` | `supplier_credit_apply` | Aplicar crédito a compra futura |
+| `suppliers` | `supplier_credit_view` | Consultar créditos disponibles |
+
+| Rol | Permisos sugeridos |
+|---|---|
+| Seller | Mercadería prestada y conversión en venta |
+| Warehouse | Mercadería prestada, devolución, mercadería dañada y salida por retorno |
+| Purchasing | Retorno a proveedor y créditos de proveedor |
+| Manager | Aprobación, baja y gestión de diferencias |
+| Admin | Todos los permisos |
+| Accountant | Consulta de créditos y efectos contables en segunda etapa |

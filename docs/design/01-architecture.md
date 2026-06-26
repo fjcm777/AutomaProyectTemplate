@@ -220,3 +220,18 @@ El sistema debe manejar `business_date` para separar la fecha real (`created_at`
 | Asignación automática al siguiente `business_date` | Primera etapa |
 | Asientos por sobrantes/faltantes | Segunda etapa |
 | Conciliación bancaria contra caja | Segunda etapa |
+
+
+---
+
+## Arquitectura para mercadería prestada, dañada y retorno a proveedor
+
+Estos procesos se implementan como subprocesos de módulos existentes.
+
+```text
+backend/app/modules/inventory/loaned_goods/
+backend/app/modules/inventory/damaged_goods/
+backend/app/modules/suppliers/supplier_returns/
+```
+
+Mercadería prestada usa `stock_reservations` y `stock_movements`. Mercadería dañada usa `warehouses`, `stock` y `stock_movements`, recomendando una bodega lógica “Mercadería dañada / No vendible”. Retorno a proveedor usa `purchase_returns`, `purchase_return_items`, `stock_movements`, `supplier_credits` y `supplier_credit_applications`.

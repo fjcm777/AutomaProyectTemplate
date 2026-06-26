@@ -267,3 +267,67 @@
 | Catálogo de cuentas, reglas contables y asientos | Segunda etapa |
 | Cierre contable formal | Segunda etapa |
 | Conciliación bancaria | Segunda etapa |
+
+
+---
+
+## INVENTORY — Mercadería prestada y dañada
+
+| Código | Actor | Caso de uso |
+|---|---|---|
+| CU-116 | Warehouse / Seller / Manager / Admin | Registrar mercadería prestada |
+| CU-117 | Warehouse / Seller / Manager / Admin | Registrar devolución de mercadería prestada |
+| CU-118 | Seller / Manager / Admin | Convertir mercadería prestada en venta |
+| CU-119 | Warehouse / Seller / Manager / Admin | Consultar mercadería prestada o fuera de tienda |
+| CU-120 | System | Alertar mercadería prestada vencida o no devuelta |
+| CU-121 | Warehouse / Manager / Admin | Registrar mercadería dañada |
+| CU-122 | Warehouse / Manager / Admin | Consultar mercadería dañada o no disponible para venta |
+| CU-123 | Manager / Admin | Dar de baja mercadería dañada |
+| CU-124 | Warehouse / Purchasing / Manager / Admin | Registrar salida de inventario por retorno a proveedor |
+
+### Reglas de mercadería prestada
+
+- No es una venta hasta que se confirme la compra.
+- Debe registrarse la persona responsable con `reserved_for_name` y `reserved_for_type`.
+- No debe aparecer como inventario disponible para venta.
+- Debe generar movimiento `loan_out` al entregar y `loan_return` al devolver.
+- Si se convierte en venta, la reserva queda `consumed` y se vincula a la factura.
+- Si el préstamo ya generó salida física, la factura no debe descontar inventario nuevamente.
+
+### Reglas de mercadería dañada
+
+- No debe formar parte del stock disponible.
+- Se recomienda usar una bodega lógica “Mercadería dañada / No vendible”.
+- La baja definitiva requiere permiso de Manager o Admin.
+- Debe quedar auditado motivo, usuario y fecha.
+
+## SUPPLIERS — Retorno a proveedor
+
+| Código | Actor | Caso de uso |
+|---|---|---|
+| CU-408 | Purchasing / Manager / Admin | Registrar retorno de mercancía a proveedor |
+| CU-409 | Purchasing / Manager / Admin | Registrar crédito a favor por retorno a proveedor |
+| CU-410 | Purchasing / Manager / Admin | Aplicar crédito de proveedor a compra futura |
+| CU-411 | Purchasing / Manager / Admin / Accountant | Consultar créditos disponibles con proveedores |
+
+### Reglas de retorno a proveedor
+
+- Retorno a proveedor es independiente de devolución sobre venta.
+- Debe registrar salida de inventario con `stock_movements.type = supplier_return`.
+- El proveedor puede reconocer crédito, reemplazo o reembolso.
+- Si reconoce crédito, se registra en `supplier_credits`.
+- Si el crédito se usa parcialmente, se registra en `supplier_credit_applications`.
+
+## Eventos internos adicionales
+
+| Evento | Módulo | Propósito |
+|---|---|---|
+| `mercaderia_prestada_registrada` | Inventory | Registrar salida temporal de mercadería |
+| `mercaderia_prestada_devuelta` | Inventory | Registrar retorno de mercadería prestada |
+| `mercaderia_prestada_convertida_venta` | Inventory / Sales | Registrar conversión en venta |
+| `mercaderia_prestada_vencida` | Inventory / System | Alertar mercadería prestada vencida |
+| `mercaderia_danada_registrada` | Inventory | Registrar mercadería dañada |
+| `mercaderia_danada_dada_baja` | Inventory | Registrar baja definitiva |
+| `retorno_proveedor_creado` | Suppliers / Inventory | Registrar retorno a proveedor |
+| `credito_proveedor_generado` | Suppliers / Accounting | Registrar crédito a favor |
+| `credito_proveedor_aplicado` | Suppliers / Accounting | Registrar aplicación de crédito |

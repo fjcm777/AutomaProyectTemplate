@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mxfile host="Electron" agent="ChatGPT" version="24.7.17" pages="9" modified="2026-06-25T02:07:00.951859+00:00">
+<mxfile host="Electron" agent="ChatGPT" version="24.7.17" pages="9" modified="2026-06-25T22:12:53.746390+00:00">
   
   
   <diagram id="admin" name="Admin">
@@ -3704,111 +3704,159 @@
   </diagram>
   
 
-  <diagram id="caja-arqueo" name="Caja y Arqueo">
-    <mxGraphModel page="1" pageWidth="1400" pageHeight="1000" grid="1" gridSize="10">
+  <diagram id="mercaderia-retorno-proveedor" name="Mercadería y Retorno a Proveedor">
+    <mxGraphModel page="1" pageWidth="1600" pageHeight="1000" grid="1" gridSize="10">
       <root>
         <mxCell id="0"/>
         <mxCell id="1" parent="0"/>
-        <mxCell id="title" value="Caja y Arqueo — Casos de uso" style="text;html=1;strokeColor=none;fillColor=none;fontSize=26;fontStyle=1;align=center" vertex="1" parent="1">
-          <mxGeometry x="360" y="30" width="600" height="40" as="geometry"/>
+        <mxCell id="title" value="Mercadería prestada, mercadería dañada y retorno a proveedor" style="text;html=1;strokeColor=none;fillColor=none;fontSize=24;fontStyle=1;align=center" vertex="1" parent="1">
+          <mxGeometry x="300" y="30" width="900" height="45" as="geometry"/>
         </mxCell>
-        <mxCell id="note" value="Regla: si la caja se cierra antes del final del día, las ventas posteriores se asignan al siguiente business_date." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;align=left;spacing=8;" vertex="1" parent="1">
-          <mxGeometry x="250" y="80" width="820" height="55" as="geometry"/>
+        <mxCell id="seller" value="Seller" style="shape=mxgraph.uml.actor;whiteSpace=wrap;html=1;fillColor=#f0a30a;strokeColor=#BD7000;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="40" y="180" width="95" height="105" as="geometry"/>
         </mxCell>
-        <mxCell id="cashier" value="Cashier" style="shape=mxgraph.uml.actor;whiteSpace=wrap;html=1;fillColor=#f0a30a;strokeColor=#BD7000;fontStyle=1" vertex="1" parent="1">
-          <mxGeometry x="50" y="210" width="80" height="100" as="geometry"/>
+        <mxCell id="warehouse" value="Warehouse" style="shape=mxgraph.uml.actor;whiteSpace=wrap;html=1;fillColor=#f0a30a;strokeColor=#BD7000;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="40" y="340" width="95" height="105" as="geometry"/>
         </mxCell>
-        <mxCell id="manager" value="Manager" style="shape=mxgraph.uml.actor;whiteSpace=wrap;html=1;fillColor=#f0a30a;strokeColor=#BD7000;fontStyle=1" vertex="1" parent="1">
-          <mxGeometry x="50" y="390" width="80" height="100" as="geometry"/>
+        <mxCell id="purchasing" value="Purchasing" style="shape=mxgraph.uml.actor;whiteSpace=wrap;html=1;fillColor=#f0a30a;strokeColor=#BD7000;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="40" y="500" width="95" height="105" as="geometry"/>
         </mxCell>
-        <mxCell id="admin" value="Admin" style="shape=mxgraph.uml.actor;whiteSpace=wrap;html=1;fillColor=#f0a30a;strokeColor=#BD7000;fontStyle=1" vertex="1" parent="1">
-          <mxGeometry x="50" y="570" width="80" height="100" as="geometry"/>
+        <mxCell id="manager" value="Manager / Admin" style="shape=mxgraph.uml.actor;whiteSpace=wrap;html=1;fillColor=#f0a30a;strokeColor=#BD7000;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="40" y="660" width="95" height="105" as="geometry"/>
         </mxCell>
         <mxCell id="system" value="System" style="shape=mxgraph.uml.actor;whiteSpace=wrap;html=1;fillColor=#f0a30a;strokeColor=#BD7000;fontStyle=1" vertex="1" parent="1">
-          <mxGeometry x="50" y="750" width="80" height="100" as="geometry"/>
+          <mxGeometry x="40" y="820" width="95" height="105" as="geometry"/>
         </mxCell>
-        <mxCell id="cu211" value="CU-211&lt;br&gt;Abrir caja" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="300" y="160" width="220" height="70" as="geometry"/>
+        <mxCell id="h1" value="INVENTORY — Mercadería prestada" style="rounded=1;whiteSpace=wrap;html=1;fontStyle=1;fontSize=14;align=center;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="250" y="130" width="340" height="40" as="geometry"/>
         </mxCell>
-        <mxCell id="cu212" value="CU-212&lt;br&gt;Movimientos manuales" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="600" y="160" width="220" height="70" as="geometry"/>
+        <mxCell id="cu116" value="CU-116&lt;br&gt;Registrar mercadería prestada" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="250" y="200" width="300" height="60" as="geometry"/>
         </mxCell>
-        <mxCell id="cu213" value="CU-213&lt;br&gt;Resumen esperado" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="900" y="160" width="220" height="70" as="geometry"/>
+        <mxCell id="cu117" value="CU-117&lt;br&gt;Registrar devolución" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="250" y="285" width="300" height="60" as="geometry"/>
         </mxCell>
-        <mxCell id="cu214" value="CU-214&lt;br&gt;Arqueo de caja" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="300" y="340" width="220" height="70" as="geometry"/>
+        <mxCell id="cu118" value="CU-118&lt;br&gt;Convertir en venta" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="250" y="370" width="300" height="60" as="geometry"/>
         </mxCell>
-        <mxCell id="cu215" value="CU-215&lt;br&gt;Sobrante / faltante" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="600" y="340" width="220" height="70" as="geometry"/>
+        <mxCell id="cu119" value="CU-119&lt;br&gt;Consultar fuera de tienda" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="250" y="455" width="300" height="60" as="geometry"/>
         </mxCell>
-        <mxCell id="cu216" value="CU-216&lt;br&gt;Cerrar caja" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="900" y="340" width="220" height="70" as="geometry"/>
+        <mxCell id="cu120" value="CU-120&lt;br&gt;Alertar vencida/no devuelta" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="250" y="540" width="300" height="60" as="geometry"/>
         </mxCell>
-        <mxCell id="cu217" value="CU-217&lt;br&gt;Ventas al siguiente business_date" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="300" y="560" width="220" height="70" as="geometry"/>
+        <mxCell id="h2" value="INVENTORY — Mercadería dañada" style="rounded=1;whiteSpace=wrap;html=1;fontStyle=1;fontSize=14;align=center;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="650" y="130" width="340" height="40" as="geometry"/>
         </mxCell>
-        <mxCell id="cu218" value="CU-218&lt;br&gt;Reabrir caja" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="600" y="560" width="220" height="70" as="geometry"/>
+        <mxCell id="cu121" value="CU-121&lt;br&gt;Registrar mercadería dañada" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="650" y="200" width="300" height="60" as="geometry"/>
         </mxCell>
-        <mxCell id="evcash" value="Eventos&lt;br&gt;caja_abierta / caja_cerrada / diferencia" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="900" y="560" width="220" height="70" as="geometry"/>
+        <mxCell id="cu122" value="CU-122&lt;br&gt;Consultar no disponible" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="650" y="285" width="300" height="60" as="geometry"/>
         </mxCell>
-        <mxCell id="e_cashier_cu211" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="cashier" target="cu211">
+        <mxCell id="cu123" value="CU-123&lt;br&gt;Dar de baja" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="650" y="370" width="300" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="cu124" value="CU-124&lt;br&gt;Salida por retorno a proveedor" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="650" y="455" width="300" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="h3" value="SUPPLIERS — Retorno a proveedor" style="rounded=1;whiteSpace=wrap;html=1;fontStyle=1;fontSize=14;align=center;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="130" width="340" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="cu408" value="CU-408&lt;br&gt;Registrar retorno a proveedor" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="200" width="300" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="cu409" value="CU-409&lt;br&gt;Registrar crédito a favor" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="285" width="300" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="cu410" value="CU-410&lt;br&gt;Aplicar crédito a compra" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="370" width="300" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="cu411" value="CU-411&lt;br&gt;Consultar créditos" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="455" width="300" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_seller_cu116" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="seller" target="cu116">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e_cashier_cu212" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="cashier" target="cu212">
+        <mxCell id="e_seller_cu117" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="seller" target="cu117">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e_cashier_cu213" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="cashier" target="cu213">
+        <mxCell id="e_seller_cu118" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="seller" target="cu118">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e_cashier_cu214" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="cashier" target="cu214">
+        <mxCell id="e_seller_cu119" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="seller" target="cu119">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e_cashier_cu215" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="cashier" target="cu215">
+        <mxCell id="e_wh_cu116" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="warehouse" target="cu116">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e_cashier_cu216" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="cashier" target="cu216">
+        <mxCell id="e_wh_cu117" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="warehouse" target="cu117">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e_manager_cu213" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="manager" target="cu213">
+        <mxCell id="e_wh_cu119" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="warehouse" target="cu119">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e_manager_cu214" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="manager" target="cu214">
+        <mxCell id="e_wh_cu121" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="warehouse" target="cu121">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e_manager_cu215" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="manager" target="cu215">
+        <mxCell id="e_wh_cu122" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="warehouse" target="cu122">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e_manager_cu216" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="manager" target="cu216">
+        <mxCell id="e_wh_cu124" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="warehouse" target="cu124">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e_manager_cu218" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="manager" target="cu218">
+        <mxCell id="e_pur_cu408" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="purchasing" target="cu408">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e_admin_cu211" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="admin" target="cu211">
+        <mxCell id="e_pur_cu409" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="purchasing" target="cu409">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e_admin_cu212" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="admin" target="cu212">
+        <mxCell id="e_pur_cu410" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="purchasing" target="cu410">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e_admin_cu214" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="admin" target="cu214">
+        <mxCell id="e_pur_cu411" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="purchasing" target="cu411">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e_admin_cu215" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="admin" target="cu215">
+        <mxCell id="e_pur_cu124" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="purchasing" target="cu124">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e_admin_cu216" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="admin" target="cu216">
+        <mxCell id="e_mgr_cu116" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="manager" target="cu116">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e_admin_cu218" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="admin" target="cu218">
+        <mxCell id="e_mgr_cu117" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="manager" target="cu117">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e_system_cu217" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="system" target="cu217">
+        <mxCell id="e_mgr_cu118" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="manager" target="cu118">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        <mxCell id="e_system_evcash" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="system" target="evcash">
+        <mxCell id="e_mgr_cu119" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="manager" target="cu119">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_mgr_cu121" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="manager" target="cu121">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_mgr_cu122" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="manager" target="cu122">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_mgr_cu123" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="manager" target="cu123">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_mgr_cu124" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="manager" target="cu124">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_mgr_cu408" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="manager" target="cu408">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_mgr_cu409" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="manager" target="cu409">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_mgr_cu410" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="manager" target="cu410">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_mgr_cu411" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="manager" target="cu411">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_sys_cu120" style="endArrow=none;html=1;rounded=0;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="system" target="cu120">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
       </root>

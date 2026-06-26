@@ -1017,3 +1017,114 @@ Eventos internos sugeridos:
 | `caja_cerrada` | Registrar cierre de caja |
 | `diferencia_caja_registrada` | Registrar sobrante o faltante |
 | `venta_asignada_siguiente_dia_operativo` | Registrar venta posterior al cierre asignada al siguiente `business_date` |
+
+
+---
+
+## SQL — INVENTORY / Mercadería prestada
+
+La mercadería prestada se maneja con `stock_reservations` y `stock_movements`, sin tabla nueva inicial.
+
+```sql
+ALTER TABLE stock_reservations
+    ADD COLUMN IF NOT EXISTS source_type VARCHAR(30),
+    ADD COLUMN IF NOT EXISTS source_id UUID,
+    ADD COLUMN IF NOT EXISTS reserved_for_name VARCHAR(150),
+    ADD COLUMN IF NOT EXISTS reserved_for_phone VARCHAR(30),
+    ADD COLUMN IF NOT EXISTS reserved_for_type VARCHAR(30),
+    ADD COLUMN IF NOT EXISTS expected_return_at DATE,
+    ADD COLUMN IF NOT EXISTS returned_at TIMESTAMPTZ,
+    ADD COLUMN IF NOT EXISTS converted_invoice_id UUID REFERENCES invoices(id) ON DELETE SET NULL,
+    ADD COLUMN IF NOT EXISTS notes TEXT;
+```
+
+Valores sugeridos:
+
+```text
+source_type: layaway, trusted_loan, internal_hold
+reserved_for_type: customer, seller, trusted_person, employee, other
+status: active, consumed, returned, cancelled, expired, lost, damaged
+```
+
+Tipos adicionales en `stock_movements`:
+
+```text
+loan_out
+loan_return
+loan_return_damaged
+```
+
+---
+
+## SQL — INVENTORY / Mercadería dañada
+
+Se recomienda usar una bodega lógica:
+
+```text
+Mercadería dañada / No vendible
+```
+
+Tipos adicionales en `stock_movements`:
+
+```text
+damage
+transfer_to_damaged
+write_off
+return_damaged
+```
+
+---
+
+## SQL — SUPPLIERS / Retorno a proveedor
+
+```sql
+ALTER TABLE purchase_returns
+    ADD COLUMN IF NOT EXISTS compensation_type VARCHAR(30),
+    ADD COLUMN IF NOT EXISTS supplier_credit_id UUID,
+    ADD COLUMN IF NOT EXISTS sent_at TIMESTAMPTZ,
+    ADD COLUMN IF NOT EXISTS accepted_at TIMESTAMPTZ,
+    ADD COLUMN IF NOT EXISTS notes TEXT;
+```
+
+Estados sugeridos de `purchase_returns.status`:
+
+```text
+draft, sent, accepted, credited, replaced, refunded, cancelled
+```
+
+Nueva tabla:
+
+```sql
+CREATE TABLE supplier_credits (
+    id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    supplier_id        UUID NOT NULL REFERENCES suppliers(id),
+    purchase_return_id UUID REFERENCES purchase_returns(id) ON DELETE SET NULL,
+    amount             NUMERIC(12, 2) NOT NULL,
+    remaining_amount   NUMERIC(12, 2) NOT NULL,
+    status             VARCHAR(20) NOT NULL DEFAULT 'open',
+    reason             TEXT,
+    issued_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CHECK (amount > 0),
+    CHECK (remaining_amount >= 0),
+    CHECK (remaining_amount <= amount)
+);
+
+CREATE TABLE supplier_credit_applications (
+    id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    supplier_credit_id UUID NOT NULL REFERENCES supplier_credits(id) ON DELETE CASCADE,
+    purchase_order_id  UUID REFERENCES purchase_orders(id) ON DELETE SET NULL,
+    amount             NUMERIC(12, 2) NOT NULL,
+    applied_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    user_id            UUID REFERENCES users(id) ON DELETE SET NULL,
+    CHECK (amount > 0)
+);
+```
+
+Tipos adicionales de `stock_movements`:
+
+```text
+supplier_return
+return_to_supplier
+```

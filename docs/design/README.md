@@ -118,3 +118,16 @@ Se incorpora el proceso de arqueo de caja dentro de ventas. El sistema debe sopo
 | `business_date` | Fecha operativa usada para ventas, caja, reportes y cortes |
 
 El arqueo pertenece a primera etapa como control operativo. Los asientos por sobrantes/faltantes pueden quedar para segunda etapa.
+
+
+---
+
+## Ajustes pendientes integrados: mercadería prestada, dañada y retorno a proveedor
+
+Se incorporan tres procesos adicionales:
+
+| Proceso | Módulo principal | Descripción |
+|---|---|---|
+| Mercadería prestada | Inventario | Producto entregado temporalmente a una persona de confianza; puede regresar o convertirse en venta |
+| Registrar mercadería dañada | Inventario | Producto no disponible para venta por daño, defecto o deterioro |
+| Retorno a proveedor | Proveedores | Mercadería devuelta al proveedor con posible crédito, reemplazo o reembolso |
