@@ -1128,3 +1128,559 @@ Tipos adicionales de `stock_movements`:
 supplier_return
 return_to_supplier
 ```
+---
+
+## Datos base / Seed inicial
+
+Esta sección contiene los `INSERT` sugeridos para cargar datos base después de crear las tablas principales.
+
+> Nota: estos queries asumen PostgreSQL y el uso de `ON CONFLICT`. Para que funcionen correctamente, las columnas indicadas deben tener restricciones `UNIQUE`.
+
+### Orden recomendado
+
+```text
+1. Crear tablas principales.
+2. Crear tablas catálogo, si aplica.
+3. Ejecutar los seeds base.
+4. Crear usuario administrador inicial.
+5. Iniciar operación del sistema.
+```
+
+### SQL ejecutable
+
+```sql
+-- ============================================================
+-- SEED INICIAL
+-- Datos base necesarios para operar el sistema
+-- ============================================================
+
+BEGIN;
+
+-- ============================================================
+-- 1. Roles base
+-- ============================================================
+
+INSERT INTO roles (name, description)
+VALUES
+    ('Admin',      'Administración completa del sistema'),
+    ('Manager',    'Gestión operativa y supervisión'),
+    ('Seller',     'Registro de ventas y atención al cliente'),
+    ('Cashier',    'Cobros, caja y arqueo'),
+    ('Warehouse',  'Inventario, stock, movimientos y bodega'),
+    ('Purchasing', 'Compras, proveedores y retornos a proveedor'),
+    ('Accountant', 'Contabilidad y reportes financieros'),
+    ('System',     'Actor interno para procesos automáticos')
+ON CONFLICT (name) DO NOTHING;
+
+
+-- ============================================================
+-- 2. Permisos base
+-- ============================================================
+
+INSERT INTO permissions (code, description)
+VALUES
+    ('users.view', 'Ver usuarios'),
+    ('users.create', 'Crear usuarios'),
+    ('users.update', 'Actualizar usuarios'),
+    ('users.delete', 'Eliminar usuarios'),
+    ('roles.view', 'Ver roles'),
+    ('roles.create', 'Crear roles'),
+    ('roles.update', 'Actualizar roles'),
+    ('permissions.view', 'Ver permisos'),
+    ('permissions.assign', 'Asignar permisos'),
+
+    ('inventory.view', 'Ver inventario'),
+    ('inventory.create', 'Crear productos o registros de inventario'),
+    ('inventory.update', 'Actualizar inventario'),
+    ('inventory.adjust', 'Registrar ajustes de inventario'),
+    ('inventory.transfer', 'Transferir inventario entre bodegas'),
+    ('inventory.reserve', 'Reservar inventario'),
+    ('inventory.loan_goods_create', 'Registrar mercadería prestada'),
+    ('inventory.loan_goods_return', 'Registrar devolución de mercadería prestada'),
+    ('inventory.loan_goods_convert_sale', 'Convertir mercadería prestada en venta'),
+    ('inventory.loan_goods_view', 'Consultar mercadería prestada'),
+    ('inventory.damaged_goods_create', 'Registrar mercadería dañada'),
+    ('inventory.damaged_goods_view', 'Consultar mercadería dañada'),
+    ('inventory.damaged_goods_write_off', 'Dar de baja mercadería dañada'),
+
+    ('sales.view', 'Ver ventas'),
+    ('sales.create', 'Crear ventas'),
+    ('sales.update', 'Actualizar ventas'),
+    ('sales.cancel', 'Anular ventas'),
+    ('sales.return', 'Registrar devolución sobre venta'),
+    ('sales.collect', 'Registrar cobros'),
+    ('sales.discount', 'Aplicar descuentos'),
+    ('sales.layaway_create', 'Crear apartado'),
+    ('sales.layaway_pay', 'Registrar pago de apartado'),
+    ('sales.layaway_close', 'Cerrar apartado'),
+
+    ('cash.open', 'Abrir caja'),
+    ('cash.view', 'Ver resumen de caja'),
+    ('cash.movement', 'Registrar movimientos manuales de caja'),
+    ('cash.count', 'Realizar arqueo de caja'),
+    ('cash.close', 'Cerrar caja'),
+    ('cash.reopen', 'Reabrir caja'),
+    ('cash.approve_difference', 'Aprobar diferencias de caja'),
+
+    ('customers.view', 'Ver clientes'),
+    ('customers.create', 'Crear clientes'),
+    ('customers.update', 'Actualizar clientes'),
+    ('customers.statement', 'Consultar estado de cuenta de cliente'),
+    ('customers.payments', 'Registrar pagos de cliente'),
+
+    ('suppliers.view', 'Ver proveedores'),
+    ('suppliers.create', 'Crear proveedores'),
+    ('suppliers.update', 'Actualizar proveedores'),
+    ('suppliers.purchase_order_create', 'Crear orden de compra'),
+    ('suppliers.purchase_order_confirm', 'Confirmar orden de compra'),
+    ('suppliers.payments', 'Registrar pagos a proveedor'),
+    ('suppliers.supplier_return_create', 'Registrar retorno a proveedor'),
+    ('suppliers.supplier_return_manage', 'Gestionar retorno a proveedor'),
+    ('suppliers.supplier_credit_create', 'Registrar crédito a favor de proveedor'),
+    ('suppliers.supplier_credit_apply', 'Aplicar crédito de proveedor'),
+    ('suppliers.supplier_credit_view', 'Consultar créditos de proveedor'),
+
+    ('reports.sales', 'Ver reportes de ventas'),
+    ('reports.inventory', 'Ver reportes de inventario'),
+    ('reports.customers', 'Ver reportes de clientes'),
+    ('reports.suppliers', 'Ver reportes de proveedores'),
+    ('reports.cash', 'Ver reportes de caja'),
+    ('reports.accounting', 'Ver reportes contables'),
+
+    ('accounting.view', 'Ver información contable'),
+    ('accounting.manage_accounts', 'Gestionar catálogo de cuentas contables'),
+    ('accounting.manage_rules', 'Gestionar reglas contables'),
+    ('accounting.post_entries', 'Registrar asientos contables'),
+    ('accounting.cancel_entries', 'Anular o reversar asientos contables'),
+    ('accounting.reports', 'Ver reportes contables'),
+    ('accounting.close_period', 'Cerrar período fiscal'),
+    ('accounting.reopen_period', 'Reabrir período fiscal'),
+    ('accounting.generate_closing_entries', 'Generar asientos de cierre'),
+    ('accounting.bank_reconciliation_view', 'Ver conciliación bancaria'),
+    ('accounting.bank_reconciliation_manage', 'Gestionar conciliación bancaria'),
+    ('accounting.import_bank_transactions', 'Importar movimientos bancarios')
+ON CONFLICT (code) DO NOTHING;
+
+
+-- ============================================================
+-- 3. Relación rol-permiso inicial
+-- ============================================================
+-- Asume tabla role_permissions(role_id, permission_id).
+
+-- Admin: todos los permisos
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r
+CROSS JOIN permissions p
+WHERE r.name = 'Admin'
+ON CONFLICT (role_id, permission_id) DO NOTHING;
+
+-- Manager
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r
+JOIN permissions p ON p.code IN (
+    'inventory.view', 'inventory.create', 'inventory.update', 'inventory.adjust',
+    'inventory.transfer', 'inventory.reserve', 'inventory.loan_goods_create',
+    'inventory.loan_goods_return', 'inventory.loan_goods_convert_sale',
+    'inventory.loan_goods_view', 'inventory.damaged_goods_create',
+    'inventory.damaged_goods_view', 'inventory.damaged_goods_write_off',
+    'sales.view', 'sales.create', 'sales.update', 'sales.cancel', 'sales.return',
+    'sales.collect', 'sales.discount', 'sales.layaway_create',
+    'sales.layaway_pay', 'sales.layaway_close',
+    'cash.open', 'cash.view', 'cash.movement', 'cash.count', 'cash.close',
+    'cash.reopen', 'cash.approve_difference',
+    'customers.view', 'customers.create', 'customers.update',
+    'customers.statement', 'customers.payments',
+    'suppliers.view', 'suppliers.create', 'suppliers.update',
+    'suppliers.purchase_order_create', 'suppliers.purchase_order_confirm',
+    'suppliers.payments', 'suppliers.supplier_return_create',
+    'suppliers.supplier_return_manage', 'suppliers.supplier_credit_create',
+    'suppliers.supplier_credit_apply', 'suppliers.supplier_credit_view',
+    'reports.sales', 'reports.inventory', 'reports.customers',
+    'reports.suppliers', 'reports.cash'
+)
+WHERE r.name = 'Manager'
+ON CONFLICT (role_id, permission_id) DO NOTHING;
+
+-- Seller
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r
+JOIN permissions p ON p.code IN (
+    'inventory.view', 'inventory.loan_goods_create',
+    'inventory.loan_goods_return', 'inventory.loan_goods_convert_sale',
+    'inventory.loan_goods_view',
+    'sales.view', 'sales.create', 'sales.collect', 'sales.discount',
+    'sales.layaway_create', 'sales.layaway_pay',
+    'customers.view', 'customers.create', 'customers.update'
+)
+WHERE r.name = 'Seller'
+ON CONFLICT (role_id, permission_id) DO NOTHING;
+
+-- Cashier
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r
+JOIN permissions p ON p.code IN (
+    'sales.view', 'sales.collect', 'sales.layaway_pay',
+    'customers.view', 'customers.payments',
+    'cash.open', 'cash.view', 'cash.movement', 'cash.count', 'cash.close'
+)
+WHERE r.name = 'Cashier'
+ON CONFLICT (role_id, permission_id) DO NOTHING;
+
+-- Warehouse
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r
+JOIN permissions p ON p.code IN (
+    'inventory.view', 'inventory.create', 'inventory.update',
+    'inventory.adjust', 'inventory.transfer', 'inventory.reserve',
+    'inventory.loan_goods_create', 'inventory.loan_goods_return',
+    'inventory.loan_goods_view', 'inventory.damaged_goods_create',
+    'inventory.damaged_goods_view', 'suppliers.supplier_return_create'
+)
+WHERE r.name = 'Warehouse'
+ON CONFLICT (role_id, permission_id) DO NOTHING;
+
+-- Purchasing
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r
+JOIN permissions p ON p.code IN (
+    'suppliers.view', 'suppliers.create', 'suppliers.update',
+    'suppliers.purchase_order_create', 'suppliers.purchase_order_confirm',
+    'suppliers.payments', 'suppliers.supplier_return_create',
+    'suppliers.supplier_return_manage', 'suppliers.supplier_credit_create',
+    'suppliers.supplier_credit_apply', 'suppliers.supplier_credit_view',
+    'inventory.view', 'reports.suppliers'
+)
+WHERE r.name = 'Purchasing'
+ON CONFLICT (role_id, permission_id) DO NOTHING;
+
+-- Accountant
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r
+JOIN permissions p ON p.code IN (
+    'customers.statement', 'suppliers.supplier_credit_view',
+    'reports.sales', 'reports.cash', 'reports.accounting',
+    'accounting.view', 'accounting.manage_accounts', 'accounting.manage_rules',
+    'accounting.post_entries', 'accounting.cancel_entries', 'accounting.reports',
+    'accounting.close_period', 'accounting.reopen_period',
+    'accounting.generate_closing_entries',
+    'accounting.bank_reconciliation_view',
+    'accounting.bank_reconciliation_manage',
+    'accounting.import_bank_transactions'
+)
+WHERE r.name = 'Accountant'
+ON CONFLICT (role_id, permission_id) DO NOTHING;
+
+
+-- ============================================================
+-- 4. Métodos de pago base
+-- ============================================================
+
+INSERT INTO payment_methods (code, name, description, is_active)
+VALUES
+    ('cash', 'Efectivo', 'Pago en efectivo', TRUE),
+    ('transfer', 'Transferencia', 'Pago por transferencia bancaria', TRUE),
+    ('card', 'Tarjeta', 'Pago con tarjeta', TRUE),
+    ('credit', 'Crédito', 'Venta a crédito o saldo pendiente', TRUE)
+ON CONFLICT (code) DO NOTHING;
+
+
+-- ============================================================
+-- 5. Bodegas base
+-- ============================================================
+
+INSERT INTO warehouses (name, warehouse_type, is_active)
+VALUES
+    ('Bodega principal', 'physical', TRUE),
+    ('Mercadería dañada / No vendible', 'logical', TRUE),
+    ('Mercadería por retornar a proveedor', 'logical', TRUE)
+ON CONFLICT (name) DO NOTHING;
+
+
+-- ============================================================
+-- 6. Caja base
+-- ============================================================
+
+INSERT INTO cash_registers (name, location, is_active)
+VALUES
+    ('Caja principal', 'Principal', TRUE)
+ON CONFLICT (name) DO NOTHING;
+
+
+-- ============================================================
+-- 7. Categorías base sugeridas
+-- ============================================================
+
+INSERT INTO categories (name, description, is_active)
+VALUES
+    ('Zapatos', 'Calzado general', TRUE),
+    ('Sandalias', 'Sandalias y calzado abierto', TRUE),
+    ('Tenis', 'Calzado deportivo o casual', TRUE),
+    ('Botas', 'Botas y botines', TRUE),
+    ('Accesorios', 'Accesorios complementarios', TRUE)
+ON CONFLICT (name) DO NOTHING;
+
+
+-- ============================================================
+-- 8. Tallas base sugeridas
+-- ============================================================
+
+INSERT INTO sizes (name, sort_order, is_active)
+VALUES
+    ('34', 34, TRUE),
+    ('35', 35, TRUE),
+    ('36', 36, TRUE),
+    ('37', 37, TRUE),
+    ('38', 38, TRUE),
+    ('39', 39, TRUE),
+    ('40', 40, TRUE),
+    ('41', 41, TRUE),
+    ('42', 42, TRUE),
+    ('43', 43, TRUE)
+ON CONFLICT (name) DO NOTHING;
+
+
+-- ============================================================
+-- 9. Colores base sugeridos
+-- ============================================================
+
+INSERT INTO colors (name, is_active)
+VALUES
+    ('Negro', TRUE),
+    ('Blanco', TRUE),
+    ('Café', TRUE),
+    ('Azul', TRUE),
+    ('Rojo', TRUE),
+    ('Beige', TRUE),
+    ('Gris', TRUE)
+ON CONFLICT (name) DO NOTHING;
+
+
+-- ============================================================
+-- 10. Tipos de movimiento de inventario
+-- Solo aplica si se manejan como tabla catálogo.
+-- ============================================================
+
+INSERT INTO stock_movement_types (code, name, description)
+VALUES
+    ('purchase_in', 'Entrada por compra', 'Entrada de inventario por compra'),
+    ('sale_out', 'Salida por venta', 'Salida de inventario por venta'),
+    ('sales_return', 'Devolución de venta', 'Entrada por devolución de cliente'),
+    ('adjustment', 'Ajuste de inventario', 'Ajuste manual de inventario'),
+    ('transfer', 'Traslado', 'Traslado entre bodegas'),
+    ('reservation', 'Reserva', 'Reserva de inventario'),
+    ('release', 'Liberación de reserva', 'Liberación de inventario reservado'),
+    ('loan_out', 'Salida por mercadería prestada', 'Producto entregado temporalmente'),
+    ('loan_return', 'Retorno de mercadería prestada', 'Producto prestado devuelto'),
+    ('loan_return_damaged', 'Retorno dañado de mercadería prestada', 'Producto prestado devuelto dañado'),
+    ('damage', 'Mercadería dañada', 'Registro de mercadería dañada'),
+    ('transfer_to_damaged', 'Traslado a mercadería dañada', 'Movimiento hacia bodega no vendible'),
+    ('write_off', 'Baja de inventario', 'Baja definitiva de inventario'),
+    ('return_damaged', 'Devolución dañada', 'Producto devuelto en condición dañada'),
+    ('supplier_return', 'Retorno a proveedor', 'Salida de inventario por retorno a proveedor'),
+    ('return_to_supplier', 'Mercadería para retornar a proveedor', 'Movimiento hacia bodega de retorno a proveedor')
+ON CONFLICT (code) DO NOTHING;
+
+
+-- ============================================================
+-- 11. Estados / tipos controlados
+-- Solo aplican si se manejan como tablas catálogo.
+-- ============================================================
+
+INSERT INTO stock_reservation_statuses (code, name)
+VALUES
+    ('active', 'Activa'),
+    ('consumed', 'Consumida'),
+    ('returned', 'Devuelta'),
+    ('cancelled', 'Cancelada'),
+    ('expired', 'Vencida'),
+    ('lost', 'Perdida'),
+    ('damaged', 'Dañada')
+ON CONFLICT (code) DO NOTHING;
+
+INSERT INTO stock_reservation_types (code, name)
+VALUES
+    ('layaway', 'Apartado'),
+    ('trusted_loan', 'Mercadería prestada'),
+    ('internal_hold', 'Reserva interna')
+ON CONFLICT (code) DO NOTHING;
+
+INSERT INTO reserved_for_types (code, name)
+VALUES
+    ('customer', 'Cliente'),
+    ('seller', 'Vendedor'),
+    ('trusted_person', 'Persona de confianza'),
+    ('employee', 'Empleado'),
+    ('other', 'Otro')
+ON CONFLICT (code) DO NOTHING;
+
+INSERT INTO purchase_return_statuses (code, name)
+VALUES
+    ('draft', 'Borrador'),
+    ('sent', 'Enviado'),
+    ('accepted', 'Aceptado'),
+    ('credited', 'Crédito generado'),
+    ('replaced', 'Reemplazado'),
+    ('refunded', 'Reembolsado'),
+    ('cancelled', 'Cancelado')
+ON CONFLICT (code) DO NOTHING;
+
+INSERT INTO purchase_return_compensation_types (code, name)
+VALUES
+    ('credit', 'Crédito a favor'),
+    ('refund', 'Reembolso'),
+    ('replacement', 'Reemplazo'),
+    ('none', 'Sin compensación')
+ON CONFLICT (code) DO NOTHING;
+
+INSERT INTO supplier_credit_statuses (code, name)
+VALUES
+    ('open', 'Abierto'),
+    ('partially_used', 'Parcialmente usado'),
+    ('used', 'Usado'),
+    ('cancelled', 'Cancelado')
+ON CONFLICT (code) DO NOTHING;
+
+INSERT INTO cash_session_statuses (code, name)
+VALUES
+    ('open', 'Abierta'),
+    ('counted', 'Arqueada'),
+    ('closed', 'Cerrada'),
+    ('reopened', 'Reabierta')
+ON CONFLICT (code) DO NOTHING;
+
+INSERT INTO layaway_statuses (code, name)
+VALUES
+    ('active', 'Activo'),
+    ('paid', 'Pagado'),
+    ('expired', 'Vencido'),
+    ('cancelled', 'Cancelado'),
+    ('converted', 'Convertido')
+ON CONFLICT (code) DO NOTHING;
+
+INSERT INTO invoice_statuses (code, name)
+VALUES
+    ('draft', 'Borrador'),
+    ('issued', 'Emitida'),
+    ('paid', 'Pagada'),
+    ('partially_paid', 'Parcialmente pagada'),
+    ('cancelled', 'Cancelada'),
+    ('returned', 'Devuelta')
+ON CONFLICT (code) DO NOTHING;
+
+
+-- ============================================================
+-- 12. Catálogo contable inicial
+-- Segunda etapa. Solo aplica si se implementa contabilidad.
+-- ============================================================
+
+INSERT INTO chart_of_accounts (code, name, account_type, is_active)
+VALUES
+    ('1', 'Activos', 'asset', TRUE),
+    ('1.1', 'Caja', 'asset', TRUE),
+    ('1.2', 'Bancos', 'asset', TRUE),
+    ('1.3', 'Cuentas por cobrar', 'asset', TRUE),
+    ('1.4', 'Inventario', 'asset', TRUE),
+    ('1.5', 'Créditos a favor con proveedores', 'asset', TRUE),
+    ('2', 'Pasivos', 'liability', TRUE),
+    ('2.1', 'Cuentas por pagar', 'liability', TRUE),
+    ('3', 'Patrimonio', 'equity', TRUE),
+    ('4', 'Ingresos', 'income', TRUE),
+    ('4.1', 'Ventas', 'income', TRUE),
+    ('5', 'Costos', 'expense', TRUE),
+    ('5.1', 'Costo de ventas', 'expense', TRUE),
+    ('6', 'Gastos', 'expense', TRUE),
+    ('6.1', 'Gastos operativos', 'expense', TRUE),
+    ('6.2', 'Faltantes de caja', 'expense', TRUE),
+    ('7', 'Otros ingresos', 'income', TRUE),
+    ('7.1', 'Sobrantes de caja', 'income', TRUE)
+ON CONFLICT (code) DO NOTHING;
+
+COMMIT;
+```
+
+---
+
+## Tablas asumidas por el seed
+
+Los queries anteriores asumen que existen estas tablas:
+
+```text
+roles
+permissions
+role_permissions
+payment_methods
+warehouses
+cash_registers
+categories
+sizes
+colors
+stock_movement_types
+stock_reservation_statuses
+stock_reservation_types
+reserved_for_types
+purchase_return_statuses
+purchase_return_compensation_types
+supplier_credit_statuses
+cash_session_statuses
+layaway_statuses
+invoice_statuses
+chart_of_accounts
+```
+
+Si algunos estados se manejan como `ENUM` o constantes en código, no se deben ejecutar los `INSERT` de esas tablas catálogo.
+
+## Restricciones únicas requeridas
+
+Para que `ON CONFLICT` funcione, se requieren restricciones únicas en:
+
+```text
+roles.name
+permissions.code
+role_permissions(role_id, permission_id)
+payment_methods.code
+warehouses.name
+cash_registers.name
+categories.name
+sizes.name
+colors.name
+stock_movement_types.code
+stock_reservation_statuses.code
+stock_reservation_types.code
+reserved_for_types.code
+purchase_return_statuses.code
+purchase_return_compensation_types.code
+supplier_credit_statuses.code
+cash_session_statuses.code
+layaway_statuses.code
+invoice_statuses.code
+chart_of_accounts.code
+```
+
+## Datos que no deben precargarse en producción
+
+Estos datos deben registrarse mediante operación real del negocio:
+
+```text
+Clientes
+Proveedores reales
+Productos
+Variantes de producto
+Stock real
+Facturas
+Pagos
+Apartados
+Arqueos
+Compras
+Retornos a proveedor
+Mercadería prestada
+Mercadería dañada
+Créditos reales de proveedor
+Asientos contables reales
+```
