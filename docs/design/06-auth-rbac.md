@@ -1,4 +1,4 @@
-# 04 — Auth + RBAC
+# 06 — Auth + RBAC
 
 ## Flujo de Autenticación
 

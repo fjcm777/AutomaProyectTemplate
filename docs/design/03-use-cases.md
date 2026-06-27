@@ -1,4 +1,4 @@
-# 02 — Casos de Uso
+# 03 — Casos de Uso
 
 > **Contexto del negocio:** Tienda de calzado y artículos complementarios (bolsos, accesorios, etc.).
 > Se manejan ventas en efectivo, ventas por transferencia bancaria, ventas con tarjeta, ventas a crédito y ventas por sistema de apartado. **No se manejan cotizaciones**.

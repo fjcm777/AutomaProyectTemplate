@@ -1,4 +1,4 @@
-# 03 — Base de Datos
+# 05 — Base de Datos
 
 > **Contexto:** Modelo de base de datos actualizado con base en los casos de uso del proyecto, incluyendo venta en efectivo, venta a crédito, venta por sistema de apartado, devoluciones, auditoría, eventos de integración y preparación para un futuro módulo de contabilidad.
 

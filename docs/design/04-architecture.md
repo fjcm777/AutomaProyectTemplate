@@ -1,4 +1,4 @@
-# 01 — Arquitectura del Sistema
+# 04 — Arquitectura del Sistema
 
 ## Stack Tecnológico
 
