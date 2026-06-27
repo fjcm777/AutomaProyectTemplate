@@ -477,8 +477,8 @@ Cancelar apartado y liberar inventario.
 ```text
 layaways
 stock_reservations
-customer_credits
 payments
+cash_sessions
 cash_sessions
 audit_logs
 ```
@@ -1218,8 +1218,11 @@ El usuario tiene permiso para registrar devolución.
 6. Si el producto está en buen estado, puede volver a inventario disponible.
 7. Si el producto está dañado, se registra como mercadería dañada.
 8. El sistema registra devolución.
-9. El usuario decide si devuelve dinero o genera saldo a favor del cliente.
-10. El sistema guarda auditoría.
+9. El sistema registra devolución de dinero al cliente en el momento.
+10. El usuario selecciona método de devolución.
+11. El método de devolución puede ser diferente al método de pago original.
+12. El sistema ajusta caja o medio de pago según corresponda.
+13. El sistema guarda auditoría.
 ```
 
 ### Reglas importantes
@@ -1227,7 +1230,7 @@ El usuario tiene permiso para registrar devolución.
 ```text
 Devolución sobre venta no es lo mismo que retorno a proveedor.
 El producto devuelto no siempre vuelve a inventario disponible.
-El dinero puede devolverse o convertirse en saldo a favor.
+Toda devolución autorizada debe retornar el dinero en el momento y no genera saldo a favor del cliente.
 ```
 
 ### Datos afectados
@@ -1238,8 +1241,8 @@ sale_items
 sales_returns
 sales_return_items
 stock_movements
-customer_credits
 payments
+cash_sessions
 audit_logs
 ```
 
@@ -1247,7 +1250,7 @@ audit_logs
 
 ```text
 devolucion_venta_registrada
-saldo_cliente_generado
+dinero_cliente_devuelto
 mercaderia_danada_registrada
 ```
 
@@ -1268,3 +1271,12 @@ El retorno a proveedor puede quedar pendiente antes de la entrega física.
 La compra a proveedor debe guardar costo histórico y documento de proveedor si existe.
 La devolución sobre venta puede devolver dinero o generar saldo a favor.
 ```
+
+
+---
+
+## Corrección aplicada — Método de devolución
+
+En una devolución sobre venta autorizada, el sistema debe retornar el dinero en el momento. La devolución no genera saldo a favor del cliente.
+
+El método de devolución puede ser diferente al método de pago original, siempre que quede registrado, afecte correctamente caja o banco y quede auditado.

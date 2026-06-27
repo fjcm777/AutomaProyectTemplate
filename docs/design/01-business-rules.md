@@ -502,7 +502,7 @@ El sistema debe permitir registrar la entrada de mercadería aunque no sea el mi
 
 El sistema debe permitir manejar saldo a favor del cliente cuando aplique.
 
-Esto puede originarse por apartado vencido cuyo abono no se devuelve, cambio de producto apartado por uno de menor valor, devolución de venta sin devolución inmediata de efectivo o ajuste autorizado.
+Esto puede originarse por apartado vencido cuyo abono no se devuelve, cambio de producto apartado, cancelación de apartado donde se conserva el abono o ajuste autorizado especial.
 
 ### RN-042 — El saldo a favor del cliente debe poder aplicarse a operaciones futuras
 
@@ -630,3 +630,31 @@ Las acciones se autorizan por permisos.
 El MVP debe guardar trazabilidad para contabilidad futura.
 Toda operación sensible debe auditarse.
 ```
+
+
+---
+
+## Corrección aplicada — Devoluciones sobre venta
+
+### RN-DEV-001 — Devolución sobre venta no genera saldo a favor
+
+La devolución sobre venta aplica cuando una venta fue válida, pero posteriormente el cliente devuelve el producto.
+
+Toda devolución autorizada debe retornar el dinero al cliente en el momento. No debe generar saldo a favor del cliente.
+
+### RN-DEV-002 — Método de devolución
+
+El método de devolución puede ser diferente al método de pago original, siempre que quede registrado y auditado.
+
+Ejemplo:
+
+```text
+La venta original fue pagada por transferencia.
+La devolución se realiza en efectivo.
+El sistema registra que la devolución fue en efectivo.
+La caja se ajusta correctamente.
+```
+
+### RN-DEV-003 — Estado del producto devuelto
+
+El producto devuelto debe clasificarse según su estado. Si está en buen estado puede volver al inventario disponible; si está dañado debe pasar a mercadería dañada/no vendible.
