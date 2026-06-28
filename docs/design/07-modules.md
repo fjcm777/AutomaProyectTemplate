@@ -1,371 +1,162 @@
-# 07 — Módulos del Sistema
+# 07 - Modules
 
-## Patrón General Backend
+## Objetivo
 
-Cada módulo funcional sigue la estructura:
+Definir cómo se organiza el backend por módulos dentro de un monolito modular.
 
-```text
-backend/app/modules/<module>/
-├── api.py
-├── models.py
-├── schemas.py
-├── repository.py
-└── service.py
-```
+## Módulos confirmados
 
-| Capa | Responsabilidad |
-|------|-----------------|
-| `api.py` | Endpoints HTTP, dependencias, status codes |
-| `models.py` | Modelos SQLAlchemy |
-| `schemas.py` | Schemas Pydantic |
-| `repository.py` | Consultas y persistencia |
-| `service.py` | Reglas de negocio |
+- `auth`
+- `users`
+- `products`
+- `inventory`
+- `customers`
+- `sales`
+- `layaways`
+- `cash`
+- `suppliers`
+- `purchases`
+- `reports`
+- `settings`
 
----
-
-## Módulos Backend
+## Estructura estándar de módulo
 
 ```text
-backend/app/modules/
-├── auth/
-├── inventory/
-├── sales/
-├── customers/
-├── suppliers/
-├── reports/
-└── accounting/          ← futuro
+modules/
+  products/
+    api.py
+    models.py
+    schemas.py
+    service.py
+    repository.py
 ```
 
-### `auth`
+Responsabilidades:
 
-Modelos sugeridos:
+- `api.py`: endpoints, permisos, request/response HTTP.
+- `schemas.py`: Pydantic, entrada y salida.
+- `models.py`: SQLAlchemy y relaciones DB.
+- `repository.py`: consultas y persistencia.
+- `service.py`: reglas de negocio, coordinación y transacciones.
+
+## Comunicación entre módulos
+
+Un módulo solo debe usar otro módulo mediante funciones públicas de `service.py`.
+
+Ejemplo correcto:
 
 ```text
-User
-Role
-Permission
-RefreshToken
-ActivityLog
+sales.service -> inventory.service.decrease_stock()
 ```
 
-### `inventory`
-
-Modelos sugeridos:
+Ejemplo incorrecto:
 
 ```text
-Category
-Size
-Color
-Product
-ProductVariant
-Warehouse
-Stock
-StockReservation
-StockMovement
+sales.service modifica inventory_stock directamente
 ```
 
-`StockReservation` soporta apartados reservando unidades sin descontarlas definitivamente del inventario físico.
+## Transacciones
 
-### `sales`
+Los casos de uso que afectan varios módulos usan una sola transacción.
 
-Modelos sugeridos:
-
-```text
-Invoice
-InvoiceItem
-CustomerPayment
-SalesReturn
-SalesReturnItem
-Layaway
-LayawayItem
-LayawayPayment
-LayawayAlert
-```
-
-El sistema de apartado debe implementarse como subproceso de ventas, no como módulo funcional independiente.
-
-### `customers`
-
-Modelos sugeridos:
-
-```text
-Customer
-CustomerCreditLog
-```
-
-Debe permitir estado de cuenta, saldo de crédito, saldo vencido, abonos y consulta de apartados del cliente.
-
-### `suppliers`
-
-Modelos sugeridos:
-
-```text
-Supplier
-PurchaseOrder
-PurchaseOrderItem
-PurchaseReturn
-PurchaseReturnItem
-SupplierPayment
-```
-
-### `reports`
-
-No requiere modelos propios en la primera versión. Puede usar queries, vistas SQL o servicios de agregación.
-
-### `accounting` (futuro)
-
-Modelos sugeridos:
-
-```text
-ChartOfAccount
-AccountingRule
-FiscalPeriod
-JournalEntry
-JournalEntryLine
-```
-
-No debe ser llamado directamente por ventas o inventario. Debe consumir eventos internos.
-
----
-
-## Infraestructura Interna Compartida
-
-```text
-backend/app/shared/
-├── events/
-│   ├── models.py
-│   ├── schemas.py
-│   ├── repository.py
-│   └── service.py
-├── audit/
-├── notifications/
-├── exceptions.py
-└── pagination.py
-```
-
-### `shared/events`
-
-No es módulo funcional. Sirve para registrar eventos como:
-
-```text
-invoice_issued
-invoice_cancelled
-customer_payment_received
-layaway_created
-layaway_payment_received
-layaway_completed
-layaway_overdue
-purchase_order_received
-inventory_adjustment_registered
-```
-
----
-
-## Patrón General Frontend
-
-```text
-frontend/src/features/<feature>/
-├── api/
-├── hooks/
-├── components/
-├── pages/
-├── types/
-└── index.ts
-```
-
-### `sales` en frontend
-
-```text
-frontend/src/features/sales/
-├── api/
-├── hooks/
-├── components/
-│   ├── invoices/
-│   ├── payments/
-│   ├── returns/
-│   └── layaways/
-├── pages/
-│   ├── invoices/
-│   └── layaways/
-├── types/
-└── index.ts
-```
-
----
-
-## Checklist para agregar un módulo
-
-### Backend
-
-1. Crear carpeta en `backend/app/modules/<module>/`.
-2. Crear `models.py`, `schemas.py`, `repository.py`, `service.py`, `api.py`.
-3. Registrar router en `main.py`.
-4. Importar modelos en `db/base.py`.
-5. Crear migración Alembic.
-6. Agregar permisos RBAC.
-7. Agregar tests.
-
-### Frontend
-
-1. Crear carpeta en `frontend/src/features/<feature>/`.
-2. Crear tipos.
-3. Crear cliente API.
-4. Crear hooks React Query.
-5. Crear páginas y componentes.
-6. Registrar rutas.
-7. Agregar navegación si aplica.
-
----
-
-## Reglas de diseño
-
-- No llamar repositorios desde `api.py`; siempre pasar por `service.py`.
-- No mezclar reglas de venta, inventario y contabilidad directamente.
-- Usar eventos internos para procesos cruzados.
-- No eliminar documentos transaccionales; anular o revertir.
-- Mantener el sistema de apartado dentro de ventas.
-- Mantener reserva de inventario dentro de inventario.
-
-
----
-
-## Ajustes derivados de observaciones
-
-1. Las devoluciones de venta deben afectar ventas, inventario y contabilidad.
-2. `Seller` debe poder consultar disponibilidad de productos mediante `inventory.view`.
-3. La conciliación bancaria se documenta como subproceso de contabilidad en **segunda etapa**.
-4. `CU-601` debe llamarse **Gestionar catálogo de cuentas contables**.
-5. El cierre contable se documenta como subproceso de contabilidad en **segunda etapa**.
-
-### Subestructura futura de `accounting`
-
-```text
-backend/app/modules/accounting/
-├── accounts/                ← catálogo de cuentas contables
-├── rules/                   ← reglas contables
-├── journal/                 ← asientos de diario
-├── fiscal_periods/          ← períodos fiscales
-├── closing/                 ← cierre contable (Segunda etapa)
-└── bank_reconciliation/     ← conciliación bancaria (Segunda etapa)
-```
-
-### Tablas futuras para conciliación bancaria
-
-```text
-bank_accounts
-bank_transactions
-bank_reconciliations
-bank_reconciliation_items
-```
-
-
----
-
-## Subproceso `sales/cash_register`
-
-El arqueo de caja se implementa como subproceso de ventas.
-
-### Backend
-
-```text
-backend/app/modules/sales/cash_register/
-├── models.py
-├── schemas.py
-├── repository.py
-├── service.py
-└── api.py
-```
-
-Modelos sugeridos:
-
-```text
-CashRegister
-CashSession
-CashSessionPayment
-CashMovement
-CashCount
-```
-
-### Frontend
-
-```text
-frontend/src/features/sales/cash-register/
-├── api/
-├── hooks/
-├── components/
-├── pages/
-├── types/
-└── index.ts
-```
-
-Pantallas sugeridas:
-
-```text
-Apertura de caja
-Resumen de caja
-Registro de movimiento manual
-Arqueo de caja
-Cierre de caja
-Historial de cajas
-Diferencias de caja
-```
-
-Reglas:
-
-- Toda venta o pago debe asociarse a una `cash_session` cuando corresponda.
-- El sistema debe usar `business_date` para determinar el día operativo.
-- Si una caja ya fue cerrada, las ventas posteriores deben asignarse al siguiente `business_date`.
-- Las diferencias de caja deben quedar auditadas.
-- Los efectos contables por sobrantes/faltantes pueden implementarse en segunda etapa.
-
-
----
-
-## Subprocesos adicionales
-
-### `inventory/loaned_goods`
-
-```text
-backend/app/modules/inventory/loaned_goods/
-frontend/src/features/inventory/loaned-goods/
-```
-
-Usa:
-
-```text
-StockReservation
-StockMovement
-Invoice, si se convierte en venta
-```
-
-### `inventory/damaged_goods`
-
-```text
-backend/app/modules/inventory/damaged_goods/
-frontend/src/features/inventory/damaged-goods/
-```
-
-Usa:
-
-```text
-Warehouse
-Stock
-StockMovement
-```
-
-### `suppliers/supplier_returns`
-
-```text
-backend/app/modules/suppliers/supplier_returns/
-frontend/src/features/suppliers/supplier-returns/
-```
-
-Usa:
-
-```text
-PurchaseReturn
-PurchaseReturnItem
-SupplierCredit
-SupplierCreditApplication
-StockMovement
-```
+El `service.py` principal coordina la transacción.
+
+Los services internos no hacen commit independiente.
+
+## core
+
+Contiene configuración técnica central:
+
+- `config.py`
+- `database.py`
+- `security.py`
+- `permissions.py`
+- `dependencies.py`
+
+## shared
+
+Contiene utilidades transversales:
+
+- `pagination.py`
+- `errors.py`
+- `audit.py`
+- `events.py`
+- `files.py`
+
+No contiene reglas específicas de negocio.
+
+## jobs
+
+Scripts internos simples:
+
+- `expire_layaways.py`
+- `cleanup_audit_logs.py`
+- `cleanup_business_events.py`
+- `detect_low_stock.py`
+- `detect_overdue_customer_credit.py`
+
+No se usará Celery/Redis en MVP.
+
+## SQLAlchemy y Alembic
+
+Cada módulo define sus modelos.
+
+Todos comparten la misma metadata/Base.
+
+Alembic debe importar todos los modelos para autogenerar migraciones.
+
+No usar `Base.metadata.create_all()` en producción.
+
+## Eventos y auditoría
+
+Un evento representa algo importante ocurrido en el negocio.
+
+`business_events` registra qué ocurrió.
+
+`audit_logs` registra quién hizo qué, cuándo y por qué.
+
+## reports
+
+`reports` es solo lectura.
+
+Puede leer varios módulos, pero no modifica datos operativos.
+
+## settings
+
+`settings` es módulo funcional pequeño.
+
+Maneja configuración funcional variable desde DB.
+
+No maneja configuración técnica del servidor.
+
+## Catálogos
+
+En backend, cada catálogo vive en el módulo dueño:
+
+- products: categories, brands, sizes, colors.
+- sales: payment_methods.
+- inventory: branches, warehouses, movement_types.
+- settings: settings, exchange_rates.
+
+En frontend pueden agruparse visualmente en Administración/Catálogos.
+
+## Rutas base
+
+- `/api/v1/auth`
+- `/api/v1/users`
+- `/api/v1/products`
+- `/api/v1/inventory`
+- `/api/v1/customers`
+- `/api/v1/sales`
+- `/api/v1/layaways`
+- `/api/v1/cash`
+- `/api/v1/suppliers`
+- `/api/v1/purchases`
+- `/api/v1/reports`
+- `/api/v1/settings`
+
+## Permisos por módulo
+
+Cada módulo debe declarar los permisos que utiliza.
+
+Cada endpoint protegido debe indicar el permiso requerido.

@@ -1,30 +1,33 @@
-# Paquete de documentacion actualizado - Automata
+# Automata Design Docs
 
-Fecha: 2026-06-28
+Documentación base del sistema Automata para Calzado Norita.
 
-Este paquete contiene los documentos actualizados segun las decisiones discutidas para el proyecto Automata.
+## Documentos incluidos
 
-## Archivos incluidos
-
+- `00-business-context.md`
 - `01-business-rules.md`
 - `02-process-flows.md`
 - `03-use-cases.md`
 - `04-architecture.md`
+- `05-database.md`
+- `06-auth-rbac.md`
+- `07-modules.md`
+- `08-api-contracts.md`
 
-## Motivo de actualizacion
+## Diagramas incluidos
 
-Se genero el documento `04-architecture.md` completo y se actualizaron documentos anteriores que podian verse afectados por decisiones arquitectonicas y reglas aclaradas durante la conversacion.
+- `automata-use-cases.drawio`
+- `automata-architecture.drawio`
+- `automata-database-er.drawio`
+- `automata-modules.drawio`
+- `automata-api-contracts.drawio`
 
-## Ajustes importantes incluidos
+## Estado
 
-- Devoluciones sobre venta devuelven dinero en el momento y no generan saldo a favor.
-- Apartados pueden generar saldo a favor en cambios/cancelaciones/resoluciones.
-- Alembic manejara estructura y seeds base.
-- Auditoria sera selectiva.
-- No habra tablas historicas en el MVP.
-- `audit_logs` y `business_events` podran limpiarse por retencion.
-- Docker Compose sera la base de desarrollo/despliegue inicial.
-- PostgreSQL y uploads tendran persistencia.
-- Backend sera monolito modular.
-- Frontend se organizara por features.
-- Permisos usaran formato `recurso.accion`.
+Este paquete incorpora el documento `08-api-contracts.md` y actualiza los documentos afectados por las decisiones de API:
+
+- Formato estándar de respuestas.
+- HTTP status real + `status_code` en body.
+- Contratos base por módulo.
+- Apartados completados generan venta en `sales`.
+- Ventas originadas desde apartados usan `source_type/source_id`.
