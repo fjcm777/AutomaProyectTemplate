@@ -1,23 +1,30 @@
-# Actualización de documentos — Casos de uso
+# Paquete de documentacion actualizado - Automata
 
-Este paquete contiene únicamente los documentos nuevos o afectados por las decisiones revisadas.
+Fecha: 2026-06-28
 
-## Incluidos
+Este paquete contiene los documentos actualizados segun las decisiones discutidas para el proyecto Automata.
 
-| Documento | Motivo |
-|---|---|
-| `03-use-cases.md` | Documento generado/actualizado |
-| `01-business-rules.md` | Ajustado para aclarar que las devoluciones no generan saldo a favor |
-| `02-process-flows.md` | Ajustado para devolución sobre venta con retorno de dinero inmediato |
+## Archivos incluidos
 
-## Decisiones aplicadas
+- `01-business-rules.md`
+- `02-process-flows.md`
+- `03-use-cases.md`
+- `04-architecture.md`
 
-```text
-Anulación de venta = error operativo del mismo business_date, no genera saldo a favor.
-Devolución sobre venta = venta válida que se devuelve, retorna dinero en el momento, no genera saldo a favor.
-El método de devolución puede ser distinto al método original, pero debe registrarse.
-Compras a proveedor pueden ser a crédito, con cuentas por pagar básicas desde el MVP.
-Clientes requieren nombre, dirección, teléfono y talla de pie.
-Productos tienen marca y código personalizado alfanumérico.
-Código de barras queda opcional/preparado para futuro.
-```
+## Motivo de actualizacion
+
+Se genero el documento `04-architecture.md` completo y se actualizaron documentos anteriores que podian verse afectados por decisiones arquitectonicas y reglas aclaradas durante la conversacion.
+
+## Ajustes importantes incluidos
+
+- Devoluciones sobre venta devuelven dinero en el momento y no generan saldo a favor.
+- Apartados pueden generar saldo a favor en cambios/cancelaciones/resoluciones.
+- Alembic manejara estructura y seeds base.
+- Auditoria sera selectiva.
+- No habra tablas historicas en el MVP.
+- `audit_logs` y `business_events` podran limpiarse por retencion.
+- Docker Compose sera la base de desarrollo/despliegue inicial.
+- PostgreSQL y uploads tendran persistencia.
+- Backend sera monolito modular.
+- Frontend se organizara por features.
+- Permisos usaran formato `recurso.accion`.

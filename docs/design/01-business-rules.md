@@ -1,660 +1,216 @@
-# 01 — Reglas de Negocio
+# 01 - Business Rules
 
-## 1. Propósito del documento
+Proyecto: **Automata**  
+Negocio: **Calzado Norita**  
+Fecha de actualizacion: 2026-06-28
 
-Este documento define las reglas de negocio que deben respetarse en el sistema **Automata**.
+## 1. Objetivo
 
-Las reglas aquí descritas sirven como guía para diseño de base de datos, desarrollo backend, desarrollo frontend, validaciones, permisos, reportes, auditoría, integración contable futura y uso de inteligencia artificial para generar código.
-
-Estas reglas son independientes de la tecnología. El sistema puede cambiar internamente, pero las reglas del negocio deben mantenerse consistentes.
-
----
+Este documento define reglas de negocio centrales para Automata. Estas reglas deben ser usadas como referencia para diseno de base de datos, casos de uso, contratos API, validaciones, pruebas y desarrollo asistido por IA.
 
 ## 2. Principios generales
 
-Automata debe respetar los siguientes principios:
+- El sistema debe proteger la trazabilidad de ventas, inventario, caja, clientes, proveedores y operaciones sensibles.
+- Los procesos criticos deben validarse en backend.
+- El frontend puede mejorar la experiencia visual, pero no es la fuente real de seguridad ni validacion.
+- Las operaciones importantes deben conservar usuario, fecha real, `business_date`, motivo cuando aplique y relacion con documentos origen.
 
-```text
-La disponibilidad de inventario debe ser confiable.
-Toda operación sensible debe quedar auditada.
-Los roles deben ser dinámicos.
-La autorización debe hacerse por permisos, no por nombres fijos de roles.
-La contabilidad completa puede quedar para segunda etapa, pero la trazabilidad debe existir desde el MVP.
-Los procesos de negocio no deben mezclarse si representan situaciones distintas.
-```
+## 3. Disponibilidad de inventario
 
----
+Disponibilidad = stock fisico - reservado por apartados - mercaderia prestada/reservada - separado para retorno a proveedor - danado/no vendible.
 
-## 3. Reglas de usuarios, roles y permisos
+Reglas:
 
-### RN-001 — Los usuarios son personas reales
+- El inventario danado no esta disponible para venta.
+- La mercaderia prestada no esta disponible mientras este prestada.
+- La mercaderia reservada por apartado no esta disponible para venta normal.
+- El inventario separado para retorno a proveedor no esta disponible.
+- Todo cambio de disponibilidad debe generar movimiento o registro trazable.
 
-Un usuario representa una persona real que accede al sistema. Los usuarios deben tener credenciales de acceso y estado activo o inactivo.
+## 4. Productos y variantes
 
-### RN-002 — Los roles deben ser dinámicos
+- El producto base representa el articulo comercial.
+- Las variantes representan combinaciones como talla, color u otros atributos.
+- La marca debe manejarse desde el MVP para filtros y reportes.
+- El codigo personalizado alfanumerico debe permitirse desde el inicio, por ejemplo `F102`.
+- El codigo de barras sera opcional y preparado para uso futuro.
+- Cada producto tendra una imagen principal desde el MVP.
+- La imagen no se guardara como binario en la base de datos; se guardara una ruta o URL.
 
-Los roles no deben estar quemados en el código.
+## 5. Clientes
 
-El sistema debe permitir crear roles, editar roles, activar o desactivar roles, asignar permisos a roles y asignar uno o más roles a usuarios.
+Datos obligatorios del cliente:
 
-Los roles base pueden existir como configuración inicial, pero no deben limitar el crecimiento del negocio.
+- Nombre.
+- Direccion.
+- Telefono.
+- Talla de pie.
 
-### RN-003 — El sistema debe validar permisos, no nombres de roles
+Datos opcionales:
 
-La lógica del sistema no debe depender de reglas como:
+- Correo.
+- Identificacion.
+- Fecha de nacimiento.
+- Notas.
 
-```text
-Si el rol se llama Vendedor, puede vender.
-```
+Excepcion:
 
-La regla correcta es:
+- La mercaderia prestada puede registrarse para una persona de confianza sin crear cliente formal, siempre que se registre al menos nombre y telefono.
 
-```text
-Si el usuario tiene el permiso sales.create, puede vender.
-```
+## 6. Ventas de contado
 
-Ejemplos:
+- Una venta de contado debe validar inventario disponible.
+- Debe registrar productos, cantidades, precios, descuentos si aplican, metodo de pago, caja y `business_date`.
+- Debe descontar inventario.
+- Debe registrar pago.
+- Debe afectar caja si el metodo de pago lo requiere.
+- Debe ejecutarse en transaccion.
+- Si una parte falla, toda la venta debe revertirse.
 
-| Acción | Permiso sugerido |
-|---|---|
-| Crear venta | `sales.create` |
-| Cerrar caja | `cash.close` |
-| Registrar mercadería dañada | `inventory.damaged_goods_create` |
-| Dar de baja mercadería dañada | `inventory.damaged_goods_write_off` |
-| Registrar retorno a proveedor | `suppliers.supplier_return_create` |
-| Aplicar crédito de proveedor | `suppliers.supplier_credit_apply` |
+## 7. Ventas a credito
 
----
+- Las ventas a credito son parte esencial del negocio.
+- Puede existir abono inicial.
+- Se debe registrar saldo pendiente.
+- Una nueva venta a credito con deuda pendiente solo se permite con permiso/autorizacion especial.
+- Los abonos a credito deben registrarse con fecha, usuario, metodo de pago, caja/banco y saldo resultante.
+- La cuenta por cobrar basica vivira dentro del contexto de ventas/clientes durante el MVP.
 
-## 4. Reglas de productos e inventario
+## 8. Apartados
 
-### RN-004 — El inventario debe manejarse por variante
+- Los apartados reservan inventario.
+- Deben tener pago inicial configurable.
+- Deben tener plazo configurable.
+- El plazo por defecto podra ser 2 meses, pero debe ser configurable.
+- El inventario apartado no esta disponible para venta normal.
+- Se permite extender plazo solo con permiso especial.
+- Un apartado puede estar activo, completado, cancelado o vencido/resuelto.
 
-La unidad mínima de inventario debe considerar:
+### Cambio de producto en apartado
 
-```text
-Producto + talla + color
-```
+Si el cliente desea cambiar el producto apartado:
 
-Además, el producto debe permitir clasificación por segmento:
+1. Se cancela la reserva actual.
+2. Se libera el inventario anterior.
+3. Se conserva el efectivo abonado como saldo a favor del cliente.
+4. Se abre un nuevo apartado.
+5. Se aplica el saldo a favor al nuevo apartado.
 
-```text
-Hombre
-Mujer
-Unisex
-```
+No se modificara directamente el producto dentro del apartado original.
 
-### RN-005 — La disponibilidad no es igual al stock físico
+## 9. Saldos a favor de cliente
 
-La disponibilidad para venta debe calcularse considerando restricciones del negocio.
+El saldo a favor puede generarse en procesos de apartado, por ejemplo:
 
-Regla propuesta:
+- Cambio de producto apartado.
+- Cancelacion de apartado donde se conserva el abono.
+- Apartado vencido resuelto conservando el abono.
+- Ajuste autorizado especial.
 
-```text
-Disponible para venta =
-stock físico
-- stock reservado por apartados
-- stock reservado/prestado
-- stock separado para retorno a proveedor
-- stock dañado/no vendible
-```
+Regla importante:
 
-Por lo tanto, un producto puede existir físicamente, pero no estar disponible para venta.
+- Las devoluciones sobre venta no generan saldo a favor. En una devolucion autorizada se devuelve dinero en el momento.
 
-### RN-006 — El inventario disponible debe actualizarse con cada operación relevante
+## 10. Devoluciones sobre venta
 
-Deben afectar inventario:
+- Toda devolucion autorizada implica devolver dinero en el momento.
+- No genera saldo a favor del cliente.
+- El metodo de devolucion puede ser diferente al metodo de pago original.
+- El metodo usado debe quedar registrado y auditado.
+- Ejemplo: venta pagada por transferencia, devolucion en efectivo.
+- La devolucion debe relacionarse con la venta original.
+- Debe ajustar inventario si el producto vuelve a estar disponible.
+- Debe ejecutarse en transaccion.
 
-```text
-Compras
-Ventas
-Devoluciones sobre venta
-Apartados
-Cancelación de apartados
-Mercadería prestada
-Devolución de mercadería prestada
-Mercadería dañada
-Retorno a proveedor
-Traslados entre bodegas
-Ajustes manuales
-```
+## 11. Anulacion de venta
 
-### RN-007 — Los movimientos de inventario deben conservar trazabilidad
+- La anulacion es para errores operativos de vendedor/cajero.
+- Solo se permite dentro del mismo `business_date`.
+- Requiere permiso especial y motivo.
+- Revierte venta, pago e inventario.
+- No genera saldo a favor.
+- Debe registrar auditoria.
+- Debe ejecutarse en transaccion.
 
-Todo movimiento de inventario debe registrar al menos producto o variante, cantidad, bodega origen, bodega destino, tipo de movimiento, documento origen, usuario responsable, fecha real y motivo o nota si aplica.
+## 12. Caja y business_date
 
+- El sistema manejara `created_at` y `business_date`.
+- `created_at` representa la fecha/hora real del registro.
+- `business_date` representa el dia operativo.
+- El arqueo puede hacerse antes del fin del dia calendario.
+- Si se registra una venta despues del cierre, el sistema debe solicitar confirmacion para abrir/usar caja del siguiente `business_date`.
+- Las ventas, pagos y reportes de caja deben usar `business_date` cuando corresponda.
 
----
+## 13. Mercaderia prestada
 
-## 5. Reglas de ventas
+- La mercaderia prestada deja de estar disponible al registrarse.
+- No es una venta.
+- Puede devolverse al inventario.
+- Puede convertirse en venta de contado o credito.
+- Si se convierte en venta, no debe descontarse inventario dos veces.
+- Puede registrarse para una persona de confianza, no necesariamente cliente formal.
 
-### RN-008 — Una venta emitida descuenta inventario disponible
+## 14. Mercaderia danada
 
-Cuando una venta se confirma, el sistema debe descontar la mercadería vendida del inventario disponible.
+- La mercaderia danada se mueve a una bodega logica o estado no vendible.
+- No esta disponible para venta.
+- Dar de baja mercaderia danada requiere permiso especial.
+- Debe registrarse motivo y auditoria.
 
-Si la venta proviene de un proceso que ya había descontado o separado inventario, el sistema no debe descontar dos veces.
+## 15. Retorno a proveedor
 
-Ejemplo:
+- El retorno a proveedor es independiente de la devolucion sobre venta.
+- Puede generar credito, reembolso, reemplazo o quedar sin compensacion.
+- El credito de proveedor puede aplicarse parcialmente.
+- Si el proveedor reemplaza mercaderia en el momento, se registra salida por retorno y entrada por reemplazo.
+- Si el producto de reemplazo es diferente, debe registrarse equivalencia o valor reconocido.
+- El proceso debe mantener trazabilidad de inventario, proveedor y compensacion.
 
-```text
-Mercadería prestada convertida en venta.
-```
+## 16. Compras y cuentas por pagar basicas
 
-### RN-009 — El sistema debe soportar varias formas de pago
+- El sistema debe registrar compras desde el MVP.
+- Debe registrar proveedor, documento proveedor si existe, productos, cantidades y costos.
+- Debe actualizar inventario.
+- Debe guardar costo historico.
+- Debe soportar compras a credito y pagos parciales a proveedor.
+- La cuenta por pagar basica vivira dentro del contexto de compras/proveedores durante el MVP.
 
-Una venta de contado puede pagarse por:
+## 17. Facturacion e impuestos
 
-```text
-Efectivo
-Transferencia
-Tarjeta
-```
+- Actualmente las ventas no aplican impuestos.
+- El sistema debe quedar preparado para impuestos, series y numeracion fiscal si se requiere en el futuro.
+- La facturacion legal/fiscal debe ser configurable.
 
-El sistema también debe soportar venta a crédito, apartados y abonos parciales.
+## 18. Moneda y tipo de cambio
 
-### RN-010 — Las ventas deben registrar datos necesarios para contabilidad futura
+- La operacion principal sera en cordobas.
+- El dolar se usara para reportes cuando se requiera.
+- El tipo de cambio sera manual por fecha, basado en Banco Central.
+- Los reportes en dolares deben calcularse con el tipo de cambio correspondiente.
 
-Toda venta debe guardar información suficiente para que pueda generarse contabilidad en una segunda etapa.
+## 19. Contabilidad futura
 
-Debe conservarse:
+- La contabilidad completa queda para una segunda etapa.
+- El MVP debe guardar trazabilidad suficiente para integrarla despues.
+- Deben conservarse datos como fecha real, `business_date`, usuario, cliente/proveedor, documento origen, metodo de pago, caja/banco, costo, precio, descuentos, saldos, movimientos de inventario y eventos internos.
 
-```text
-Fecha real
-Fecha operativa
-Cliente, si aplica
-Usuario responsable
-Detalle de productos
-Precio de venta
-Costo del producto vendido
-Descuento
-Método de pago
-Caja o sesión de caja
-Saldo pendiente, si aplica
-Documento origen, si aplica
-```
+## 20. Auditoria selectiva
 
----
+- No se auditara cada consulta normal del sistema.
+- Se auditaran operaciones sensibles o modificaciones importantes.
+- Areas principales: ventas, inventario, clientes, caja, proveedores, compras, permisos y contabilidad futura.
+- La auditoria debe registrarse desde backend.
+- El frontend puede solicitar motivo, pero el backend decide cuando auditar y guarda el registro.
 
-## 6. Reglas de ventas a crédito
+## 21. Borrado logico y estados
 
-### RN-011 — La venta a crédito es un proceso esencial
+- No se eliminaran fisicamente registros con impacto historico, financiero, operativo o de inventario.
+- Se usaran estados o borrado logico.
+- Ejemplos: `active`, `inactive`, `cancelled`, `voided`, `closed`.
+- El borrado fisico se reservara para datos temporales o sin impacto historico.
 
-La venta a crédito forma parte del MVP porque permite captar más clientes.
+## 22. Tablas historicas y retencion
 
-El sistema debe permitir registrar venta a crédito, registrar abonos, consultar saldo pendiente, consultar historial de pagos e identificar clientes con deuda activa.
-
-### RN-012 — Se permite vender a crédito a clientes con deuda pendiente solo con control de permisos
-
-El sistema puede permitir una nueva venta a crédito a un cliente con deuda pendiente, pero debe requerir autorización mediante permisos.
-
-Regla:
-
-```text
-Si el cliente tiene deuda pendiente o vencida, el sistema debe permitir la venta solo si el usuario tiene permiso autorizado para hacerlo.
-```
-
-Esto evita bloquear el negocio, pero mantiene control.
-
-Permiso sugerido:
-
-```text
-sales.credit_override
-```
-
----
-
-## 7. Reglas de apartados
-
-### RN-013 — Un apartado reserva inventario
-
-Cuando se crea un apartado, el sistema debe reservar el inventario correspondiente.
-
-La mercadería apartada no debe aparecer como disponible para venta.
-
-### RN-014 — Un apartado puede recibir pagos parciales
-
-El sistema debe permitir registrar abonos a un apartado hasta completar el total.
-
-Cada abono debe registrar fecha, monto, método de pago, usuario responsable y caja o sesión de caja si aplica.
-
-### RN-015 — Un apartado vencido no debe quedarse sin resolución
-
-Cuando un apartado vence, el sistema debe alertar y permitir resolverlo.
-
-Las resoluciones permitidas son:
-
-```text
-Devolver el abono al cliente
-Convertir el abono en saldo a favor del cliente
-Extender o reactivar el apartado con autorización
-Cancelar el apartado y liberar inventario
-```
-
-### RN-016 — El abono de un apartado puede convertirse en saldo a favor del cliente
-
-Si el negocio decide no devolver el dinero al cliente, el sistema debe permitir registrar ese monto como saldo a favor.
-
-Este saldo debe poder aplicarse a futuras ventas, apartados u otras operaciones permitidas.
-
-Estructura sugerida para implementación futura:
-
-```text
-customer_credits
-customer_credit_applications
-```
-
-### RN-017 — El cambio de producto en un apartado se maneja cancelando la reserva actual
-
-Para simplificar el proceso y mantener trazabilidad clara, el sistema no debe modificar directamente los productos dentro del mismo apartado como primera opción del MVP.
-
-Si el cliente desea cambiar el producto apartado, el flujo recomendado es:
-
-```text
-Cancelar la reserva del apartado actual.
-Liberar el inventario reservado.
-Conservar el efectivo recibido.
-Registrar el monto pagado como saldo a favor del cliente.
-Crear un nuevo apartado para el nuevo producto.
-Aplicar el saldo a favor del cliente al nuevo apartado.
-```
-
-Esta decisión evita inconsistencias en inventario, recálculo de saldos y auditoría del apartado original.
-
-### RN-018 — El cambio de producto apartado debe conservar trazabilidad
-
-Cuando un cliente cambia el producto apartado, el sistema debe conservar relación entre:
-
-```text
-Apartado original cancelado
-Saldo a favor generado
-Nuevo apartado creado
-Saldo a favor aplicado
-Usuario que realizó la operación
-Motivo del cambio
-Fecha y hora
-```
-
-Si el nuevo producto tiene mayor valor, la diferencia queda como saldo pendiente en el nuevo apartado.
-
-Si el nuevo producto tiene menor valor, el saldo restante puede conservarse como saldo a favor del cliente o devolverse, según decisión del negocio y permisos del usuario.
-
-Todo este proceso debe quedar auditado.
-
-
----
-
-## 8. Reglas de caja y arqueo
-
-### RN-019 — Toda operación de cobro debe asociarse a caja cuando aplique
-
-Las ventas, abonos, pagos de apartados y otros cobros deben asociarse a una caja o sesión de caja cuando correspondan.
-
-### RN-020 — El sistema debe manejar fecha operativa
-
-El sistema debe manejar:
-
-```text
-created_at
-business_date
-```
-
-`created_at` representa la fecha y hora real del registro.
-
-`business_date` representa el día operativo del negocio.
-
-### RN-021 — Las ventas posteriores al cierre de caja pasan al siguiente business_date
-
-Si la caja del día fue cerrada antes del final del día calendario, las ventas posteriores deben asignarse al siguiente `business_date`.
-
-### RN-022 — El sistema puede crear o usar automáticamente una caja para el siguiente día operativo
-
-Después del cierre de caja, si se registra una nueva venta, el sistema puede crear o usar automáticamente una nueva sesión de caja para el siguiente `business_date`.
-
-Regla:
-
-```text
-Si no existe sesión de caja abierta para el nuevo business_date, el sistema puede crearla automáticamente según configuración.
-```
-
-Esta regla busca mantener fluidez operativa sin impedir ventas posteriores al arqueo.
-
-### RN-023 — El arqueo debe comparar efectivo esperado contra efectivo contado
-
-El sistema debe calcular el efectivo esperado considerando monto inicial de caja, pagos en efectivo, entradas manuales, salidas manuales y reembolsos en efectivo.
-
-La diferencia debe registrarse como:
-
-```text
-Sin diferencia
-Sobrante
-Faltante
-```
-
-### RN-024 — Reabrir caja requiere permiso especial
-
-Una caja cerrada solo debe reabrirse con permiso especial y motivo obligatorio.
-
-Debe quedar auditado usuario que reabre, fecha y hora, motivo, estado anterior y estado nuevo.
-
----
-
-## 9. Reglas de mercadería prestada
-
-### RN-025 — La mercadería prestada no es una venta
-
-Mercadería prestada significa que un producto se entrega temporalmente a una persona de confianza.
-
-No debe generar factura hasta que se confirme la compra.
-
-### RN-026 — La mercadería prestada deja de estar disponible para venta
-
-Desde el momento en que se registra como prestada, la mercadería no debe aparecer como disponible para venta.
-
-Esto se debe a que salió físicamente de la tienda o bodega.
-
-### RN-027 — La mercadería prestada debe registrar responsable
-
-El sistema debe registrar nombre de la persona responsable, tipo de responsable, teléfono si aplica, fecha esperada de devolución, usuario que registró el préstamo y notas.
-
-Tipos sugeridos de responsable:
-
-```text
-customer
-seller
-trusted_person
-employee
-other
-```
-
-### RN-028 — La devolución de mercadería prestada debe reincorporar inventario si está apta
-
-Si la mercadería prestada regresa en buen estado, puede volver al inventario disponible.
-
-Si regresa dañada, debe manejarse como mercadería dañada.
-
-### RN-029 — Si mercadería prestada se convierte en venta, no debe descontar inventario dos veces
-
-Cuando una mercadería prestada se convierte en venta, el sistema debe registrar la venta y marcar la reserva como consumida.
-
-Si el inventario ya fue separado o descontado al momento del préstamo, la factura no debe descontarlo nuevamente.
-
-### RN-030 — El sistema debe alertar mercadería prestada vencida
-
-Si la mercadería prestada supera su fecha esperada de devolución, el sistema debe alertar o permitir consulta de préstamos vencidos.
-
-
----
-
-## 10. Reglas de mercadería dañada
-
-### RN-031 — La mercadería dañada no está disponible para venta
-
-Todo producto registrado como dañado, defectuoso o no vendible debe quedar fuera de la disponibilidad de venta.
-
-### RN-032 — La mercadería dañada debe moverse a una bodega lógica
-
-Se recomienda manejar una bodega lógica:
-
-```text
-Mercadería dañada / No vendible
-```
-
-Esto permite controlar productos que existen físicamente, pero no pueden venderse.
-
-### RN-033 — Dar de baja mercadería dañada requiere permiso especial
-
-Dar de baja definitiva una mercadería dañada debe requerir permiso especial.
-
-Permiso sugerido:
-
-```text
-inventory.damaged_goods_write_off
-```
-
-La acción debe guardar auditoría y motivo.
-
----
-
-## 11. Reglas de retorno a proveedor
-
-### RN-034 — Retorno a proveedor es un proceso independiente
-
-Retorno a proveedor no es lo mismo que devolución sobre venta.
-
-Puede originarse por producto defectuoso, daño, error de compra, acuerdo comercial, reemplazo solicitado o mercadería no vendible.
-
-### RN-035 — El retorno a proveedor debe sacar mercadería del inventario disponible
-
-Cuando se registra retorno a proveedor, la mercadería debe dejar de estar disponible para venta.
-
-Puede manejarse primero en una bodega lógica:
-
-```text
-Mercadería por retornar a proveedor
-```
-
-Y luego registrar salida cuando se entrega al proveedor.
-
-### RN-036 — El proveedor puede compensar mediante crédito, reembolso o reemplazo
-
-Un retorno a proveedor puede resolverse mediante:
-
-```text
-Crédito a favor
-Reembolso
-Reemplazo de mercadería
-Sin compensación
-```
-
-### RN-037 — Si el proveedor reconoce crédito, debe registrarse como crédito a favor
-
-Si el proveedor no entrega producto ni devuelve dinero en el momento, pero reconoce un monto a favor de la tienda, el sistema debe registrar un crédito de proveedor.
-
-Estructura sugerida:
-
-```text
-supplier_credits
-supplier_credit_applications
-```
-
-### RN-038 — El crédito de proveedor puede aplicarse parcial o totalmente
-
-El sistema debe permitir aplicar el crédito de proveedor en compras futuras.
-
-Ejemplo:
-
-```text
-Crédito reconocido: C$ 1,000
-Aplicado a compra futura: C$ 400
-Saldo restante: C$ 600
-```
-
-### RN-039 — Si el proveedor reemplaza mercadería en el momento, no se crea crédito pendiente
-
-Si el proveedor entrega mercadería de reemplazo en el momento, el sistema debe registrar:
-
-```text
-Salida por retorno a proveedor
-Entrada de mercadería por reemplazo
-```
-
-En este caso, no se crea crédito pendiente, salvo que exista diferencia de valor.
-
-### RN-040 — El producto recibido como reemplazo puede ser distinto
-
-El proveedor puede reemplazar un producto por otro diferente, siempre que se registre la equivalencia o valor reconocido.
-
-Ejemplo:
-
-```text
-Se retorna un producto de C$ 1,000.
-El proveedor entrega otro producto distinto por valor equivalente.
-```
-
-El sistema debe permitir registrar la entrada de mercadería aunque no sea el mismo producto.
-
-
----
-
-## 12. Reglas de clientes y saldos a favor
-
-### RN-041 — El cliente puede tener saldo a favor
-
-El sistema debe permitir manejar saldo a favor del cliente cuando aplique.
-
-Esto puede originarse por apartado vencido cuyo abono no se devuelve, cambio de producto apartado, cancelación de apartado donde se conserva el abono o ajuste autorizado especial.
-
-### RN-042 — El saldo a favor del cliente debe poder aplicarse a operaciones futuras
-
-El saldo a favor puede aplicarse a nueva venta, nuevo apartado o pago parcial de una operación.
-
-Toda aplicación debe quedar registrada y auditada.
-
-Estructura sugerida:
-
-```text
-customer_credits
-customer_credit_applications
-```
-
----
-
-## 13. Reglas de facturación legal y configuración fiscal
-
-### RN-043 — La facturación legal debe ser configurable
-
-El sistema debe estar preparado para facturación legal o fiscal, pero las reglas fiscales deben ser configurables.
-
-Actualmente el negocio no aplica impuestos sobre venta.
-
-### RN-044 — El sistema debe permitir ventas sin impuesto
-
-En el contexto actual, las ventas pueden emitirse sin impuesto.
-
-Sin embargo, el sistema debe quedar preparado para configurar impuestos, series, numeración, reglas fiscales, anulación fiscal y reportes fiscales.
-
----
-
-## 14. Reglas de moneda y tipo de cambio
-
-### RN-045 — La moneda principal es el córdoba
-
-Las operaciones principales del sistema deben registrarse en córdobas.
-
-### RN-046 — Los reportes pueden mostrarse en dólares
-
-El dólar puede usarse para reportes y análisis.
-
-El tipo de cambio puede ingresarse manualmente usando la tasa oficial correspondiente.
-
-### RN-047 — El tipo de cambio usado debe conservarse para reportes históricos
-
-Si se genera un reporte equivalente en dólares, el sistema debe conservar o poder reconstruir el tipo de cambio usado para la fecha correspondiente.
-
----
-
-## 15. Reglas de contabilidad futura
-
-### RN-048 — La contabilidad completa queda para segunda etapa
-
-El MVP no necesita generar todos los asientos contables, libro diario, libro mayor, balance general ni cierre contable.
-
-### RN-049 — El MVP debe guardar trazabilidad suficiente para contabilidad
-
-Desde la primera etapa, las operaciones deben guardar información suficiente para anexar el módulo contable después.
-
-Esto incluye fecha real, fecha operativa, usuario, cliente o proveedor, documento origen, método de pago, caja o banco, costo, precio, descuento, saldo pendiente, movimiento de inventario y evento interno.
-
-### RN-050 — Los eventos internos deben permitir generar asientos futuros
-
-Los eventos internos no son visibles para el usuario final, pero pueden servir para generar contabilidad después.
-
-Ejemplos:
-
-```text
-factura_emitida
-pago_cliente_recibido
-apartado_creado
-caja_cerrada
-retorno_proveedor_creado
-credito_proveedor_generado
-```
-
----
-
-## 16. Reglas de auditoría
-
-### RN-051 — Toda operación sensible debe quedar auditada
-
-Deben quedar auditadas acciones como anular venta, modificar venta, cerrar caja, reabrir caja, registrar diferencia de caja, registrar mercadería prestada, registrar mercadería dañada, dar de baja mercadería dañada, registrar retorno a proveedor, aplicar crédito de proveedor, modificar apartado, cambiar producto apartado y convertir saldo a favor.
-
-### RN-052 — La auditoría debe registrar estado anterior y nuevo
-
-Cuando aplique, la auditoría debe guardar usuario, fecha y hora, acción realizada, entidad afectada, valor anterior, valor nuevo, motivo, IP o dispositivo si aplica.
-
----
-
-## 17. Reglas de reportes
-
-### RN-053 — Los reportes deben basarse en datos operativos confiables
-
-Los reportes deben considerar correctamente `business_date`, métodos de pago, caja, inventario disponible, inventario no vendible, mercadería prestada, apartados activos, ventas a crédito, saldos pendientes, créditos de proveedor y saldos a favor de clientes.
-
-### RN-054 — Los reportes no deben mezclar fecha real y fecha operativa sin aclaración
-
-Si un reporte usa `created_at`, debe indicarlo.
-
-Si usa `business_date`, también debe indicarlo.
-
-Esto es importante especialmente en reportes de caja y ventas diarias.
-
----
-
-## 18. Resumen de reglas críticas
-
-Las reglas más importantes del sistema son:
-
-```text
-La disponibilidad no es igual al stock físico.
-Una venta descuenta inventario, salvo que el inventario ya haya sido separado previamente.
-Un apartado reserva inventario.
-El cambio de producto en apartado se maneja cancelando la reserva actual, generando saldo a favor y creando un nuevo apartado.
-Un cliente puede tener saldo a favor.
-Una caja cerrada mueve ventas posteriores al siguiente business_date.
-La mercadería prestada no es venta y no está disponible para venta.
-La mercadería dañada no está disponible para venta.
-Un retorno a proveedor puede generar crédito, reembolso o reemplazo.
-Los créditos de proveedor pueden aplicarse parcialmente.
-Los roles son dinámicos.
-Las acciones se autorizan por permisos.
-El MVP debe guardar trazabilidad para contabilidad futura.
-Toda operación sensible debe auditarse.
-```
-
-
----
-
-## Corrección aplicada — Devoluciones sobre venta
-
-### RN-DEV-001 — Devolución sobre venta no genera saldo a favor
-
-La devolución sobre venta aplica cuando una venta fue válida, pero posteriormente el cliente devuelve el producto.
-
-Toda devolución autorizada debe retornar el dinero al cliente en el momento. No debe generar saldo a favor del cliente.
-
-### RN-DEV-002 — Método de devolución
-
-El método de devolución puede ser diferente al método de pago original, siempre que quede registrado y auditado.
-
-Ejemplo:
-
-```text
-La venta original fue pagada por transferencia.
-La devolución se realiza en efectivo.
-El sistema registra que la devolución fue en efectivo.
-La caja se ajusta correctamente.
-```
-
-### RN-DEV-003 — Estado del producto devuelto
-
-El producto devuelto debe clasificarse según su estado. Si está en buen estado puede volver al inventario disponible; si está dañado debe pasar a mercadería dañada/no vendible.
+- En el MVP no se implementaran tablas historicas.
+- `audit_logs` y `business_events` podran limpiarse por antiguedad mediante politica de retencion.
+- No se eliminaran registros recientes ni necesarios para procesos abiertos, investigacion activa o cierres pendientes.
