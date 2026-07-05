@@ -1,41 +1,52 @@
 # 08 - API Contracts
 
-## Objetivo
+## Propósito
 
-Definir la guía de endpoints del backend: rutas, métodos HTTP, permisos, request/response base, errores y reglas generales de API.
+Este documento define los contratos de API de Automata hasta el MVP. Debe guiar endpoints FastAPI, schemas Pydantic, servicios frontend, manejo de errores y desarrollo asistido por IA.
 
-## Convenciones generales
+La API debe ser consistente, predecible y suficientemente explícita para que el frontend y el backend puedan desarrollarse por módulos sin perder reglas de negocio.
 
-Base URL:
+---
 
-```text
-/api/v1
-```
+## 1. Convenciones generales
 
-Formato principal:
+| Concepto | Decisión |
+|---|---|
+| Base URL | `/api/v1` |
+| Request/response principal | JSON |
+| Uploads | `multipart/form-data` |
+| Auth | Bearer token |
+| Paginación | `items`, `total`, `page`, `page_size` |
+| Acciones especiales | `POST` |
+| Reports | Solo lectura |
+| Movement types | Solo lectura en MVP |
 
-- Request: JSON.
-- Response: JSON.
-- Uploads: `multipart/form-data`.
-
-Autenticación:
+Header de autenticación:
 
 ```http
 Authorization: Bearer <access_token>
 ```
 
-Excepciones:
+Endpoints públicos iniciales:
 
-- `POST /api/v1/auth/login`
-- `GET /api/v1/health`
+```text
+POST /api/v1/auth/login
+GET  /api/v1/health
+```
 
-## Respuesta estándar
+---
 
-Todas las respuestas JSON deben incluir `status_code`.
+## 2. Formato estándar de respuesta
 
-El HTTP status real debe coincidir con `status_code` del body.
+Todas las respuestas JSON deben incluir `status_code` en el body.
 
-### Respuesta exitosa
+Regla obligatoria:
+
+```text
+El HTTP status real debe coincidir con status_code del body.
+```
+
+### 2.1 Éxito
 
 ```json
 {
@@ -45,7 +56,7 @@ El HTTP status real debe coincidir con `status_code` del body.
 }
 ```
 
-### Respuesta de creación
+### 2.2 Creación
 
 ```json
 {
@@ -57,7 +68,7 @@ El HTTP status real debe coincidir con `status_code` del body.
 }
 ```
 
-### Respuesta de lista
+### 2.3 Lista paginada
 
 ```json
 {
@@ -72,45 +83,87 @@ El HTTP status real debe coincidir con `status_code` del body.
 }
 ```
 
-### Respuesta de error
+### 2.4 Error
 
 ```json
 {
   "status_code": 404,
   "code": "resource.not_found",
   "message": "El recurso solicitado no existe.",
-  "details": {}
+  "details": {
+    "resource": "product",
+    "id": 15
+  }
 }
 ```
 
-## Códigos HTTP principales
+---
 
-- `200 OK`
-- `201 Created`
-- `400 Bad Request`
-- `401 Unauthorized`
-- `403 Forbidden`
-- `404 Not Found`
-- `409 Conflict`
-- `422 Validation Error`
-- `500 Internal Server Error`
+## 3. HTTP status codes
 
-## Reglas comunes
+| Código | Uso |
+|---|---|
+| 200 | Operación exitosa |
+| 201 | Recurso creado |
+| 400 | Regla de negocio inválida o request inconsistente |
+| 401 | No autenticado |
+| 403 | Sin permiso |
+| 404 | Recurso no encontrado |
+| 409 | Conflicto de estado o duplicado |
+| 422 | Validación de schema |
+| 500 | Error interno |
 
-- `GET` lista: retorna `data.items`, `total`, `page`, `page_size`.
-- `GET` detalle: retorna `data` con el objeto.
-- `POST` crear: retorna `201` y `data` con id o resumen.
-- `PUT` actualizar: retorna `200`.
-- `DELETE`: desactiva o aplica borrado lógico.
-- Acciones especiales usan `POST`.
-- Uploads usan `multipart/form-data`.
-- Endpoints protegidos requieren Bearer token y permiso.
+---
 
-## Auth
+## 4. Reglas CRUD comunes
 
-### POST /api/v1/auth/login
+| Acción | Método | Regla |
+|---|---|---|
+| Listar | GET | Devuelve `items`, `total`, `page`, `page_size` |
+| Detalle | GET | Devuelve objeto en `data` |
+| Crear | POST | Devuelve 201 y `data.id` |
+| Actualizar | PUT | Devuelve 200 y resumen |
+| Desactivar | DELETE | Borrado lógico, no físico |
+| Acción especial | POST | Usar verbo funcional en ruta |
+| Upload | POST | `multipart/form-data` |
 
-Permiso: ninguno.
+---
+
+## 5. Query params comunes
+
+Listas paginadas pueden usar:
+
+```text
+page
+page_size
+search
+is_active
+sort_by
+sort_dir
+```
+
+Filtros por fecha deben usar:
+
+```text
+business_date_from
+business_date_to
+created_at_from
+created_at_to
+```
+
+---
+
+## 6. Auth
+
+### Endpoints
+
+```text
+POST /api/v1/auth/login
+GET  /api/v1/auth/me
+POST /api/v1/auth/logout
+```
+
+### POST /auth/login
 
 Request:
 
@@ -136,30 +189,22 @@ Response:
       "username": "admin",
       "first_name": "Administrador",
       "last_name": "Sistema",
-      "permissions": [
-        "products.view",
-        "sales.create"
-      ]
+      "permissions": ["products.view", "sales.create"]
     }
   }
 }
 ```
 
-### GET /api/v1/auth/me
+Reglas:
 
-Permiso: usuario autenticado.
+- Login solo con `username`.
+- Email no se usa para login.
+- Token dura 8 horas por defecto.
+- Logout elimina token en frontend.
 
-Devuelve usuario, roles y permisos.
+---
 
-### POST /api/v1/auth/logout
-
-Permiso: usuario autenticado.
-
-Regla: el backend responde OK, pero el logout real ocurre eliminando el token en frontend.
-
-## Users / Roles / Permissions
-
-Endpoints:
+## 7. Users / Roles / Permissions
 
 ```text
 GET    /api/v1/users
@@ -179,15 +224,22 @@ GET    /api/v1/permissions
 
 Reglas:
 
-- Login solo usa `username`.
-- `email` es dato de contacto.
 - `username` obligatorio y único.
-- Los permisos se siembran con Alembic.
-- En MVP no se crean permisos libremente desde pantalla.
+- `email` contacto opcional.
+- DELETE desactiva.
+- `roles/{id}/permissions` reemplaza permisos del rol.
+- Permisos se siembran con Alembic.
 
-## Products
+Permisos:
 
-Endpoints:
+```text
+users.view/create/update/deactivate/reset_password
+roles.view/create/update/assign_permissions
+```
+
+---
+
+## 8. Products
 
 ```text
 GET    /api/v1/products
@@ -195,9 +247,7 @@ POST   /api/v1/products
 GET    /api/v1/products/{id}
 PUT    /api/v1/products/{id}
 DELETE /api/v1/products/{id}
-
 POST   /api/v1/products/{id}/image
-
 POST   /api/v1/products/{id}/variants
 PUT    /api/v1/products/variants/{variant_id}
 DELETE /api/v1/products/variants/{variant_id}
@@ -206,23 +256,48 @@ DELETE /api/v1/products/variants/{variant_id}
 Catálogos:
 
 ```text
-/api/v1/products/categories
-/api/v1/products/brands
-/api/v1/products/sizes
-/api/v1/products/colors
+GET/POST/PUT/DELETE /api/v1/products/categories
+GET/POST/PUT/DELETE /api/v1/products/brands
+GET/POST/PUT/DELETE /api/v1/products/sizes
+GET/POST/PUT/DELETE /api/v1/products/colors
+```
+
+Crear producto:
+
+```json
+{
+  "custom_code": "F102",
+  "name": "Zapato escolar negro",
+  "description": "Zapato escolar para niño",
+  "category_id": 1,
+  "brand_id": 1,
+  "segment": "kids",
+  "sale_price": 650.00
+}
+```
+
+Crear variante:
+
+```json
+{
+  "size_id": 1,
+  "color_id": 1,
+  "variant_code": "F102-37-NEGRO",
+  "barcode": null,
+  "sale_price_override": null
+}
 ```
 
 Reglas:
 
-- `products` maneja catálogo, no stock.
-- Variantes representan talla y color.
-- `sale_price_override` permite precio especial.
-- Imagen se sube como `multipart/form-data`.
+- Products maneja catálogo, no stock.
+- Variantes representan talla/color.
+- Imagen con `multipart/form-data`.
 - DB guarda `image_url`.
 
-## Inventory
+---
 
-Endpoints:
+## 9. Inventory
 
 ```text
 GET  /api/v1/inventory/stock
@@ -238,25 +313,62 @@ POST /api/v1/inventory/loans/{id}/return
 Subrecursos:
 
 ```text
-/api/v1/inventory/branches
-/api/v1/inventory/warehouses
-/api/v1/inventory/movement-types
+GET/POST/PUT/DELETE /api/v1/inventory/branches
+GET/POST/PUT/DELETE /api/v1/inventory/warehouses
+GET               /api/v1/inventory/movement-types
+```
+
+Filtros de stock:
+
+```text
+product_id
+product_variant_id
+warehouse_id
+branch_id
+category_id
+brand_id
+search
+```
+
+Ajuste:
+
+```json
+{
+  "product_variant_id": 10,
+  "warehouse_id": 1,
+  "direction": "in",
+  "quantity": 5,
+  "unit_cost": 300.00,
+  "reason": "Ajuste por conteo físico",
+  "business_date": "2026-06-28"
+}
+```
+
+Transferencia:
+
+```json
+{
+  "product_variant_id": 10,
+  "source_warehouse_id": 1,
+  "target_warehouse_id": 2,
+  "quantity": 3,
+  "reason": "Traslado a exhibición",
+  "business_date": "2026-06-28"
+}
 ```
 
 Reglas:
 
-- `stock` muestra saldos actuales.
-- `movements` muestra trazabilidad.
-- Todo ajuste genera movimiento.
-- Transferencias generan salida y entrada.
-- Mercadería dañada deja de estar disponible.
-- Baja requiere permiso especial.
-- Mercadería prestada no es venta.
-- `movement-types` es solo lectura en MVP.
+- Todo cambio genera movimiento.
+- Transferencia genera salida y entrada.
+- Dañado deja de estar disponible.
+- Baja reduce existencia física.
+- Prestado no es venta.
+- Movement types solo lectura.
 
-## Customers
+---
 
-Endpoints:
+## 10. Customers
 
 ```text
 GET    /api/v1/customers
@@ -264,23 +376,47 @@ POST   /api/v1/customers
 GET    /api/v1/customers/{id}
 PUT    /api/v1/customers/{id}
 DELETE /api/v1/customers/{id}
-
 POST   /api/v1/customers/{id}/photo
 GET    /api/v1/customers/{id}/balance-movements
 POST   /api/v1/customers/{id}/balance-adjustment
 ```
 
+Crear cliente:
+
+```json
+{
+  "first_name": "María",
+  "last_name": "López",
+  "phone": "8888-8888",
+  "address": "Managua",
+  "foot_size": "37",
+  "email": null,
+  "identification_number": "001-000000-0000A",
+  "birth_date": null,
+  "notes": "Cliente frecuente"
+}
+```
+
+Ajuste saldo:
+
+```json
+{
+  "movement_type": "credit_adjustment",
+  "amount": 100.00,
+  "reason": "Ajuste autorizado por gerencia.",
+  "business_date": "2026-06-28"
+}
+```
+
 Reglas:
 
-- `first_name`, `last_name`, `phone`, `address` y `foot_size` son obligatorios.
-- Foto se guarda como archivo y DB guarda `photo_url`.
-- Saldo a favor no se modifica directamente.
-- Todo cambio genera `customer_balance_movement`.
-- Devoluciones sobre venta no generan saldo a favor.
+- Saldo no se modifica directamente.
+- Todo cambio genera movimiento.
+- Devoluciones de venta no generan saldo a favor.
 
-## Sales
+---
 
-Endpoints:
+## 11. Sales
 
 ```text
 GET  /api/v1/sales
@@ -290,34 +426,73 @@ POST /api/v1/sales/{id}/void
 POST /api/v1/sales/{id}/return
 GET  /api/v1/sales/{id}/payments
 POST /api/v1/sales/{id}/payments
+GET/POST/PUT/DELETE /api/v1/sales/payment-methods
 ```
 
-Subrecurso:
+Crear venta:
 
-```text
-GET    /api/v1/sales/payment-methods
-POST   /api/v1/sales/payment-methods
-PUT    /api/v1/sales/payment-methods/{id}
-DELETE /api/v1/sales/payment-methods/{id}
+```json
+{
+  "customer_id": 1,
+  "sale_type": "cash",
+  "business_date": "2026-06-28",
+  "items": [
+    {
+      "product_variant_id": 10,
+      "quantity": 1,
+      "unit_price": 650.00,
+      "discount_amount": 0.00
+    }
+  ],
+  "payments": [
+    {
+      "payment_method_id": 1,
+      "amount": 650.00,
+      "payment_reference": null,
+      "notes": null
+    }
+  ]
+}
+```
+
+Anular:
+
+```json
+{
+  "void_reason": "Error operativo en talla seleccionada.",
+  "business_date": "2026-06-28"
+}
+```
+
+Devolución:
+
+```json
+{
+  "refund_payment_method_id": 1,
+  "reason": "Cliente devuelve producto.",
+  "business_date": "2026-06-28",
+  "items": [
+    {
+      "sale_item_id": 50,
+      "quantity": 1,
+      "return_to_inventory": true,
+      "inventory_condition": "sellable"
+    }
+  ]
+}
 ```
 
 Reglas:
 
-- Crear venta descuenta inventario.
-- Registra pagos.
-- Si método afecta caja, registra `cash_movement`.
-- Impuesto se toma desde `settings` y se copia a venta/detalle.
-- `unit_price`, `unit_cost`, `tax_rate`, `tax_amount` son copia histórica.
-- Venta a crédito puede quedar con `balance_due`.
-- Si usa saldo a favor, se registra movimiento de saldo.
+- Venta descuenta inventario.
+- Método con `affects_cash` registra caja.
+- Venta crédito requiere cliente.
 - Anulación solo mismo `business_date`.
-- Anulación revierte inventario, pagos y caja.
-- Devolución sobre venta devuelve dinero en el momento.
-- Devolución no genera saldo a favor.
+- Devolución devuelve dinero y no genera saldo a favor.
 
-## Layaways
+---
 
-Endpoints:
+## 12. Layaways
 
 ```text
 GET  /api/v1/layaways
@@ -329,20 +504,47 @@ POST /api/v1/layaways/{id}/extend
 POST /api/v1/layaways/{id}/complete
 ```
 
+Crear apartado:
+
+```json
+{
+  "customer_id": 1,
+  "business_date": "2026-06-28",
+  "due_date": "2026-08-28",
+  "items": [
+    {
+      "product_variant_id": 10,
+      "quantity": 1,
+      "unit_price": 650.00
+    }
+  ],
+  "initial_payment": {
+    "payment_method_id": 1,
+    "amount": 200.00
+  }
+}
+```
+
+Completar:
+
+```json
+{
+  "business_date": "2026-06-28"
+}
+```
+
 Reglas:
 
 - Apartado reserva inventario.
-- Pagos viven en `layaway_payments`.
-- Plazo y pago mínimo se toman de `settings`.
+- Pago mínimo y plazo vienen de `settings`.
 - Cancelación puede generar saldo a favor.
-- Cambio de producto se maneja cancelando/liberando y creando nuevo apartado.
-- Al completarse, genera una venta en `sales`.
-- La venta usa `source_type = "layaway"` y `source_id = layaway.id`.
-- No se debe descontar inventario dos veces.
+- Completar genera venta en `sales`.
+- Venta usa `source_type = "layaway"` y `source_id`.
+- No descontar inventario dos veces.
 
-## Cash
+---
 
-Endpoints:
+## 13. Cash
 
 ```text
 GET  /api/v1/cash/sessions
@@ -353,19 +555,34 @@ GET  /api/v1/cash/sessions/{id}/movements
 POST /api/v1/cash/sessions/{id}/manual-movement
 ```
 
+Abrir:
+
+```json
+{
+  "branch_id": 1,
+  "business_date": "2026-06-28",
+  "opening_amount": 1000.00
+}
+```
+
+Cerrar:
+
+```json
+{
+  "counted_amount": 5400.00,
+  "notes": "Cierre sin observaciones"
+}
+```
+
 Reglas:
 
-- Cada caja pertenece a un `business_date`.
-- Cierre vive en `cash_sessions`.
-- `cash_movements` guarda entradas y salidas.
-- `expected_amount` se calcula.
-- `counted_amount` lo registra usuario.
-- `difference_amount` representa diferencia.
-- Caja cerrada requiere confirmación para usar siguiente `business_date`.
+- Caja pertenece a `business_date`.
+- Cierre calcula esperado, contado y diferencia.
+- Movimiento manual requiere motivo.
 
-## Suppliers
+---
 
-Endpoints:
+## 14. Suppliers
 
 ```text
 GET    /api/v1/suppliers
@@ -373,28 +590,25 @@ POST   /api/v1/suppliers
 GET    /api/v1/suppliers/{id}
 PUT    /api/v1/suppliers/{id}
 DELETE /api/v1/suppliers/{id}
-
 GET  /api/v1/suppliers/returns
 POST /api/v1/suppliers/returns
 GET  /api/v1/suppliers/returns/{id}
 POST /api/v1/suppliers/returns/{id}/send
 POST /api/v1/suppliers/returns/{id}/resolve
-
 GET  /api/v1/suppliers/credits
 POST /api/v1/suppliers/credits/{id}/apply
 ```
 
 Reglas:
 
-- Retornos pueden quedar pendientes.
-- Producto puede separarse como no vendible antes de enviarse.
-- Compensación puede ser `credit`, `refund`, `replacement` o `none`.
-- Crédito genera `supplier_credit`.
-- Reemplazo genera entrada `supplier_replacement_in`.
+- Retorno a proveedor puede quedar pendiente.
+- Producto puede separarse como no vendible.
+- Resolución: credit, refund, replacement, none.
+- Reemplazo genera entrada de inventario.
 
-## Purchases
+---
 
-Endpoints:
+## 15. Purchases
 
 ```text
 GET  /api/v1/purchases
@@ -408,15 +622,14 @@ POST /api/v1/purchases/{id}/payments
 
 Reglas:
 
-- `purchase_items.unit_cost` guarda costo histórico.
-- Al recibir mercadería genera `purchase_in`.
 - Compra puede ser contado o crédito.
-- `supplier_payments` registra pagos y abonos.
-- Crédito de proveedor se aplica mediante `supplier_credit_application`.
+- Recepción genera `purchase_in`.
+- `purchase_items.unit_cost` guarda costo histórico.
+- Crédito proveedor se aplica mediante `supplier_credit_applications`.
 
-## Reports
+---
 
-Endpoints:
+## 16. Reports
 
 ```text
 GET /api/v1/reports/sales
@@ -429,17 +642,20 @@ GET /api/v1/reports/purchases
 GET /api/v1/reports/supplier-returns
 ```
 
-Regla: solo lectura.
+Regla:
 
-## Settings
+```text
+reports es solo lectura.
+```
 
-Endpoints:
+---
+
+## 17. Settings
 
 ```text
 GET /api/v1/settings
 GET /api/v1/settings/{key}
 PUT /api/v1/settings/{key}
-
 GET  /api/v1/settings/exchange-rates
 POST /api/v1/settings/exchange-rates
 PUT  /api/v1/settings/exchange-rates/{id}
@@ -447,19 +663,26 @@ PUT  /api/v1/settings/exchange-rates/{id}
 
 Reglas:
 
-- `settings` vive en DB.
-- Solo se modifican settings editables.
+- Solo modificar settings editables.
 - Backend valida `value_type`.
+- Cambios sensibles auditan.
 - Configuración técnica sigue en `.env`.
-- Cambios sensibles registran auditoría.
 
-Ejemplos:
+---
 
-- `sales.tax_enabled`
-- `sales.default_tax_rate`
-- `sales.tax_name`
-- `layaways.default_term_days`
-- `layaways.minimum_down_payment_percent`
-- `system.default_currency`
-- `audit.retention_months`
-- `events.retention_months`
+## 18. Códigos de error funcionales
+
+| Código | Uso |
+|---|---|
+| `auth.invalid_credentials` | Login inválido |
+| `auth.unauthorized` | Falta token |
+| `auth.forbidden` | Sin permiso |
+| `resource.not_found` | Recurso no existe |
+| `resource.duplicate` | Valor único duplicado |
+| `business.invalid_state` | Estado no permite acción |
+| `inventory.insufficient_stock` | Stock insuficiente |
+| `sales.void_not_allowed` | Anulación no permitida |
+| `sales.return_not_allowed` | Devolución no permitida |
+| `layaway.not_ready_to_complete` | Apartado no puede completarse |
+| `cash.session_closed` | Caja cerrada |
+| `validation.invalid_input` | Validación general |

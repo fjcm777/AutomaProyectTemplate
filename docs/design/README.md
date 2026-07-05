@@ -1,6 +1,8 @@
-# Automata Design Docs
+# Automata Docs - Recovered Full Documentation
 
-Documentación base del sistema Automata para Calzado Norita.
+## Estado
+
+Este paquete corrige la degradación documental anterior y recupera la documentación completa hasta `08-api-contracts.md` antes de continuar con `09-frontend-routes.md`.
 
 ## Documentos incluidos
 
@@ -13,6 +15,7 @@ Documentación base del sistema Automata para Calzado Norita.
 - `06-auth-rbac.md`
 - `07-modules.md`
 - `08-api-contracts.md`
+- `CODE_ALIGNMENT.md`
 
 ## Diagramas incluidos
 
@@ -22,12 +25,28 @@ Documentación base del sistema Automata para Calzado Norita.
 - `automata-modules.drawio`
 - `automata-api-contracts.drawio`
 
-## Estado
+## Corrección principal
 
-Este paquete incorpora el documento `08-api-contracts.md` y actualiza los documentos afectados por las decisiones de API:
+El documento `05-database.md` fue reconstruido como diccionario técnico completo, incluyendo:
 
-- Formato estándar de respuestas.
-- HTTP status real + `status_code` en body.
-- Contratos base por módulo.
-- Apartados completados generan venta en `sales`.
-- Ventas originadas desde apartados usan `source_type/source_id`.
+- tabla
+- campo
+- tipo PostgreSQL
+- nullable
+- default
+- PK / FK
+- unique
+- checks
+- índices
+- descripción funcional
+- reglas relacionadas
+
+## Base utilizada
+
+- Decisiones funcionales y técnicas confirmadas en el flujo de trabajo.
+- Documentación previa recuperada antes del error de resumen.
+- Estructura real del código actual en `AutomaProyectTemplate.zip`.
+
+## Regla de continuidad
+
+No continuar con `09-frontend-routes.md` hasta que este paquete sea revisado y aprobado.

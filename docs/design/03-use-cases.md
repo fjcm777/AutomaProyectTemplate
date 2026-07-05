@@ -1,214 +1,333 @@
-# 03 - Use Cases
-
-## Convención
-
-Cada caso de uso debe documentarse con:
-
-- Código.
-- Actor.
-- Objetivo.
-- Precondiciones.
-- Flujo resumido.
-- Reglas.
-- Permisos.
-- Datos afectados.
-- Eventos.
-- Etapa.
-
-## CU-000 Autenticación y seguridad
-
-### CU-001 Iniciar sesión
-
-Actor: usuario del sistema.  
-Permiso: ninguno.  
-Regla: el login se realiza únicamente con `username` y contraseña.
-
-### CU-002 Consultar usuario actual
-
-Actor: usuario autenticado.  
-Regla: devuelve usuario, roles y permisos.
-
-### CU-003 Cerrar sesión
-
-Actor: usuario autenticado.  
-Regla: el frontend elimina el token de `sessionStorage`.
-
-## CU-100 Productos e inventario
-
-### CU-101 Crear producto
-
-Permiso: `products.create`.
-
-Reglas:
-
-- Producto tiene código personalizado único.
-- Puede tener imagen principal.
-- Puede tener variantes por talla y color.
-- No registra inventario por sí mismo.
-
-### CU-102 Crear variante
-
-Permiso: `products.update`.
-
-Reglas:
-
-- Variante pertenece a producto.
-- Combinación producto/talla/color no debe duplicarse.
-- Puede tener `sale_price_override`.
-
-### CU-103 Consultar disponibilidad
-
-Permiso: `inventory.view`.
-
-Regla: disponibilidad se consulta desde inventario, no desde productos.
-
-### CU-104 Ajustar inventario
-
-Permiso: `inventory.adjust`.
-
-Regla: todo ajuste genera movimiento de inventario y requiere motivo.
-
-### CU-105 Marcar mercadería dañada
-
-Permiso: `inventory.mark_damaged`.
-
-Regla: deja de estar disponible, pero no se da de baja automáticamente.
-
-### CU-106 Dar de baja inventario
-
-Permiso: `inventory.writeoff`.
-
-Regla: requiere permiso especial y auditoría.
-
-### CU-107 Registrar mercadería prestada
-
-Permiso: `inventory.loan`.
-
-Regla: no es venta y deja de estar disponible.
-
-## CU-200 Ventas, crédito, apartados y devoluciones
-
-### CU-201 Crear venta de contado
-
-Permiso: `sales.create`.
-
-Reglas:
-
-- Descuenta inventario.
-- Registra pago.
-- Registra caja si método afecta efectivo.
-- Copia impuesto aplicado desde `settings`.
-
-### CU-202 Crear venta a crédito
-
-Permiso: `sales.credit_create`.
-
-Regla: puede quedar saldo pendiente.
-
-### CU-203 Registrar abono a crédito
-
-Permiso: `sales.credit_payment`.
-
-### CU-204 Anular venta
-
-Permiso: `sales.void`.
-
-Reglas:
-
-- Solo mismo `business_date`.
-- Requiere motivo.
-- Revierte inventario, pagos y caja.
-- No genera saldo a favor.
-
-### CU-205 Registrar devolución sobre venta
-
-Permiso: `sales.return`.
-
-Reglas:
-
-- Devuelve dinero en el momento.
-- No genera saldo a favor.
-- Método de devolución puede ser distinto al original.
-
-### CU-206 Crear apartado
-
-Permiso: `layaways.create`.
-
-Regla: reserva inventario.
-
-### CU-207 Completar apartado
-
-Permiso: `layaways.payment`.
-
-Regla: genera venta en `sales`.
-
-## CU-300 Caja
-
-### CU-301 Abrir caja
-
-Permiso: `cash.open`.
-
-### CU-302 Cerrar caja
-
-Permiso: `cash.close`.
-
-Regla: calcula esperado, contado y diferencia.
-
-### CU-303 Movimiento manual de caja
-
-Permiso: `cash.manual_movement`.
-
-## CU-400 Compras y proveedores
-
-### CU-401 Crear proveedor
-
-Permiso: `suppliers.create`.
-
-### CU-402 Crear compra
-
-Permiso: `purchases.create`.
-
-### CU-403 Recibir compra
-
-Permiso: `purchases.create`.
-
-Regla: genera entrada de inventario.
-
-### CU-404 Registrar retorno a proveedor
-
-Permiso: `supplier_returns.create`.
-
-Regla: puede quedar pendiente.
-
-### CU-405 Resolver retorno a proveedor
-
-Permiso: `supplier_returns.resolve`.
-
-Regla: puede generar crédito, reembolso, reemplazo o sin compensación.
-
-## CU-500 Reportes
-
-Reportes MVP:
-
-- Ventas por `business_date`.
-- Inventario disponible.
-- Stock bajo.
-- Créditos pendientes.
-- Apartados activos o vencidos.
-- Caja.
-- Compras.
-- Retornos a proveedor pendientes.
-
-## CU-600 Contabilidad futura
-
-La contabilidad completa queda fuera del MVP, pero el sistema guardará trazabilidad suficiente.
-
-## CU-700 Configuración, auditoría y jobs
-
-Incluye:
-
-- `settings`.
-- `exchange_rates`.
-- Auditoría selectiva.
-- Eventos internos.
-- Jobs de limpieza y detección.
+# 03 — Casos de Uso
+
+> **Contexto del negocio:** Tienda de calzado y artículos complementarios (bolsos, accesorios, etc.).
+> Se manejan ventas en efectivo, ventas por transferencia bancaria, ventas con tarjeta, ventas a crédito y ventas por sistema de apartado. **No se manejan cotizaciones**.
+
+---
+
+## Actores del Sistema
+
+| Actor | Descripción |
+|-------|-------------|
+| **Admin** | Acceso total al sistema |
+| **Manager** | Supervisión, reportes y administración de clientes, sin gestión de usuarios |
+| **Seller** | Crea facturas, aplica descuentos, cobra, gestiona clientes, crea apartados, consulta disponibilidad de productos y ve reportes de ventas |
+| **Cashier** | Registra pagos de facturas, abonos de clientes y pagos de apartados. No crea facturas ni edita clientes |
+| **Warehouse** | Gestión completa de inventario |
+| **Purchasing** | Gestión de proveedores y órdenes de compra |
+| **Accountant** | Gestión contable, catálogo de cuentas, asientos, cierres y reportes financieros |
+| **System** | Acciones automáticas del sistema |
+
+---
+
+## AUTH — Autenticación y Usuarios
+
+| ID | Actor | Caso de Uso |
+|----|-------|-------------|
+| CU-001 | Admin | Crear, editar y desactivar usuarios |
+| CU-002 | Admin | Asignar roles y permisos por módulo |
+| CU-003 | Usuario | Iniciar y cerrar sesión (JWT) |
+| CU-004 | Usuario | Cambiar contraseña |
+| CU-005 | Admin | Ver log de actividad del sistema |
+| CU-006 | Admin | Gestionar permisos y asignaciones |
+| CU-007 | Admin | Revocar tokens activos para forzar cierre de sesión |
+
+---
+
+## INVENTORY — Inventario
+
+| ID | Actor | Caso de Uso |
+|----|-------|-------------|
+| CU-101 | Warehouse / Admin | Crear, editar y desactivar productos |
+| CU-102 | Warehouse / Admin | Gestionar categorías |
+| CU-103 | Warehouse / Admin | Gestionar variantes de producto |
+| CU-103a | Warehouse / Admin | Gestionar catálogos de tallas y colores |
+| CU-104 | Warehouse | Registrar entrada de mercancía desde orden de compra |
+| CU-105 | Warehouse | Registrar ajuste de inventario |
+| CU-106 | Warehouse | Registrar traslado entre bodegas |
+| CU-107 | Warehouse / Admin / Manager | Ver stock actual por producto, variante y bodega |
+| CU-108 | Admin | Configurar stock mínimo y alertas |
+| CU-109 | System | Descontar stock automáticamente al facturar |
+| CU-110 | Admin / Warehouse / Manager | Ver kardex completo |
+| CU-111 | Warehouse / Admin | Registrar devolución de venta con movimiento de inventario |
+| CU-112 | Warehouse / Admin | Revertir entrada de mercancía o recepción errónea |
+| CU-113 | System | Reservar stock al crear apartado |
+| CU-114 | System | Liberar stock reservado por apartado vencido o cancelado según política |
+| CU-115 | Seller / Warehouse / Admin / Manager | Consultar productos disponibles por nombre, código, talla, color y bodega |
+
+### Reglas de inventario relacionadas
+
+| Área | Regla |
+|------|-------|
+| Disponibilidad para venta | El stock disponible debe considerar el stock físico menos el stock reservado por apartados activos |
+| Consulta de disponibilidad | El vendedor debe poder confirmar existencia de productos por variante, talla, color y bodega |
+| Devoluciones de venta | Si el producto devuelto está en condiciones de reventa, debe reingresar al inventario; si está defectuoso, debe registrarse sin disponibilidad para venta |
+| Reservas por apartado | La venta por apartado reserva inventario, no lo descuenta definitivamente hasta completar el flujo definido |
+
+---
+
+## SALES — Ventas y Facturación
+
+| ID | Actor | Caso de Uso |
+|----|-------|-------------|
+| CU-201 | Seller | Crear factura de venta directa |
+| CU-202 | Seller | Agregar productos por código, nombre o variante |
+| CU-203 | Seller | Aplicar descuentos por línea o total |
+| CU-204 | Seller | Seleccionar modalidad de venta: efectivo, transferencia, tarjeta, crédito o apartado |
+| CU-205 | Seller / Cashier | Registrar pago de factura |
+| CU-205a | Seller / Cashier | Registrar abonos parciales o anular pagos |
+| CU-205b | Seller / Cashier | Crear venta por sistema de apartado con pago inicial mínimo |
+| CU-205c | Seller / Cashier | Registrar pagos parciales de apartado durante el plazo permitido |
+| CU-205d | System | Alertar apartados vencidos cuando el cliente no complete el pago en máximo 2 meses |
+| CU-205e | Seller / Cashier | Cerrar apartado pagado y generar factura o documento final según proceso definido |
+| CU-206 | Seller | Generar nota de crédito / devolución |
+| CU-206a | Seller / Admin / System | Registrar devolución de venta con movimiento de inventario y evento contable |
+| CU-207 | Seller / Admin | Anular factura con motivo |
+| CU-207a | Seller / Admin | Gestionar estados de factura |
+| CU-208 | Admin | Configurar impuestos y series de factura |
+| CU-209 | System | Descontar inventario al emitir factura |
+| CU-210 | System | Generar PDF de factura |
+| CU-211 | Cashier / Admin | Abrir caja del día operativo |
+| CU-212 | Cashier / Admin | Registrar movimientos manuales de caja |
+| CU-213 | Cashier / Manager / Admin | Consultar resumen esperado de caja |
+| CU-214 | Cashier / Manager / Admin | Realizar arqueo de caja |
+| CU-215 | Cashier / Manager / Admin | Registrar diferencia de caja: sobrante o faltante |
+| CU-216 | Cashier / Manager / Admin | Cerrar caja |
+| CU-217 | System | Asignar ventas posteriores al siguiente día operativo después del cierre de caja |
+| CU-218 | Admin / Manager | Reabrir caja con permiso especial |
+
+### Modalidades de venta
+
+| Modalidad | Descripción |
+|-----------|-------------|
+| **Venta en efectivo** | Venta pagada al momento. Incluye efectivo físico, transferencia bancaria y tarjeta |
+| **Venta a crédito** | Venta entregada al cliente con saldo pendiente, sujeta a límite de crédito |
+| **Venta por apartado** | El cliente selecciona productos, paga un porcentaje inicial y cancela el saldo por partes en máximo 2 meses |
+
+### Reglas de apartado
+
+| Regla | Descripción |
+|-------|-------------|
+| Porcentaje inicial | Debe ser configurable por el negocio |
+| Plazo máximo | 2 meses para completar el pago |
+| Pagos parciales | Se permiten múltiples abonos |
+| Inventario | Se reserva mientras el apartado esté activo |
+| Vencimiento | Si no se completa el pago en 2 meses, se genera alerta |
+| Liberación | La liberación de inventario por vencimiento debe ser configurable |
+| Cierre | Al completar el pago, el apartado se convierte en venta cerrada/factura según el flujo definido |
+
+
+### Reglas de caja y arqueo
+
+| Regla | Descripción |
+|-------|-------------|
+| Apertura de caja | Toda operación de cobro debe asociarse a una caja abierta o sesión de caja válida |
+| Fecha operativa | El sistema debe manejar `business_date` para separar la fecha real de la fecha operativa |
+| Arqueo antes de fin de día | Si la caja se cierra antes del final del día calendario, las ventas posteriores deben registrarse con el siguiente `business_date` |
+| Efectivo esperado | Se calcula con apertura de caja + pagos en efectivo + entradas manuales - salidas manuales - reembolsos en efectivo |
+| Diferencia de caja | El sistema debe registrar sobrante o faltante cuando el efectivo contado no coincida con el esperado |
+| Métodos de pago | El arqueo debe resumir efectivo, transferencia y tarjeta, aunque la diferencia física aplica principalmente al efectivo |
+| Reapertura | Reabrir caja debe requerir permiso especial y quedar auditado |
+| Contabilidad | Sobrantes y faltantes pueden generar eventos contables en segunda etapa |
+
+### Reglas de devoluciones sobre ventas
+
+| Regla | Descripción |
+|-------|-------------|
+| Movimiento de inventario | Toda devolución debe generar movimiento de inventario si el producto regresa físicamente |
+| Evento contable | Toda devolución debe generar un evento interno para contabilidad |
+| Nota de crédito | La devolución puede generar nota de crédito o reversa según política definida |
+| Producto defectuoso | Si el producto no está disponible para reventa, debe registrarse sin incrementar stock disponible |
+| Auditoría | Toda devolución debe registrar usuario, fecha, motivo y documento relacionado |
+
+---
+
+## CUSTOMERS — Clientes y Crédito
+
+| ID | Actor | Caso de Uso |
+|----|-------|-------------|
+| CU-301 | Admin / Manager / Seller | Crear y editar cliente |
+| CU-302 | Admin | Asignar límite de crédito |
+| CU-303 | Admin | Aprobar o rechazar solicitud de crédito |
+| CU-304 | Seller / Cashier | Registrar abono a cuenta del cliente |
+| CU-305 | Seller / Cashier / Manager / Accountant | Ver estado de cuenta del cliente |
+| CU-306 | Admin / Manager | Ver clientes con saldo vencido |
+| CU-307 | System | Bloquear venta si cliente excede límite de crédito |
+| CU-307a | System | Bloquear nuevas ventas y notificar al vendedor si supera límite de crédito |
+| CU-308 | Admin | Generar estado de cuenta para cliente |
+| CU-309 | Seller / Manager | Ver apartados activos, pagados y vencidos del cliente |
+
+---
+
+## SUPPLIERS — Proveedores
+
+| ID | Actor | Caso de Uso |
+|----|-------|-------------|
+| CU-401 | Admin / Purchasing | Crear y editar proveedor |
+| CU-402 | Purchasing | Crear orden de compra |
+| CU-402a | Purchasing / Admin | Confirmar o rechazar orden de compra |
+| CU-403 | Warehouse | Recibir mercancía contra orden de compra |
+| CU-404 | Admin | Registrar factura de proveedor |
+| CU-405 | Admin | Registrar pago a proveedor |
+| CU-406 | Admin / Manager / Accountant | Ver cuentas por pagar |
+| CU-407 | Admin / Manager / Purchasing | Ver historial de compras por proveedor |
+
+---
+
+## REPORTS — Reportes
+
+| ID | Actor | Caso de Uso |
+|----|-------|-------------|
+| CU-501 | Admin / Manager / Seller | Reporte de ventas por período, vendedor o producto |
+| CU-502 | Admin / Manager / Warehouse | Reporte de inventario |
+| CU-503 | Admin / Manager / Accountant | Reporte de cuentas por cobrar |
+| CU-504 | Admin / Manager / Accountant | Reporte de cuentas por pagar |
+| CU-505 | Admin / Warehouse | Reporte de productos bajo stock |
+| CU-506 | Admin / Warehouse | Reporte de movimientos de inventario |
+| CU-507 | Admin / Manager | Dashboard general con KPIs |
+| CU-507a | Admin / Manager / Seller | Reporte de apartados activos, pagados y vencidos |
+| CU-508 | Admin | Reporte de actividad de usuarios |
+| CU-509 | Admin | Reporte de permisos y roles asignados |
+
+---
+
+## ACCOUNTING — Contabilidad
+
+> Los casos de uso marcados como **(Segunda etapa)** forman parte del diseño general, pero no son obligatorios para el MVP.
+
+| ID | Actor | Caso de Uso |
+|----|-------|-------------|
+| CU-601 | Admin / Accountant | Gestionar catálogo de cuentas contables **(Segunda etapa)** |
+| CU-602 | Admin / Accountant | Definir reglas contables para ventas, compras, pagos, notas de crédito, apartados, devoluciones y ajustes **(Segunda etapa)** |
+| CU-603 | System / Accountant | Generar asientos de diario automáticos desde eventos del sistema **(Segunda etapa)** |
+| CU-604 | Accountant | Crear asientos de diario manuales **(Segunda etapa)** |
+| CU-605 | Accountant | Revisar, aprobar, anular o reversar asientos de diario **(Segunda etapa)** |
+| CU-606 | Admin / Accountant / Manager | Consultar libro diario **(Segunda etapa)** |
+| CU-607 | Admin / Accountant / Manager | Consultar libro mayor **(Segunda etapa)** |
+| CU-608 | Admin / Accountant / Manager | Generar balance general **(Segunda etapa)** |
+| CU-609 | Admin / Accountant / Manager | Generar estado de resultados **(Segunda etapa)** |
+| CU-610 | Accountant | Conciliar pagos, cuentas por cobrar y cuentas por pagar **(Segunda etapa)** |
+| CU-611 | Admin / Accountant | Configurar períodos fiscales **(Segunda etapa)** |
+| CU-612 | Accountant | Ejecutar validaciones previas al cierre contable **(Segunda etapa)** |
+| CU-613 | Accountant | Generar asientos de cierre del período **(Segunda etapa)** |
+| CU-614 | Accountant | Cerrar período fiscal **(Segunda etapa)** |
+| CU-615 | Accountant | Generar asiento de apertura del nuevo período **(Segunda etapa)** |
+| CU-616 | Admin / Accountant | Reabrir período fiscal con permiso especial **(Segunda etapa)** |
+| CU-617 | Accountant | Gestionar cuentas bancarias **(Segunda etapa)** |
+| CU-618 | Accountant | Importar o registrar movimientos bancarios **(Segunda etapa)** |
+| CU-619 | Accountant | Conciliar movimientos bancarios contra pagos del sistema **(Segunda etapa)** |
+
+### Reglas de contabilidad
+
+| Área | Regla |
+|------|-------|
+| Catálogo de cuentas | CU-601 administra el catálogo de cuentas contables usado por asientos, reglas y reportes |
+| Reglas contables | CU-602 define cómo los eventos del sistema se convierten en débitos y créditos |
+| Asientos de diario | Los asientos automáticos o manuales se registran en diario y luego alimentan libro mayor |
+| Cierre contable | El cierre contable debe validar asientos, generar cierre, bloquear el período y crear apertura del nuevo período |
+| Conciliación CxC/CxP | Revisa saldos de clientes y proveedores contra documentos y pagos registrados |
+| Conciliación bancaria | Compara movimientos del sistema contra movimientos reales del banco |
+
+---
+
+## INTERNAL EVENTS — Eventos internos del sistema
+
+> Esta sección no representa un módulo funcional visible al usuario. Es infraestructura interna para integrar módulos y preparar procesos futuros.
+
+| Evento | Origen | Propósito |
+|--------|--------|-----------|
+| `caja_abierta` | Sales / Cash Register | Registrar apertura de caja |
+| `arqueo_caja_realizado` | Sales / Cash Register | Registrar arqueo de caja |
+| `caja_cerrada` | Sales / Cash Register | Registrar cierre de caja |
+| `diferencia_caja_registrada` | Sales / Cash Register | Registrar sobrante o faltante de caja |
+| `venta_asignada_siguiente_dia_operativo` | Sales / System | Registrar venta posterior al cierre con siguiente `business_date` |
+| `factura_emitida` | Sales | Registrar emisión de factura |
+| `apartado_creado` | Sales | Registrar creación de apartado y reserva de stock |
+| `apartado_vencido` | Sales / System | Registrar vencimiento de apartado |
+| `pago_cliente_recibido` | Sales / Customers | Registrar pago o abono recibido |
+| `orden_compra_recibida` | Suppliers / Inventory | Registrar recepción de mercancía |
+| `ajuste_inventario_registrado` | Inventory | Registrar ajuste manual de inventario |
+| `devolucion_venta_registrada` | Sales / Inventory | Registrar devolución con efecto en inventario y contabilidad |
+| `periodo_cerrado` | Accounting | Registrar cierre de período **(Segunda etapa)** |
+| `asiento_cierre_generado` | Accounting | Registrar generación de asiento de cierre **(Segunda etapa)** |
+| `asiento_apertura_generado` | Accounting | Registrar generación de asiento de apertura **(Segunda etapa)** |
+
+---
+
+## Resumen de alcance por etapa
+
+| Área | Etapa |
+|------|-------|
+| Ventas directas, crédito y apartado | Primera etapa |
+| Inventario, stock, reservas y kardex | Primera etapa |
+| Clientes, proveedores, reportes básicos y RBAC | Primera etapa |
+| Consulta de disponibilidad para vendedores | Primera etapa |
+| Devoluciones con efecto en inventario | Primera etapa |
+| Arqueo de caja operativo | Primera etapa |
+| Catálogo de cuentas, reglas contables y asientos | Segunda etapa |
+| Cierre contable formal | Segunda etapa |
+| Conciliación bancaria | Segunda etapa |
+
+
+---
+
+## INVENTORY — Mercadería prestada y dañada
+
+| Código | Actor | Caso de uso |
+|---|---|---|
+| CU-116 | Warehouse / Seller / Manager / Admin | Registrar mercadería prestada |
+| CU-117 | Warehouse / Seller / Manager / Admin | Registrar devolución de mercadería prestada |
+| CU-118 | Seller / Manager / Admin | Convertir mercadería prestada en venta |
+| CU-119 | Warehouse / Seller / Manager / Admin | Consultar mercadería prestada o fuera de tienda |
+| CU-120 | System | Alertar mercadería prestada vencida o no devuelta |
+| CU-121 | Warehouse / Manager / Admin | Registrar mercadería dañada |
+| CU-122 | Warehouse / Manager / Admin | Consultar mercadería dañada o no disponible para venta |
+| CU-123 | Manager / Admin | Dar de baja mercadería dañada |
+| CU-124 | Warehouse / Purchasing / Manager / Admin | Registrar salida de inventario por retorno a proveedor |
+
+### Reglas de mercadería prestada
+
+- No es una venta hasta que se confirme la compra.
+- Debe registrarse la persona responsable con `reserved_for_name` y `reserved_for_type`.
+- No debe aparecer como inventario disponible para venta.
+- Debe generar movimiento `loan_out` al entregar y `loan_return` al devolver.
+- Si se convierte en venta, la reserva queda `consumed` y se vincula a la factura.
+- Si el préstamo ya generó salida física, la factura no debe descontar inventario nuevamente.
+
+### Reglas de mercadería dañada
+
+- No debe formar parte del stock disponible.
+- Se recomienda usar una bodega lógica “Mercadería dañada / No vendible”.
+- La baja definitiva requiere permiso de Manager o Admin.
+- Debe quedar auditado motivo, usuario y fecha.
+
+## SUPPLIERS — Retorno a proveedor
+
+| Código | Actor | Caso de uso |
+|---|---|---|
+| CU-408 | Purchasing / Manager / Admin | Registrar retorno de mercancía a proveedor |
+| CU-409 | Purchasing / Manager / Admin | Registrar crédito a favor por retorno a proveedor |
+| CU-410 | Purchasing / Manager / Admin | Aplicar crédito de proveedor a compra futura |
+| CU-411 | Purchasing / Manager / Admin / Accountant | Consultar créditos disponibles con proveedores |
+
+### Reglas de retorno a proveedor
+
+- Retorno a proveedor es independiente de devolución sobre venta.
+- Debe registrar salida de inventario con `stock_movements.type = supplier_return`.
+- El proveedor puede reconocer crédito, reemplazo o reembolso.
+- Si reconoce crédito, se registra en `supplier_credits`.
+- Si el crédito se usa parcialmente, se registra en `supplier_credit_applications`.
+
+## Eventos internos adicionales
+
+| Evento | Módulo | Propósito |
+|---|---|---|
+| `mercaderia_prestada_registrada` | Inventory | Registrar salida temporal de mercadería |
+| `mercaderia_prestada_devuelta` | Inventory | Registrar retorno de mercadería prestada |
+| `mercaderia_prestada_convertida_venta` | Inventory / Sales | Registrar conversión en venta |
+| `mercaderia_prestada_vencida` | Inventory / System | Alertar mercadería prestada vencida |
+| `mercaderia_danada_registrada` | Inventory | Registrar mercadería dañada |
+| `mercaderia_danada_dada_baja` | Inventory | Registrar baja definitiva |
+| `retorno_proveedor_creado` | Suppliers / Inventory | Registrar retorno a proveedor |
+| `credito_proveedor_generado` | Suppliers / Accounting | Registrar crédito a favor |
+| `credito_proveedor_aplicado` | Suppliers / Accounting | Registrar aplicación de crédito |
