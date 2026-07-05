@@ -630,3 +630,212 @@ Las acciones se autorizan por permisos.
 El MVP debe guardar trazabilidad para contabilidad futura.
 Toda operación sensible debe auditarse.
 ```
+
+---
+
+## Reglas complementarias v4
+
+Estas reglas completan lógica ya confirmada previamente y no introducen decisiones nuevas.
+
+### Mercadería prestada
+
+La mercadería prestada debe tener trazabilidad propia mediante `inventory_loans`.
+
+Reglas:
+
+- Un préstamo activo reduce disponibilidad mediante `quantity_loaned`.
+- El préstamo no es venta.
+- Puede estar asociado a `customer_id` o a datos manuales de persona: `borrower_name`, `borrower_phone`.
+- Al devolverlo, se reduce `quantity_loaned`.
+- Al convertirlo en venta, se genera una venta relacionada y no se descuenta inventario dos veces.
+- Estados permitidos: `active`, `returned`, `converted_to_sale`, `cancelled`.
+
+### Disponibilidad persistida
+
+`inventory_stock.quantity_available` se mantiene persistida para consultas y reportes rápidos.
+
+Reglas:
+
+- Solo `inventory.service` puede recalcularla.
+- Debe recalcularse cuando cambie `quantity_on_hand`, `quantity_reserved`, `quantity_damaged`, `quantity_loaned` o `quantity_supplier_return`.
+- Ningún otro módulo debe modificarla directamente.
+
+### Apartado completado y venta generada
+
+Cuando un apartado se completa:
+
+- Se genera una venta en `sales`.
+- `sales.source_type = "layaway"`.
+- `sales.source_id = layaways.id`.
+- `layaways.completed_sale_id` puede guardar referencia directa a la venta generada.
+- Ambas referencias deben escribirse en la misma transacción.
+- Un apartado completado solo puede generar una venta.
+
+### Estados finales
+
+Como regla MVP, los estados finales no se reabren. Las correcciones posteriores se manejan mediante movimientos o procesos nuevos.
+
+Estados finales:
+
+- `sales.voided`.
+- `layaways.completed`.
+- `layaways.cancelled`.
+- `cash_sessions.closed`.
+- `supplier_returns.completed`.
+
+### Reportes mínimos
+
+Los reportes MVP deben devolver datos agregados mínimos y ser solo lectura.
+
+- Ventas: totales, cantidad de ventas, contado, crédito, devoluciones, anulaciones e impuesto.
+- Inventario: on hand, available, reserved, damaged, loaned, supplier return.
+- Stock bajo: producto, variante, bodega, disponible y umbral.
+- Créditos cliente: cliente, total pendiente, vencimiento.
+- Apartados: activos, vencidos, completados, cancelados, saldo pendiente.
+- Caja: apertura, cierre, esperado, contado, diferencia, movimientos.
+- Compras: compras por proveedor, pagado, pendiente.
+- Retornos proveedor: pendientes, completados y tipo de compensación.
+
+---
+
+# Complemento v5 - Reglas confirmadas
+
+## Resumen visual
+
+| Tema | Regla | Estado |
+|---|---|---|
+| Transferencias internas | Fuera del MVP inicial | `CONFIRMED` |
+| Disponibilidad | `quantity_available` generado por PostgreSQL | `CONFIRMED` |
+| Saldo a favor | FIFO + trazabilidad | `CONFIRMED` |
+| Pagos mixtos | Permitidos en ventas y apartados | `CONFIRMED` |
+| Anulacion con saldo | Restaura saldo usado | `CONFIRMED` |
+| Reembolso saldo | Permitido con permiso especial | `CONFIRMED` |
+| Estados finales | No se reabren | `CONFIRMED` |
+| Compra recibida | No se cancela directamente | `CONFIRMED` |
+| Utilidad estimada | Incluida en reportes de ventas | `CONFIRMED` |
+
+## Transferencias internas fuera del MVP
+
+Para la primera version no se implementara un proceso formal para mover productos entre bodega y exhibicion.
+
+La estructura de `warehouses` queda preparada para crecer, pero no debe generar obligacion de implementar transferencias internas en la primera version.
+
+## Disponibilidad generada por DB
+
+`inventory_stock.quantity_available` sera una columna generada por PostgreSQL.
+
+```sql
+quantity_available INTEGER GENERATED ALWAYS AS (
+  quantity_on_hand
+  - quantity_reserved
+  - quantity_damaged
+  - quantity_loaned
+  - quantity_supplier_return
+) STORED
+```
+
+Reglas:
+
+- Backend no escribe `quantity_available`.
+- `inventory.service` actualiza cantidades base.
+- PostgreSQL calcula disponibilidad.
+- Consultas y reportes pueden leer `quantity_available`.
+
+## Saldo a favor del cliente
+
+| Regla | Descripcion |
+|---|---|
+| Consumo | FIFO sobre movimientos con `remaining_amount > 0` |
+| Trazabilidad | Cada aplicacion genera `customer_credit_applications` |
+| Uso | Puede aplicarse en ventas y apartados |
+| Pago mixto | Puede combinarse con efectivo, transferencia o tarjeta |
+| Caja | `customer_credit` no afecta caja |
+| Limite | No puede exceder `customers.current_balance` |
+
+## Reembolso de saldo a favor
+
+El saldo a favor puede reembolsarse al cliente con autorizacion especial.
+
+Reglas:
+
+- Requiere permiso `customers.balance_refund`.
+- Requiere motivo obligatorio.
+- No puede exceder `customers.current_balance`.
+- Consume saldo FIFO.
+- Genera `customer_balance_movements`.
+- Genera `customer_credit_applications`.
+- Si el metodo afecta caja, genera `cash_movements` tipo salida.
+- Debe quedar auditado.
+
+## Anulacion de venta con saldo a favor
+
+Si una venta uso saldo a favor y luego se anula:
+
+1. Se restaura el saldo a favor usado.
+2. Se revierten aplicaciones en `customer_credit_applications`.
+3. Se crea movimiento de reversion en `customer_balance_movements`.
+4. Se revierte caja si hubo pago con metodo que afecta caja.
+5. Todo ocurre en una sola transaccion.
+
+Esto aplica a anulacion, no a devolucion sobre venta.
+
+## Estados finales
+
+Estados finales no se reabren.
+
+| Entidad | Estados finales |
+|---|---|
+| sales | `voided`, `returned_total` |
+| layaways | `completed`, `cancelled`, `expired` |
+| cash_sessions | `closed` |
+| supplier_returns | `completed`, `cancelled` |
+| purchases | `received`, `cancelled` |
+
+Correcciones posteriores se manejan con procesos compensatorios, movimientos nuevos o ajustes autorizados.
+
+## Retorno proveedor
+
+Solo un retorno proveedor en estado `created` puede cancelarse.
+
+```text
+created -> cancelled
+created -> sent
+sent -> pending_compensation
+pending_compensation -> completed
+```
+
+Si no hay compensacion del proveedor:
+
+```text
+status = completed
+compensation_type = none
+```
+
+## Compra recibida
+
+Una compra recibida no se cancela directamente.
+
+```text
+draft -> received
+draft -> cancelled
+received -> final
+cancelled -> final
+```
+
+Correcciones validas:
+
+- Retorno a proveedor.
+- Ajuste autorizado de inventario.
+- Correccion de pago proveedor.
+- Movimiento compensatorio auditado.
+
+## Utilidad estimada
+
+Los reportes de ventas incluiran utilidad estimada simple.
+
+```text
+estimated_profit =
+sum((unit_price * quantity - discount_amount) - (unit_cost * quantity))
+```
+
+Esta utilidad es operativa y estimada. No representa contabilidad formal completa.

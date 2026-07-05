@@ -686,3 +686,379 @@ Reglas:
 | `layaway.not_ready_to_complete` | Apartado no puede completarse |
 | `cash.session_closed` | Caja cerrada |
 | `validation.invalid_input` | Validación general |
+
+---
+
+## Complemento v4 - Acciones críticas
+
+Esta sección completa endpoints críticos que requieren más detalle por afectar varios módulos.
+
+### POST `/api/v1/inventory/loans`
+
+Permiso:
+
+```text
+inventory.loan
+```
+
+Request:
+
+```json
+{
+  "customer_id": null,
+  "borrower_name": "Persona de confianza",
+  "borrower_phone": "8888-8888",
+  "product_variant_id": 10,
+  "warehouse_id": 1,
+  "quantity": 1,
+  "expected_return_date": "2026-07-15",
+  "reason": "Préstamo autorizado",
+  "business_date": "2026-06-28"
+}
+```
+
+Tablas afectadas:
+
+- `inventory_loans`
+- `inventory_stock`
+- `inventory_movements`
+- `business_events`
+
+Eventos:
+
+```text
+inventory.loaned
+```
+
+Errores esperados:
+
+- `inventory.insufficient_stock`
+- `validation.invalid_input`
+- `auth.forbidden`
+
+### POST `/api/v1/inventory/loans/{id}/return`
+
+Permiso:
+
+```text
+inventory.return_loan
+```
+
+Reglas:
+
+- Solo préstamos `active`.
+- Cambia préstamo a `returned`.
+- Genera movimiento `loan_return`.
+- Recalcula disponibilidad.
+
+Evento:
+
+```text
+inventory.loan_returned
+```
+
+### POST `/api/v1/inventory/loans/{id}/convert-to-sale`
+
+Permisos:
+
+```text
+inventory.loan
+sales.create
+```
+
+Reglas:
+
+- Solo préstamos `active`.
+- Genera venta en `sales`.
+- Marca préstamo como `converted_to_sale`.
+- Guarda `converted_sale_id`.
+- No descuenta inventario dos veces.
+
+Eventos:
+
+```text
+inventory.loan_converted_to_sale
+sale.created
+```
+
+### POST `/api/v1/sales`
+
+Tablas afectadas:
+
+- `sales`
+- `sale_items`
+- `sale_payments`
+- `inventory_stock`
+- `inventory_movements`
+- `cash_movements`
+- `business_events`
+
+Eventos:
+
+```text
+sale.created
+```
+
+Errores esperados:
+
+- `inventory.insufficient_stock`
+- `cash.session_closed`
+- `sales.customer_required_for_credit`
+- `validation.invalid_input`
+
+### POST `/api/v1/sales/{id}/void`
+
+Tablas afectadas:
+
+- `sales`
+- `sale_payments`
+- `inventory_stock`
+- `inventory_movements`
+- `cash_movements`
+- `audit_logs`
+- `business_events`
+
+Eventos:
+
+```text
+sale.voided
+```
+
+Errores esperados:
+
+- `sales.void_not_allowed`
+- `business.invalid_state`
+- `auth.forbidden`
+
+### POST `/api/v1/sales/{id}/return`
+
+Tablas afectadas:
+
+- `sale_returns`
+- `sale_return_items`
+- `sales`
+- `sale_items`
+- `inventory_stock`
+- `inventory_movements`
+- `cash_movements`
+- `audit_logs`
+- `business_events`
+
+Eventos:
+
+```text
+sale.returned
+```
+
+Errores esperados:
+
+- `sales.return_not_allowed`
+- `business.invalid_state`
+- `auth.forbidden`
+
+### POST `/api/v1/layaways/{id}/complete`
+
+Tablas afectadas:
+
+- `layaways`
+- `sales`
+- `sale_items`
+- `sale_payments`
+- `inventory_stock`
+- `inventory_movements`
+- `business_events`
+
+Eventos:
+
+```text
+layaway.completed
+sale.created
+```
+
+Errores esperados:
+
+- `layaway.not_ready_to_complete`
+- `business.invalid_state`
+- `auth.forbidden`
+
+### POST `/api/v1/suppliers/returns/{id}/resolve`
+
+Tablas afectadas según resolución:
+
+- `supplier_returns`
+- `supplier_credits`
+- `supplier_credit_applications`
+- `inventory_stock`
+- `inventory_movements`
+- `audit_logs`
+- `business_events`
+
+Eventos:
+
+```text
+supplier_return.resolved
+```
+
+Errores esperados:
+
+- `supplier_return.invalid_state`
+- `validation.invalid_input`
+- `auth.forbidden`
+
+---
+
+## Salidas mínimas de reportes
+
+### GET `/api/v1/reports/sales`
+
+Debe incluir:
+
+```json
+{
+  "total_sales_amount": 0.00,
+  "total_sales_count": 0,
+  "cash_sales_amount": 0.00,
+  "credit_sales_amount": 0.00,
+  "returned_amount": 0.00,
+  "voided_amount": 0.00,
+  "tax_amount": 0.00
+}
+```
+
+### GET `/api/v1/reports/inventory`
+
+Debe incluir por variante/bodega:
+
+```json
+{
+  "product_variant_id": 10,
+  "warehouse_id": 1,
+  "quantity_on_hand": 0,
+  "quantity_available": 0,
+  "quantity_reserved": 0,
+  "quantity_damaged": 0,
+  "quantity_loaned": 0,
+  "quantity_supplier_return": 0
+}
+```
+
+### GET `/api/v1/reports/cash`
+
+Debe incluir:
+
+```json
+{
+  "cash_session_id": 1,
+  "business_date": "2026-06-28",
+  "opening_amount": 0.00,
+  "expected_amount": 0.00,
+  "counted_amount": 0.00,
+  "difference_amount": 0.00
+}
+```
+
+---
+
+# Complemento v5 - Contratos ajustados
+
+## Pagos mixtos
+
+Ventas y apartados aceptan multiples metodos de pago.
+
+```json
+{
+  "customer_id": 1,
+  "sale_type": "cash",
+  "items": [
+    { "product_variant_id": 10, "quantity": 1, "unit_price": 1000.00 }
+  ],
+  "payments": [
+    { "payment_method_code": "customer_credit", "amount": 500.00 },
+    { "payment_method_code": "cash", "amount": 500.00 }
+  ]
+}
+```
+
+Reglas:
+
+- `customer_credit` requiere cliente.
+- `customer_credit` no afecta caja.
+- Pagos con `affects_cash=true` generan `cash_movements`.
+- La suma de pagos no debe exceder el total requerido.
+
+## POST `/api/v1/customers/{id}/credit-refund`
+
+Reembolsa saldo a favor del cliente.
+
+Permiso: `customers.balance_refund`
+
+```json
+{
+  "amount": 500.00,
+  "payment_method_id": 1,
+  "reason": "Reembolso autorizado de saldo a favor",
+  "business_date": "2026-06-28"
+}
+```
+
+Tablas afectadas:
+
+- `customers`
+- `customer_balance_movements`
+- `customer_credit_applications`
+- `cash_movements` si metodo afecta caja
+- `audit_logs`
+- `business_events`
+
+Errores:
+
+| Codigo | Causa |
+|---|---|
+| customer.insufficient_credit | Saldo insuficiente |
+| auth.forbidden | Sin permiso |
+| validation.invalid_input | Monto/motivo invalido |
+| cash.session_closed | Caja cerrada si metodo afecta caja |
+
+## POST `/api/v1/sales/{id}/void`
+
+Si la venta uso `customer_credit`, la anulacion restaura el saldo usado.
+
+## POST `/api/v1/purchases/{id}/cancel`
+
+Solo permitido si `purchases.status = draft`.
+
+Si la compra esta `received`, devolver:
+
+```json
+{
+  "status_code": 409,
+  "code": "business.invalid_state",
+  "message": "Una compra recibida no puede cancelarse directamente.",
+  "details": { "current_status": "received" }
+}
+```
+
+## POST `/api/v1/suppliers/returns/{id}/cancel`
+
+Solo permitido si `supplier_returns.status = created`.
+
+## GET `/api/v1/reports/sales`
+
+Salida minima ampliada:
+
+```json
+{
+  "total_sales_amount": 0.00,
+  "total_sales_count": 0,
+  "cash_sales_amount": 0.00,
+  "credit_sales_amount": 0.00,
+  "returned_amount": 0.00,
+  "voided_amount": 0.00,
+  "tax_amount": 0.00,
+  "estimated_cost": 0.00,
+  "estimated_profit": 0.00,
+  "estimated_margin_percent": 0.00
+}
+```
+
+`estimated_profit` es utilidad operativa estimada, no contabilidad formal.

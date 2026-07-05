@@ -1268,3 +1268,118 @@ El retorno a proveedor puede quedar pendiente antes de la entrega física.
 La compra a proveedor debe guardar costo histórico y documento de proveedor si existe.
 La devolución sobre venta puede devolver dinero o generar saldo a favor.
 ```
+
+---
+
+## Flujos complementarios v4
+
+### Registrar mercadería prestada con trazabilidad
+
+1. Usuario selecciona variante y bodega.
+2. Sistema valida disponibilidad.
+3. Usuario selecciona cliente o ingresa nombre/teléfono.
+4. Sistema crea `inventory_loans` con estado `active`.
+5. Sistema genera movimiento `loan_out`.
+6. Sistema aumenta `quantity_loaned`.
+7. Sistema recalcula `quantity_available`.
+8. Sistema registra evento.
+
+### Retornar mercadería prestada
+
+1. Usuario busca préstamo activo.
+2. Sistema valida estado `active`.
+3. Usuario confirma retorno.
+4. Sistema cambia préstamo a `returned`.
+5. Sistema genera movimiento `loan_return`.
+6. Sistema reduce `quantity_loaned`.
+7. Sistema recalcula disponibilidad.
+8. Sistema registra evento.
+
+### Convertir préstamo en venta
+
+1. Usuario busca préstamo activo.
+2. Sistema valida que no esté retornado ni cancelado.
+3. Sistema crea venta relacionada.
+4. Sistema cambia préstamo a `converted_to_sale`.
+5. Sistema vincula `converted_sale_id`.
+6. Sistema no descuenta inventario dos veces.
+7. Sistema registra evento.
+
+### Recalcular disponibilidad
+
+Cada vez que cambia una cantidad base en `inventory_stock`:
+
+1. `inventory.service` actualiza la cantidad correspondiente.
+2. Recalcula `quantity_available`.
+3. Persiste el nuevo saldo.
+4. Genera movimiento si la operación modifica inventario.
+
+---
+
+# Complemento v5 - Flujos ajustados
+
+## Uso de saldo a favor en venta con pago mixto
+
+| Paso | Accion |
+|---:|---|
+| 1 | Usuario selecciona cliente. |
+| 2 | Sistema consulta `customers.current_balance`. |
+| 3 | Usuario indica monto a usar como saldo a favor. |
+| 4 | Sistema valida que el monto no exceda saldo disponible. |
+| 5 | Sistema consume saldo FIFO desde `customer_balance_movements`. |
+| 6 | Sistema crea `customer_credit_applications`. |
+| 7 | Sistema registra `sale_payments` con metodo `customer_credit`. |
+| 8 | Si queda saldo por pagar, usuario usa efectivo/transferencia/tarjeta. |
+| 9 | Metodos con `affects_cash=true` generan `cash_movements`. |
+| 10 | Venta queda pagada o con saldo pendiente segun tipo de venta. |
+
+## Uso de saldo a favor en apartado
+
+El mismo principio aplica a apartados:
+
+- Puede cubrir total o parcialmente el pago inicial.
+- Puede combinarse con otros metodos.
+- Genera `layaway_payments`.
+- Genera `customer_credit_applications`.
+- No afecta caja cuando el metodo es `customer_credit`.
+
+## Reembolso de saldo a favor
+
+| Paso | Accion |
+|---:|---|
+| 1 | Usuario autorizado selecciona cliente. |
+| 2 | Sistema muestra saldo disponible. |
+| 3 | Usuario indica monto, metodo y motivo. |
+| 4 | Sistema valida permiso `customers.balance_refund`. |
+| 5 | Sistema consume saldo FIFO. |
+| 6 | Sistema crea `customer_balance_movements` tipo `credit_refund`. |
+| 7 | Sistema crea `customer_credit_applications` asociadas al reembolso. |
+| 8 | Si metodo afecta caja, crea `cash_movements` tipo salida. |
+| 9 | Sistema registra auditoria y evento. |
+
+## Anulacion de venta con saldo usado
+
+| Paso | Accion |
+|---:|---|
+| 1 | Validar permiso `sales.void`. |
+| 2 | Validar mismo `business_date`. |
+| 3 | Cambiar venta a `voided`. |
+| 4 | Revertir inventario. |
+| 5 | Revertir caja si hubo pagos con metodos que afectan caja. |
+| 6 | Restaurar saldo a favor usado. |
+| 7 | Crear movimiento de reversion en `customer_balance_movements`. |
+| 8 | Marcar o referenciar aplicaciones de credito revertidas. |
+| 9 | Registrar auditoria y evento `sale.voided`. |
+
+## Correccion de compra recibida
+
+Una compra `received` no vuelve a `cancelled`. Si hubo error, se corrige con retorno a proveedor, ajuste autorizado, correccion de pago o movimiento compensatorio.
+
+## Retorno proveedor sin compensacion
+
+Si el proveedor no da credito, reembolso ni reemplazo:
+
+```text
+supplier_returns.status = completed
+supplier_returns.compensation_type = none
+```

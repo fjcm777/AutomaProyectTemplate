@@ -713,3 +713,18 @@ Frontend solo muestra u oculta opciones.
 Permisos y roles base sembrados con Alembic.
 Usuario admin inicial sembrado con Alembic.
 ```
+
+---
+
+# Complemento v5 - Permisos adicionales
+
+| Permiso | Modulo | Uso |
+|---|---|---|
+| customers.balance_refund | customers | Reembolsar saldo a favor del cliente |
+| reports.sales.profit.view | reports | Ver utilidad estimada en reportes de ventas |
+
+Reglas:
+
+- `customers.balance_refund` debe asignarse solo a roles de confianza, por ejemplo `admin` o `manager`.
+- Todo reembolso de saldo a favor requiere motivo y auditoria.
+- `reports.sales.profit.view` puede separarse de `reports.sales.view` si se desea limitar acceso a margenes.

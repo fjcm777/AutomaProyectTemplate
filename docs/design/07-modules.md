@@ -721,3 +721,81 @@ Los casos multi-módulo usan una sola transacción.
 Los services internos no hacen commit independiente.
 shared contiene utilidades transversales, no reglas específicas de negocio.
 ```
+
+---
+
+## Ajustes complementarios v4
+
+### Inventory loans
+
+El módulo `inventory` también es responsable de `inventory_loans`.
+
+Responsabilidades:
+
+- Crear préstamo.
+- Retornar préstamo.
+- Convertir préstamo en venta coordinando con `sales.service`.
+- Mantener `quantity_loaned`.
+- Recalcular `quantity_available`.
+
+Tablas relacionadas:
+
+- `inventory_loans`
+- `inventory_stock`
+- `inventory_movements`
+
+### Disponibilidad
+
+La disponibilidad persistida en `inventory_stock.quantity_available` solo debe recalcularse desde `inventory.service`.
+
+Otros módulos deben solicitar operaciones públicas del módulo inventory.
+
+### Estados
+
+Cada módulo debe validar transiciones de estado desde `service.py`.
+
+Ejemplos:
+
+- `sales.service` valida anulación/devolución.
+- `layaways.service` valida completar/cancelar/vencer.
+- `cash.service` valida cierre de caja.
+- `suppliers.service` valida resolución de retorno proveedor.
+
+---
+
+# Complemento v5 - Responsabilidades ajustadas
+
+## customers.service
+
+| Operacion | Descripcion |
+|---|---|
+| `apply_customer_credit_fifo` | Consume saldo FIFO para venta/apartado |
+| `refund_customer_credit` | Reembolsa saldo con autorizacion |
+| `restore_customer_credit` | Restaura saldo usado al anular venta |
+| `create_credit_application` | Registra trazabilidad en `customer_credit_applications` |
+
+## inventory.service
+
+- Actualiza cantidades base de `inventory_stock`.
+- No escribe `quantity_available`.
+- PostgreSQL calcula `quantity_available`.
+- Transferencias internas bodega/exhibicion quedan fuera del MVP inicial.
+
+## purchases.service
+
+- Solo compras `draft` pueden cancelarse.
+- Compras `received` son finales y se corrigen con procesos compensatorios.
+
+## suppliers.service
+
+- Solo retornos proveedor `created` pueden cancelarse.
+- Retornos enviados o pendientes deben resolverse.
+
+## reports.service
+
+Calcula utilidad estimada simple usando `sale_items`.
+
+```text
+estimated_profit =
+sum((unit_price * quantity - discount_amount) - (unit_cost * quantity))
+```

@@ -940,3 +940,271 @@ Eventos internos de negocio.
 - Costeo avanzado promedio/FIFO.
 - Multi-moneda operativa.
 - Lotes/series.
+
+---
+
+## Complemento v4 - Tablas y reglas faltantes
+
+Esta sección completa estructuras que ya estaban definidas funcionalmente, pero requerían mayor precisión técnica.
+
+### `inventory_loans`
+
+Tabla para registrar mercadería prestada.
+
+| Campo | Tipo PostgreSQL | Null | Default | Restricciones | Descripción |
+|---|---|---|---|---|---|
+| id | BIGSERIAL | No | auto | PK | Identificador interno |
+| loan_number | VARCHAR(50) | No | - | UNIQUE | Número interno del préstamo |
+| customer_id | BIGINT | Sí | NULL | FK customers.id, INDEX | Cliente formal, si aplica |
+| borrower_name | VARCHAR(150) | Sí | NULL | - | Nombre de persona si no hay cliente formal |
+| borrower_phone | VARCHAR(30) | Sí | NULL | - | Teléfono de persona |
+| branch_id | BIGINT | No | - | FK branches.id, INDEX | Sucursal |
+| warehouse_id | BIGINT | No | - | FK warehouses.id, INDEX | Bodega origen |
+| product_variant_id | BIGINT | No | - | FK product_variants.id, INDEX | Variante prestada |
+| quantity | INTEGER | No | - | CHECK > 0 | Cantidad prestada |
+| status | VARCHAR(30) | No | 'active' | CHECK | active, returned, converted_to_sale, cancelled |
+| loaned_at | TIMESTAMPTZ | No | now() | INDEX | Fecha/hora del préstamo |
+| expected_return_date | DATE | Sí | NULL | INDEX | Fecha esperada de retorno |
+| returned_at | TIMESTAMPTZ | Sí | NULL | - | Fecha/hora de retorno |
+| converted_sale_id | BIGINT | Sí | NULL | FK sales.id | Venta generada si se convierte |
+| reason | VARCHAR(500) | Sí | NULL | - | Motivo del préstamo |
+| notes | TEXT | Sí | NULL | - | Observaciones |
+| created_by | BIGINT | No | - | FK users.id | Usuario que registró |
+| business_date | DATE | No | CURRENT_DATE | INDEX | Día operativo |
+| created_at | TIMESTAMPTZ | No | now() | - | Fecha creación |
+| updated_at | TIMESTAMPTZ | Sí | NULL | - | Última actualización |
+
+Reglas:
+
+- Si `customer_id` es NULL, debe existir `borrower_name`.
+- Un préstamo activo incrementa `inventory_stock.quantity_loaned`.
+- Un préstamo retornado reduce `quantity_loaned`.
+- Un préstamo convertido a venta registra `converted_sale_id`.
+- No debe descontarse inventario dos veces al convertir a venta.
+
+### Regla de `inventory_stock.quantity_available`
+
+`quantity_available` queda como columna persistida.
+
+Fórmula de negocio:
+
+```text
+quantity_available =
+  quantity_on_hand
+  - quantity_reserved
+  - quantity_damaged
+  - quantity_loaned
+  - quantity_supplier_return
+```
+
+Reglas técnicas:
+
+- Solo `inventory.service` recalcula este campo.
+- No debe actualizarse directamente desde módulos como sales, layaways o purchases.
+- Toda operación que modifique cantidades base debe recalcular disponibilidad en la misma transacción.
+
+### Relación `layaways` -> `sales`
+
+Se mantienen ambas referencias:
+
+| Campo | Propósito |
+|---|---|
+| `sales.source_type` / `sales.source_id` | Identifica el origen de la venta de forma genérica |
+| `layaways.completed_sale_id` | Permite navegación directa desde el apartado a la venta |
+
+Reglas:
+
+- Al completar apartado, ambos lados se escriben en la misma transacción.
+- Un apartado completado solo puede tener una venta final.
+- La venta generada desde apartado debe usar `source_type = 'layaway'`.
+
+### Transiciones de estado
+
+#### `sales.status`
+
+```text
+completed -> voided
+completed -> returned_partial
+completed -> returned_total
+returned_partial -> returned_total
+```
+
+Estados finales:
+
+```text
+voided
+returned_total
+```
+
+#### `layaways.status`
+
+```text
+active -> completed
+active -> cancelled
+active -> expired
+```
+
+Estados finales:
+
+```text
+completed
+cancelled
+expired
+```
+
+#### `cash_sessions.status`
+
+```text
+open -> closed
+```
+
+Estado final:
+
+```text
+closed
+```
+
+#### `supplier_returns.status`
+
+```text
+created -> sent
+sent -> pending_compensation
+pending_compensation -> completed
+created -> cancelled
+```
+
+Estados finales:
+
+```text
+completed
+cancelled
+```
+
+### Seeds operativos recomendados
+
+#### `payment_methods`
+
+| code | name | affects_cash | requires_reference |
+|---|---|---:|---:|
+| cash | Efectivo | true | false |
+| transfer | Transferencia | false | true |
+| card | Tarjeta | false | true |
+| customer_credit | Saldo a favor | false | false |
+
+#### `inventory_movement_types`
+
+| code | direction | affects_stock | affects_available | Uso |
+|---|---|---:|---:|---|
+| purchase_in | in | true | true | Entrada por compra |
+| sale_out | out | true | true | Salida por venta |
+| sale_void_in | in | true | true | Reversión de venta anulada |
+| sale_return_in | in | true | true | Devolución sobre venta |
+| layaway_reserve | neutral | false | true | Reserva de apartado |
+| layaway_release | neutral | false | true | Liberación de apartado |
+| inventory_adjust_in | in | true | true | Ajuste positivo |
+| inventory_adjust_out | out | true | true | Ajuste negativo |
+| transfer_out | out | true | true | Salida por transferencia |
+| transfer_in | in | true | true | Entrada por transferencia |
+| mark_damaged | neutral | false | true | Mercadería dañada |
+| writeoff | out | true | true | Baja de inventario |
+| loan_out | neutral | false | true | Préstamo de mercadería |
+| loan_return | neutral | false | true | Retorno de préstamo |
+| supplier_return_reserved | neutral | false | true | Separado para retorno proveedor |
+| supplier_return_out | out | true | true | Envío físico a proveedor |
+| supplier_replacement_in | in | true | true | Entrada por reemplazo proveedor |
+
+---
+
+# Complemento v5 - Ajustes tecnicos confirmados
+
+## `inventory_stock.quantity_available`
+
+`quantity_available` no sera una columna editable.
+
+```sql
+quantity_available INTEGER GENERATED ALWAYS AS (
+  quantity_on_hand
+  - quantity_reserved
+  - quantity_damaged
+  - quantity_loaned
+  - quantity_supplier_return
+) STORED
+```
+
+| Campo | Tipo PostgreSQL | Null | Default | Restricciones | Descripcion |
+|---|---|---|---|---|---|
+| quantity_available | INTEGER GENERATED ALWAYS AS (...) STORED | No | generado | Calculado por DB | Disponibilidad generada por PostgreSQL |
+
+Reglas:
+
+- Backend no escribe este campo.
+- SQLAlchemy debe mapearlo como columna calculada.
+- Alembic debe crear la expresion generada.
+- Si cambia la formula futura, se requiere migracion.
+
+## `customer_credit_applications`
+
+Tabla para trazabilidad de uso o reembolso de saldo a favor.
+
+| Campo | Tipo PostgreSQL | Null | Default | Restricciones | Descripcion |
+|---|---|---|---|---|---|
+| id | BIGSERIAL | No | auto | PK | Identificador |
+| customer_id | BIGINT | No | - | FK customers.id, INDEX | Cliente |
+| customer_balance_movement_id | BIGINT | No | - | FK customer_balance_movements.id, INDEX | Movimiento de saldo consumido |
+| sale_id | BIGINT | Si | NULL | FK sales.id, INDEX | Venta donde se aplico saldo |
+| layaway_id | BIGINT | Si | NULL | FK layaways.id, INDEX | Apartado donde se aplico saldo |
+| refund_cash_movement_id | BIGINT | Si | NULL | FK cash_movements.id | Movimiento de caja si fue reembolso |
+| amount | NUMERIC(12,2) | No | - | CHECK > 0 | Monto aplicado |
+| application_type | VARCHAR(30) | No | - | CHECK | sale_payment, layaway_payment, refund, reversal |
+| reversed_application_id | BIGINT | Si | NULL | FK customer_credit_applications.id | Aplicacion original si es reversion |
+| created_by | BIGINT | No | - | FK users.id | Usuario |
+| business_date | DATE | No | CURRENT_DATE | INDEX | Dia operativo |
+| created_at | TIMESTAMPTZ | No | now() | INDEX | Fecha/hora |
+
+Reglas:
+
+- Una venta o apartado puede consumir saldo de varios movimientos.
+- El consumo es FIFO.
+- Reembolsos tambien consumen saldo FIFO.
+- Anulaciones crean aplicacion tipo `reversal`.
+
+## Ajuste a `customer_balance_movements`
+
+| movement_type | Uso |
+|---|---|
+| credit_created | Creacion de saldo |
+| credit_used | Uso en venta/apartado |
+| credit_refund | Reembolso al cliente |
+| credit_reversal | Restauracion por anulacion |
+| adjustment_in | Ajuste positivo autorizado |
+| adjustment_out | Ajuste negativo autorizado |
+
+## Transiciones confirmadas
+
+### `purchases.status`
+
+```text
+draft -> received
+draft -> cancelled
+received -> final
+cancelled -> final
+```
+
+### `supplier_returns.status`
+
+```text
+created -> cancelled
+created -> sent
+sent -> pending_compensation
+pending_compensation -> completed
+```
+
+### Estados finales no reversibles
+
+| Entidad | Estados finales |
+|---|---|
+| sales | voided, returned_total |
+| layaways | completed, cancelled, expired |
+| cash_sessions | closed |
+| supplier_returns | completed, cancelled |
+| purchases | received, cancelled |

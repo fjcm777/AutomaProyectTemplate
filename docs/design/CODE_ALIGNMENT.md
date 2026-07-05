@@ -104,3 +104,19 @@ Una vez aprobado, el documento `09-frontend-routes.md` debe tomar en cuenta:
 - La estructura real actual del frontend.
 - Los permisos definidos en `06-auth-rbac.md`.
 - Los contratos definidos en `08-api-contracts.md`.
+
+---
+
+# Complemento v5
+
+La documentacion v5 incluye decisiones objetivo que pueden no existir aun en el codigo actual:
+
+| Elemento | Estado esperado |
+|---|---|
+| `inventory_loans` | Pendiente de implementar |
+| `customer_credit_applications` | Pendiente de implementar |
+| `quantity_available` generado por PostgreSQL | Pendiente de migracion |
+| Reembolso de saldo a favor | Pendiente de implementar |
+| Utilidad estimada en reportes | Pendiente de implementar |
+| Restriccion de estados finales | Pendiente de implementar en services |
+| Transferencias internas | Fuera del MVP inicial |

@@ -331,3 +331,30 @@
 | `retorno_proveedor_creado` | Suppliers / Inventory | Registrar retorno a proveedor |
 | `credito_proveedor_generado` | Suppliers / Accounting | Registrar crédito a favor |
 | `credito_proveedor_aplicado` | Suppliers / Accounting | Registrar aplicación de crédito |
+
+---
+
+## Casos de uso complementarios v4
+
+| Código | Caso | Módulo | Permiso | Tablas principales | Evento |
+|---|---|---|---|---|---|
+| CU-209 | Crear préstamo de inventario | inventory | inventory.loan | inventory_loans, inventory_stock, inventory_movements | inventory.loaned |
+| CU-210 | Retornar préstamo de inventario | inventory | inventory.return_loan | inventory_loans, inventory_stock, inventory_movements | inventory.loan_returned |
+| CU-211 | Convertir préstamo en venta | inventory / sales | inventory.loan, sales.create | inventory_loans, sales, sale_items, sale_payments | inventory.loan_converted_to_sale |
+| CU-506 | Completar apartado y generar venta | layaways / sales | layaways.payment | layaways, sales, sale_items, inventory_movements | layaway.completed, sale.created |
+| CU-707 | Resolver retorno proveedor con reemplazo | suppliers / inventory | supplier_returns.resolve | supplier_returns, supplier_return_items, inventory_movements | supplier_return.resolved |
+
+---
+
+# Complemento v5 - Casos de uso ajustados
+
+| Codigo | Caso de uso | Modulo | Permiso | Regla principal |
+|---|---|---|---|---|
+| CU-305 | Usar saldo a favor en venta | customers/sales | sales.create | FIFO + aplicaciones |
+| CU-306 | Usar saldo a favor en apartado | customers/layaways | layaways.payment | FIFO + aplicaciones |
+| CU-307 | Reembolsar saldo a favor | customers/cash | customers.balance_refund | Permiso, motivo, caja/auditoria |
+| CU-406 | Anular venta con saldo usado | sales/customers | sales.void | Restaurar saldo usado |
+| CU-708 | Cancelar retorno proveedor creado | suppliers | supplier_returns.resolve | Solo estado `created` |
+| CU-709 | Resolver retorno sin compensacion | suppliers | supplier_returns.resolve | `compensation_type = none` |
+| CU-710 | Corregir compra recibida | purchases/inventory | segun proceso | No cancelar directamente |
+| CU-801 | Consultar utilidad estimada | reports | reports.sales.view | Utilidad operativa no contable |

@@ -1,30 +1,29 @@
-# Automata / Calzado Norita - Índice de documentación
+# Automata / Calzado Norita - Indice de documentacion
 
-**Versión:** documentación recuperada y corregida  
+**Version:** documentacion recuperada, corregida y ajustada v5  
 **Fecha:** 2026-07-05  
-**Estado:** base documental válida hasta `08-api-contracts.md`  
+**Estado:** base documental valida hasta `08-api-contracts.md`  
 **Siguiente documento pendiente:** `09-frontend-routes.md`
 
 ---
 
-## 1. Propósito
+## 1. Proposito
 
-Esta documentación define el diseño funcional y técnico del sistema **Automata** para **Calzado Norita**.
+Esta documentacion define el diseno funcional y tecnico de **Automata** para **Calzado Norita**.
 
-Debe servir como guía para:
+Debe servir como mapa para desarrollo humano y desarrollo asistido con IA.
 
-- El propietario o responsable funcional del negocio.
-- Desarrolladores backend.
-- Desarrolladores frontend.
-- IA utilizada para desarrollo asistido.
-- Revisión de reglas de negocio.
-- Generación de código coherente con la arquitectura acordada.
+| Audiencia | Uso principal |
+|---|---|
+| Responsable funcional | Validar reglas del negocio |
+| Backend | Implementar modulos, servicios, DB y API |
+| Frontend | Implementar rutas, pantallas, permisos y consumo de API |
+| IA de desarrollo asistido | Generar codigo respetando reglas y decisiones confirmadas |
+| QA / pruebas | Derivar escenarios funcionales y casos criticos |
 
 ---
 
-## 2. Cómo navegar la documentación
-
-La documentación debe revisarse en este orden:
+## 2. Orden de lectura recomendado
 
 ```text
 00 -> contexto del negocio
@@ -33,264 +32,95 @@ La documentación debe revisarse en este orden:
 03 -> casos de uso
 04 -> arquitectura
 05 -> base de datos
-06 -> autenticación y permisos
-07 -> módulos backend
+06 -> autenticacion y permisos
+07 -> modulos backend
 08 -> contratos API
 ```
 
-Antes de implementar una funcionalidad, se recomienda revisar:
+Antes de implementar una funcionalidad, revisar:
 
-1. La regla de negocio en `01-business-rules.md`.
-2. El flujo relacionado en `02-process-flows.md`.
-3. El caso de uso en `03-use-cases.md`.
-4. Las tablas involucradas en `05-database.md`.
-5. El módulo responsable en `07-modules.md`.
-6. El endpoint correspondiente en `08-api-contracts.md`.
+1. `01-business-rules.md`
+2. `02-process-flows.md`
+3. `03-use-cases.md`
+4. `05-database.md`
+5. `07-modules.md`
+6. `08-api-contracts.md`
+7. `CODE_ALIGNMENT.md`
 
 ---
 
-## 3. Índice de documentos
+## 3. Indice de documentos
 
-| Orden | Documento | Propósito | Cuándo usarlo |
+| Orden | Documento | Proposito | Uso recomendado |
 |---:|---|---|---|
-| 00 | [`00-business-context.md`](00-business-context.md) | Contexto general del negocio, alcance, stack y principios. | Para entender el objetivo del sistema. |
-| 01 | [`01-business-rules.md`](01-business-rules.md) | Reglas funcionales obligatorias. | Antes de implementar procesos de negocio. |
-| 02 | [`02-process-flows.md`](02-process-flows.md) | Flujos paso a paso. | Para entender operaciones completas. |
-| 03 | [`03-use-cases.md`](03-use-cases.md) | Casos de uso por actor, permiso y regla. | Para planificar pantallas, endpoints y pruebas. |
-| 04 | [`04-architecture.md`](04-architecture.md) | Arquitectura, estructura de código y transacciones. | Antes de crear módulos o servicios. |
-| 05 | [`05-database.md`](05-database.md) | Diccionario técnico de datos. | Antes de crear modelos, migraciones o consultas. |
-| 06 | [`06-auth-rbac.md`](06-auth-rbac.md) | Autenticación, roles, permisos y seguridad. | Antes de proteger endpoints o rutas. |
-| 07 | [`07-modules.md`](07-modules.md) | Organización modular backend. | Para decidir dónde ubicar código. |
-| 08 | [`08-api-contracts.md`](08-api-contracts.md) | Contratos API, respuestas, errores y endpoints. | Antes de implementar API o cliente frontend. |
-| CA | [`CODE_ALIGNMENT.md`](CODE_ALIGNMENT.md) | Diferencia entre código actual y diseño objetivo. | Para entender qué existe y qué falta implementar. |
+| 00 | [`00-business-context.md`](00-business-context.md) | Contexto, alcance, actores, stack y principios. | Entender el objetivo general. |
+| 01 | [`01-business-rules.md`](01-business-rules.md) | Reglas obligatorias del negocio. | Antes de implementar logica. |
+| 02 | [`02-process-flows.md`](02-process-flows.md) | Flujos paso a paso. | Disenar servicios y pantallas. |
+| 03 | [`03-use-cases.md`](03-use-cases.md) | Casos de uso por modulo/actor/permiso. | Planificar endpoints y pruebas. |
+| 04 | [`04-architecture.md`](04-architecture.md) | Arquitectura, capas, transacciones y estructura. | Organizar codigo. |
+| 05 | [`05-database.md`](05-database.md) | Diccionario tecnico de datos. | Crear modelos/migraciones. |
+| 06 | [`06-auth-rbac.md`](06-auth-rbac.md) | Auth, roles, permisos y seguridad. | Proteger acciones y rutas. |
+| 07 | [`07-modules.md`](07-modules.md) | Responsabilidades por modulo. | Ubicar logica y dependencias. |
+| 08 | [`08-api-contracts.md`](08-api-contracts.md) | Endpoints, respuestas, errores y acciones criticas. | Implementar API y cliente frontend. |
+| CA | [`CODE_ALIGNMENT.md`](CODE_ALIGNMENT.md) | Codigo actual vs diseno objetivo. | Evitar confundir template con sistema final. |
+| DL | [`DECISION_LOG.md`](DECISION_LOG.md) | Registro de decisiones confirmadas. | Revisar historial de decisiones. |
 
 ---
 
-## 4. Diagramas disponibles
+## 4. Diagramas
 
-| Diagrama | Archivo | Propósito |
+| Diagrama | Archivo | Uso |
 |---|---|---|
-| Casos de uso | [`automata-use-cases.drawio`](automata-use-cases.drawio) | Actores y casos principales. |
-| Arquitectura | [`automata-architecture.drawio`](automata-architecture.drawio) | Frontend, backend, DB, módulos, jobs y shared/core. |
-| Base de datos | [`automata-database-er.drawio`](automata-database-er.drawio) | Entidades y relaciones principales. |
-| Módulos | [`automata-modules.drawio`](automata-modules.drawio) | Responsabilidades y relación entre módulos. |
-| API | [`automata-api-contracts.drawio`](automata-api-contracts.drawio) | Contratos, endpoints y respuesta estándar. |
-
-Los archivos `.drawio` pueden abrirse en diagrams.net / draw.io.
+| Casos de uso | [`automata-use-cases.drawio`](automata-use-cases.drawio) | Actores y operaciones principales |
+| Arquitectura | [`automata-architecture.drawio`](automata-architecture.drawio) | Frontend, backend, DB, modulos y jobs |
+| Base de datos | [`automata-database-er.drawio`](automata-database-er.drawio) | Entidades y relaciones principales |
+| Modulos | [`automata-modules.drawio`](automata-modules.drawio) | Responsabilidades y comunicacion |
+| API | [`automata-api-contracts.drawio`](automata-api-contracts.drawio) | Contratos y acciones criticas |
 
 ---
 
-## 5. Estado actual del código vs documentación
+## 5. Decisiones confirmadas clave
 
-El proyecto `AutomaProyectTemplate.zip` representa una **base/template inicial**, no el sistema completo.
-
-La documentación define el **diseño objetivo confirmado** para Automata / Calzado Norita.
-
-Para revisar la alineación entre código actual y documentación, usar:
-
-```text
-CODE_ALIGNMENT.md
-```
-
-Regla importante:
-
-```text
-Si el código actual todavía no implementa algo documentado, no significa que la documentación esté incorrecta.
-Significa que esa parte queda pendiente de implementación.
-```
-
----
-
-## 6. Decisiones técnicas principales
-
-| Tema | Decisión |
-|---|---|
-| Arquitectura | Monolito modular |
-| Backend | FastAPI |
-| Frontend | React + TypeScript + Vite |
-| DB | PostgreSQL |
-| ORM | SQLAlchemy async |
-| Migraciones | Alembic |
-| Auth | JWT access token simple |
-| Password hashing | Argon2 |
-| Roles/permisos | Dinámicos en DB |
-| Config técnica | `.env` |
-| Config funcional | Tabla `settings` |
-| Jobs | Scripts simples / cron / scheduler externo |
-| Reportes | Solo lectura |
-| Archivos | Uploads locales/volumen; DB guarda URL |
-| Respuestas API | `status_code`, `message`, `data` |
-| Errores API | `status_code`, `code`, `message`, `details` |
+| Area | Decision | Estado |
+|---|---|---|
+| Arquitectura | Monolito modular | `CONFIRMED` |
+| Transferencias internas bodega/exhibicion | Fuera del MVP inicial | `CONFIRMED` |
+| Disponibilidad | `quantity_available` sera columna generada por PostgreSQL | `CONFIRMED` |
+| Saldo a favor | Se consume FIFO | `CONFIRMED` |
+| Trazabilidad saldo | Se agrega `customer_credit_applications` | `CONFIRMED` |
+| Uso saldo | Puede usarse en ventas y apartados | `CONFIRMED` |
+| Pagos mixtos | Permitidos en ventas y apartados | `CONFIRMED` |
+| Anulacion con saldo usado | Restaura saldo a favor | `CONFIRMED` |
+| Reembolso de saldo | Permitido con permiso especial, motivo, caja/auditoria | `CONFIRMED` |
+| Estados finales | No se reabren; se corrige con procesos compensatorios | `CONFIRMED` |
+| Retorno proveedor | Solo `created` puede cancelarse | `CONFIRMED` |
+| Compra recibida | No puede cancelarse directamente | `CONFIRMED` |
+| Reportes ventas | Incluyen utilidad estimada simple | `CONFIRMED` |
 
 ---
 
-## 7. Decisiones funcionales principales
+## 6. Matriz rapida de implementacion
 
-| Área | Decisión |
-|---|---|
-| Inventario | Todo cambio genera `inventory_movements`. |
-| Disponibilidad | Considera reservado, dañado, prestado y retorno proveedor. |
-| Productos | Producto base + variantes por talla/color. |
-| Ventas | La venta final vive en `sales`. |
-| Crédito | Ventas a crédito dejan `balance_due`. |
-| Apartados | Reservan inventario y al completarse generan venta. |
-| Devoluciones | Devuelven dinero, no saldo a favor. |
-| Anulación | Solo mismo `business_date`, revierte inventario/pagos/caja. |
-| Caja | Usa `business_date`, sesiones y movimientos. |
-| Clientes | Saldo a favor con movimientos, no edición directa. |
-| Proveedores | Retornos pueden quedar pendientes y resolverse después. |
-| Settings | Valores funcionales variables viven en DB. |
-| Auditoría | Acciones sensibles quedan registradas. |
+| Caso de uso | Modulo | Endpoint | Permiso | Tablas principales | Eventos |
+|---|---|---|---|---|---|
+| Crear venta | sales | `POST /api/v1/sales` | `sales.create` | sales, sale_items, sale_payments, inventory_stock, inventory_movements, cash_movements | `sale.created` |
+| Venta con saldo a favor | sales/customers | `POST /api/v1/sales` | `sales.create` | sales, sale_payments, customer_credit_applications, customer_balance_movements | `sale.created`, `customer_credit.used` |
+| Anular venta | sales | `POST /api/v1/sales/<built-in function id>/void` | `sales.void` | sales, inventory_movements, cash_movements, customer_credit_applications | `sale.voided` |
+| Devolucion venta | sales | `POST /api/v1/sales/<built-in function id>/return` | `sales.return` | sale_returns, sale_return_items, inventory_movements, cash_movements | `sale.returned` |
+| Crear apartado | layaways | `POST /api/v1/layaways` | `layaways.create` | layaways, layaway_items, layaway_payments, inventory_movements | `layaway.created` |
+| Completar apartado | layaways/sales | `POST /api/v1/layaways/<built-in function id>/complete` | `layaways.payment` | layaways, sales, sale_items, inventory_movements | `layaway.completed`, `sale.created` |
+| Reembolsar saldo cliente | customers/cash | `POST /api/v1/customers/<built-in function id>/credit-refund` | `customers.balance_refund` | customer_balance_movements, customer_credit_applications, cash_movements | `customer_credit.refunded` |
+| Crear prestamo | inventory | `POST /api/v1/inventory/loans` | `inventory.loan` | inventory_loans, inventory_stock, inventory_movements | `inventory.loaned` |
+| Retornar prestamo | inventory | `POST /api/v1/inventory/loans/<built-in function id>/return` | `inventory.return_loan` | inventory_loans, inventory_stock, inventory_movements | `inventory.loan_returned` |
+| Recibir compra | purchases/inventory | `POST /api/v1/purchases/<built-in function id>/receive` | `purchases.create` | purchases, purchase_items, inventory_stock, inventory_movements | `purchase.received` |
+| Resolver retorno proveedor | suppliers/inventory | `POST /api/v1/suppliers/returns/<built-in function id>/resolve` | `supplier_returns.resolve` | supplier_returns, supplier_credits, inventory_movements | `supplier_return.resolved` |
 
 ---
 
-## 8. Guía rápida por tarea
+## 7. Siguiente paso
 
-### Crear o modificar una tabla
-
-Revisar:
-
-```text
-05-database.md
-04-architecture.md
-07-modules.md
-```
-
-### Crear un endpoint
-
-Revisar:
-
-```text
-08-api-contracts.md
-07-modules.md
-06-auth-rbac.md
-03-use-cases.md
-```
-
-### Implementar una regla de negocio
-
-Revisar:
-
-```text
-01-business-rules.md
-02-process-flows.md
-03-use-cases.md
-07-modules.md
-```
-
-### Crear una pantalla frontend
-
-Revisar:
-
-```text
-08-api-contracts.md
-06-auth-rbac.md
-07-modules.md
-CODE_ALIGNMENT.md
-```
-
-Luego continuar con:
+Despues de aprobar esta version v5, continuar con:
 
 ```text
 09-frontend-routes.md
 ```
-
-### Implementar ventas
-
-Revisar:
-
-```text
-01-business-rules.md
-02-process-flows.md
-03-use-cases.md
-05-database.md
-08-api-contracts.md
-```
-
-### Implementar apartados
-
-Revisar:
-
-```text
-01-business-rules.md
-02-process-flows.md
-03-use-cases.md
-05-database.md
-08-api-contracts.md
-```
-
-### Implementar inventario
-
-Revisar:
-
-```text
-01-business-rules.md
-02-process-flows.md
-05-database.md
-07-modules.md
-08-api-contracts.md
-```
-
----
-
-## 9. Flujo de trabajo acordado
-
-El trabajo documental se hace documento por documento.
-
-Reglas:
-
-1. Se toma el siguiente documento pendiente.
-2. Se analiza por bloques.
-3. Si aparece una duda funcional, técnica o un vacío lógico, se resuelve antes de documentar.
-4. El usuario confirma decisiones importantes.
-5. Después se genera o actualiza el documento.
-6. Si una decisión afecta documentos anteriores, esos documentos también se actualizan.
-7. Si afecta diagramas, también se actualizan los `.drawio`.
-8. Se entrega un `.zip` con todos los documentos y diagramas afectados.
-
-No se debe avanzar a documentos nuevos si hay una corrección estructural pendiente en documentos anteriores.
-
----
-
-## 10. Siguiente paso
-
-Después de revisar y aprobar este paquete, el siguiente documento a trabajar es:
-
-```text
-09-frontend-routes.md
-```
-
-Ese documento debe definir:
-
-- Layout general frontend.
-- Rutas públicas.
-- Rutas protegidas.
-- Módulos/pantallas.
-- Relación permisos-rutas.
-- Menú lateral.
-- Navegación por experiencia de usuario.
-- Relación con `auth/me`.
-- Estructura recomendada de carpetas frontend.
-- Diferencia entre estructura backend por dominio y frontend por experiencia de usuario.
-
----
-
-## 11. Nota de calidad
-
-Este paquete reemplaza versiones anteriores degradadas o demasiado resumidas.
-
-En particular, `05-database.md` fue reconstruido como diccionario técnico, incluyendo:
-
-- Tabla.
-- Campo.
-- Tipo PostgreSQL.
-- Nullable.
-- Default.
-- PK/FK.
-- Unique.
-- Checks.
-- Índices.
-- Descripción funcional.
-- Reglas relacionadas.
-
-Este ZIP debe considerarse la base documental válida antes de continuar.
