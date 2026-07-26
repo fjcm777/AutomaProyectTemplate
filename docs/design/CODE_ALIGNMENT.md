@@ -120,3 +120,60 @@ La documentacion v5 incluye decisiones objetivo que pueden no existir aun en el 
 | Utilidad estimada en reportes | Pendiente de implementar |
 | Restriccion de estados finales | Pendiente de implementar en services |
 | Transferencias internas | Fuera del MVP inicial |
+
+---
+
+# Complemento 09 - Frontend routes
+
+`09-frontend-routes.md` define el diseno objetivo de rutas navegables del frontend.
+
+## Diferencias relevantes con el template actual
+
+| Elemento actual | Diseno objetivo |
+|---|---|
+| `/` muestra productos o pantalla inicial del template | `/` debe redirigir a `/dashboard` si hay sesion o a `/login` si no hay sesion |
+| `/products/new` | Debe evolucionar a `/products/create` |
+| `features/login` | Debe evolucionar a `features/auth` |
+| `App` actual con `Outlet` | Puede evolucionar a `AppLayout` para rutas protegidas |
+| `/login` dentro del layout actual | Debe usar `PublicLayout` separado |
+| `/test` | Ruta de prueba; no pertenece al diseno final |
+| `/tictactoe` | Ruta de prueba; no pertenece al diseno final |
+
+## Estructura frontend objetivo
+
+```text
+frontend/src/
+  app/
+    router/
+      router.tsx
+    layouts/
+      AppLayout.tsx
+      PublicLayout.tsx
+    guards/
+      RequireAuth.tsx
+      GuestOnly.tsx
+  features/
+    auth/
+    dashboard/
+    products/
+    customers/
+    suppliers/
+    inventory/
+    sales/
+    layaways/
+    cash/
+    purchases/
+    reports/
+    admin/
+  shared/
+```
+
+## Regla de alineacion
+
+El template actual es una base tecnica ajustable. Las rutas y features de prueba no deben guiar el diseno final del ERP.
+
+La implementacion frontend debe tomar como referencia `09-frontend-routes.md` y mantener consistencia con:
+
+- `06-auth-rbac.md` para permisos;
+- `08-api-contracts.md` para consumo de API;
+- `01-business-rules.md` y `02-process-flows.md` para flujos criticos.

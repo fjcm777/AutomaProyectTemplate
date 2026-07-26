@@ -2,8 +2,8 @@
 
 **Version:** documentacion recuperada, corregida y ajustada v5  
 **Fecha:** 2026-07-05  
-**Estado:** base documental valida hasta `08-api-contracts.md`  
-**Siguiente documento pendiente:** `09-frontend-routes.md`
+**Estado:** base documental valida hasta `09-frontend-routes.md`  
+**Siguiente documento pendiente:** documentos AI en fase posterior (`AI_CONTEXT.md`, `AI_DEVELOPMENT_GUIDE.md`, `AI_TASK_PROMPTS.md`)
 
 ---
 
@@ -35,6 +35,7 @@ Debe servir como mapa para desarrollo humano y desarrollo asistido con IA.
 06 -> autenticacion y permisos
 07 -> modulos backend
 08 -> contratos API
+09 -> rutas frontend
 ```
 
 Antes de implementar una funcionalidad, revisar:
@@ -45,7 +46,8 @@ Antes de implementar una funcionalidad, revisar:
 4. `05-database.md`
 5. `07-modules.md`
 6. `08-api-contracts.md`
-7. `CODE_ALIGNMENT.md`
+7. `09-frontend-routes.md`
+8. `CODE_ALIGNMENT.md`
 
 ---
 
@@ -62,6 +64,7 @@ Antes de implementar una funcionalidad, revisar:
 | 06 | [`06-auth-rbac.md`](06-auth-rbac.md) | Auth, roles, permisos y seguridad. | Proteger acciones y rutas. |
 | 07 | [`07-modules.md`](07-modules.md) | Responsabilidades por modulo. | Ubicar logica y dependencias. |
 | 08 | [`08-api-contracts.md`](08-api-contracts.md) | Endpoints, respuestas, errores y acciones criticas. | Implementar API y cliente frontend. |
+| 09 | [`09-frontend-routes.md`](09-frontend-routes.md) | Rutas navegables del frontend, layouts, guards, permisos sugeridos y navegación. | Implementar router, pantallas, guards y menú. |
 | CA | [`CODE_ALIGNMENT.md`](CODE_ALIGNMENT.md) | Codigo actual vs diseno objetivo. | Evitar confundir template con sistema final. |
 | DL | [`DECISION_LOG.md`](DECISION_LOG.md) | Registro de decisiones confirmadas. | Revisar historial de decisiones. |
 
@@ -96,6 +99,8 @@ Antes de implementar una funcionalidad, revisar:
 | Retorno proveedor | Solo `created` puede cancelarse | `CONFIRMED` |
 | Compra recibida | No puede cancelarse directamente | `CONFIRMED` |
 | Reportes ventas | Incluyen utilidad estimada simple | `CONFIRMED` |
+| Frontend routes | `09-frontend-routes.md` define diseño objetivo de rutas navegables | `CONFIRMED` |
+| Rutas de prueba frontend | `test` y `tictactoe` no forman parte del diseño final | `CONFIRMED` |
 
 ---
 
@@ -119,8 +124,10 @@ Antes de implementar una funcionalidad, revisar:
 
 ## 7. Siguiente paso
 
-Despues de aprobar esta version v5, continuar con:
+Despues de aprobar `09-frontend-routes.md`, continuar con la fase posterior de documentos AI:
 
 ```text
-09-frontend-routes.md
+AI_CONTEXT.md
+AI_DEVELOPMENT_GUIDE.md
+AI_TASK_PROMPTS.md
 ```
