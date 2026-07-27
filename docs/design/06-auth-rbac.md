@@ -684,7 +684,7 @@ Permiso insuficiente:
 
 ```json
 {
-  "code": "auth.permission_denied",
+  "code": "auth.forbidden",
   "message": "No tiene permiso para realizar esta acción."
 }
 ```
@@ -728,3 +728,39 @@ Reglas:
 - `customers.balance_refund` debe asignarse solo a roles de confianza, por ejemplo `admin` o `manager`.
 - Todo reembolso de saldo a favor requiere motivo y auditoria.
 - `reports.sales.profit.view` puede separarse de `reports.sales.view` si se desea limitar acceso a margenes.
+
+
+---
+
+## Complemento v7 - Validaciones de permisos y respuestas de error
+
+El frontend puede ocultar rutas, botones o acciones según permisos para mejorar la experiencia,
+pero la autorización real debe validarse siempre en backend.
+
+Mensajes visibles recomendados:
+
+| Caso | Mensaje |
+|---|---|
+| Ruta/sección no permitida | `No tiene acceso a esta sección.` |
+| Acción no permitida | `No tiene permiso para realizar esta acción.` |
+
+Respuesta estándar para acción sin permiso:
+
+```json
+{
+  "status_code": 403,
+  "code": "auth.forbidden",
+  "message": "No tiene permiso para realizar esta acción.",
+  "details": {
+    "resource": "sale",
+    "operation": "void_sale",
+    "required_permission": "sales.void"
+  }
+}
+```
+
+Regla:
+
+```text
+Ningún endpoint protegido debe depender únicamente de validaciones del frontend.
+```

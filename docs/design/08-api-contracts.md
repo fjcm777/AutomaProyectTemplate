@@ -672,6 +672,28 @@ Reglas:
 
 ## 18. Códigos de error funcionales
 
+Los códigos funcionales deben representar errores de negocio o validación, no errores técnicos internos.
+
+Regla de formato recomendada:
+
+```text
+module.reason
+```
+
+Ejemplos:
+
+```text
+validation.invalid_input
+auth.forbidden
+resource.not_found
+business.invalid_state
+inventory.insufficient_stock
+cash.session_closed
+layaway.expired_payment_allowed
+```
+
+
+
 | Código | Uso |
 |---|---|
 | `auth.invalid_credentials` | Login inválido |
@@ -686,6 +708,9 @@ Reglas:
 | `layaway.not_ready_to_complete` | Apartado no puede completarse |
 | `cash.session_closed` | Caja cerrada |
 | `validation.invalid_input` | Validación general |
+| `validation.required` | Campo requerido |
+| `validation.greater_than_zero` | Valor debe ser mayor que cero |
+| `layaway.expired_payment_allowed` | Advertencia: apartado vencido permite pago |
 
 ---
 
@@ -1062,3 +1087,135 @@ Salida minima ampliada:
 ```
 
 `estimated_profit` es utilidad operativa estimada, no contabilidad formal.
+
+
+---
+
+## Complemento v7 - Validaciones, errores múltiples y warnings
+
+Esta sección alinea el contrato API con `10-validation-rules.md`.
+
+### Regla general
+
+Las respuestas de error del backend deben mantener el formato estándar ya definido:
+
+```json
+{
+  "status_code": 422,
+  "code": "validation.invalid_input",
+  "message": "Hay campos inválidos. Revise la información ingresada.",
+  "details": {}
+}
+```
+
+Campos obligatorios:
+
+- `status_code`
+- `code`
+- `message`
+
+Campo opcional:
+
+- `details`
+
+El HTTP status real debe coincidir con `status_code` del body.
+
+### Validaciones múltiples
+
+Cuando una operación tenga varios errores de validación, se debe usar `details.errors`.
+
+```json
+{
+  "status_code": 422,
+  "code": "validation.invalid_input",
+  "message": "Hay campos inválidos. Revise la información ingresada.",
+  "details": {
+    "resource": "sale",
+    "operation": "confirm_sale",
+    "errors": [
+      {
+        "field": "customer_id",
+        "code": "validation.required",
+        "message": "Debe seleccionar un cliente válido."
+      },
+      {
+        "field": "quantity",
+        "code": "inventory.insufficient_stock",
+        "message": "La cantidad solicitada excede el stock disponible."
+      }
+    ]
+  }
+}
+```
+
+Cada elemento de `details.errors` puede incluir:
+
+- `field`
+- `code`
+- `message`
+
+### Errores de negocio
+
+Los errores de negocio deben usar códigos funcionales y contexto en `details`.
+
+```json
+{
+  "status_code": 409,
+  "code": "business.invalid_state",
+  "message": "La operación no es válida para el estado actual.",
+  "details": {
+    "resource": "purchase",
+    "operation": "cancel_purchase",
+    "current_status": "received"
+  }
+}
+```
+
+### Permiso insuficiente
+
+```json
+{
+  "status_code": 403,
+  "code": "auth.forbidden",
+  "message": "No tiene permiso para realizar esta acción.",
+  "details": {
+    "resource": "sale",
+    "operation": "void_sale",
+    "required_permission": "sales.void"
+  }
+}
+```
+
+### Warnings no bloqueantes
+
+Las advertencias no bloqueantes no deben devolverse como errores HTTP. Deben incluirse en respuestas exitosas mediante `warnings`.
+
+```json
+{
+  "status_code": 200,
+  "message": "Pago registrado correctamente.",
+  "data": {
+    "layaway_id": 88,
+    "payment_id": 501
+  },
+  "warnings": [
+    {
+      "code": "layaway.expired_payment_allowed",
+      "message": "El apartado está vencido, pero puede registrar el pago si desea continuar."
+    }
+  ]
+}
+```
+
+Regla:
+
+```text
+Las advertencias informan condiciones importantes, pero no bloquean la operación
+cuando la regla de negocio permite continuar.
+```
+
+### Relación con severity
+
+`severity` puede usarse en documentación de validaciones para clasificar reglas
+como `blocking`, `warning` o `informational`, pero no es campo obligatorio del
+contrato público de error.

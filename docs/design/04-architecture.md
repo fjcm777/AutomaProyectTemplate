@@ -412,25 +412,69 @@ La capa `service.py` coordinara la transaccion cuando el flujo afecte varias tab
 
 El backend sera siempre la fuente real de validacion.
 
-## 17. Errores estandar
+## 17. Errores estándar
 
-El backend usara errores estandar de negocio.
+El backend usará errores estándar de negocio alineados con `08-api-contracts.md`.
 
-Formato recomendado:
+Regla obligatoria:
+
+```text
+Toda respuesta JSON debe incluir status_code en el body y el HTTP status real
+debe coincidir con ese status_code.
+```
+
+Formato base:
 
 ```json
 {
-  "code": "inventory.not_available",
-  "message": "No hay inventario disponible para este producto.",
+  "status_code": 409,
+  "code": "inventory.insufficient_stock",
+  "message": "La cantidad solicitada excede el stock disponible.",
   "details": {
-    "product_id": 15,
-    "requested_qty": 2,
-    "available_qty": 1
+    "resource": "inventory",
+    "field": "quantity",
+    "requested_quantity": 2,
+    "available_quantity": 1
   }
 }
 ```
 
-Ubicacion sugerida: `backend/app/shared/errors.py`.
+Para validaciones múltiples, el backend debe usar `details.errors`:
+
+```json
+{
+  "status_code": 422,
+  "code": "validation.invalid_input",
+  "message": "Hay campos inválidos. Revise la información ingresada.",
+  "details": {
+    "errors": [
+      {
+        "field": "quantity",
+        "code": "validation.greater_than_zero",
+        "message": "La cantidad debe ser mayor que cero."
+      }
+    ]
+  }
+}
+```
+
+Permiso insuficiente:
+
+```json
+{
+  "status_code": 403,
+  "code": "auth.forbidden",
+  "message": "No tiene permiso para realizar esta acción."
+}
+```
+
+Warnings no bloqueantes:
+
+```text
+Las advertencias no bloqueantes deben viajar en respuestas exitosas mediante
+warnings, no como errores HTTP.
+```
+
 
 ## 18. Auditoria selectiva
 
@@ -760,3 +804,33 @@ Al final, resume archivos modificados, cambios realizados y pendientes.
 ```
 
 La documentacion es la fuente de verdad para evitar que la IA invente reglas.
+
+
+---
+
+## Complemento v7 - Atomicidad multi-módulo
+
+Las operaciones críticas que afecten varios módulos deben ejecutarse como una sola unidad transaccional.
+
+Ejemplos:
+
+| Operación | Módulos afectados |
+|---|---|
+| Venta | Sales + Inventory + Cash + Audit |
+| Apartado | Layaway + Inventory Reservation + Cash + Customer Balance si aplica |
+| Devolución de venta | Sales Return + Inventory + Cash + Audit |
+| Anulación de venta | Sales + Inventory Reversal + Cash + Audit |
+| Compra recibida | Purchases + Inventory + Historical Cost |
+| Retorno a proveedor | Supplier Return + Inventory + Supplier Credit + Audit |
+| Baja de mercadería dañada | Inventory + Damaged Goods + Audit |
+| Conversión de mercadería prestada a venta | Loaned Goods + Sales + Inventory + Cash + Audit |
+| Cierre de caja | Cash + Movements + Differences + Audit |
+| Cambio sensible de configuración | Settings + Audit |
+
+Regla:
+
+```text
+Si una parte de la operación falla, toda la operación debe revertirse.
+```
+
+La capa `service.py` debe coordinar la transacción cuando el flujo afecte varias tablas o módulos.

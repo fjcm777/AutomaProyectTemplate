@@ -2,8 +2,8 @@
 
 **Version:** documentacion recuperada, corregida y ajustada v5  
 **Fecha:** 2026-07-05  
-**Estado:** base documental valida hasta `09-frontend-routes.md`  
-**Siguiente documento pendiente:** documentos AI en fase posterior (`AI_CONTEXT.md`, `AI_DEVELOPMENT_GUIDE.md`, `AI_TASK_PROMPTS.md`)
+**Estado:** base documental valida hasta `10-validation-rules.md`  
+**Siguiente documento pendiente:** `11-error-handling.md`
 
 ---
 
@@ -36,6 +36,7 @@ Debe servir como mapa para desarrollo humano y desarrollo asistido con IA.
 07 -> modulos backend
 08 -> contratos API
 09 -> rutas frontend
+10 -> reglas de validación
 ```
 
 Antes de implementar una funcionalidad, revisar:
@@ -47,7 +48,8 @@ Antes de implementar una funcionalidad, revisar:
 5. `07-modules.md`
 6. `08-api-contracts.md`
 7. `09-frontend-routes.md`
-8. `CODE_ALIGNMENT.md`
+8. `10-validation-rules.md`
+9. `CODE_ALIGNMENT.md`
 
 ---
 
@@ -65,6 +67,7 @@ Antes de implementar una funcionalidad, revisar:
 | 07 | [`07-modules.md`](07-modules.md) | Responsabilidades por modulo. | Ubicar logica y dependencias. |
 | 08 | [`08-api-contracts.md`](08-api-contracts.md) | Endpoints, respuestas, errores y acciones criticas. | Implementar API y cliente frontend. |
 | 09 | [`09-frontend-routes.md`](09-frontend-routes.md) | Rutas navegables del frontend, layouts, guards, permisos sugeridos y navegación. | Implementar router, pantallas, guards y menú. |
+| 10 | [`10-validation-rules.md`](10-validation-rules.md) | Reglas de validación frontend/backend, severidad documental, mensajes y alineación con errores API. | Implementar validaciones, QA y manejo de errores. |
 | CA | [`CODE_ALIGNMENT.md`](CODE_ALIGNMENT.md) | Codigo actual vs diseno objetivo. | Evitar confundir template con sistema final. |
 | DL | [`DECISION_LOG.md`](DECISION_LOG.md) | Registro de decisiones confirmadas. | Revisar historial de decisiones. |
 
@@ -101,6 +104,10 @@ Antes de implementar una funcionalidad, revisar:
 | Reportes ventas | Incluyen utilidad estimada simple | `CONFIRMED` |
 | Frontend routes | `09-frontend-routes.md` define diseño objetivo de rutas navegables | `CONFIRMED` |
 | Rutas de prueba frontend | `test` y `tictactoe` no forman parte del diseño final | `CONFIRMED` |
+| Validaciones | Backend es fuente definitiva; frontend valida para UX | `CONFIRMED` |
+| Errores API | Usar `status_code`, `code`, `message`, `details`; validaciones múltiples en `details.errors` | `CONFIRMED` |
+| Warnings API | Advertencias no bloqueantes en respuestas exitosas con `warnings` | `CONFIRMED` |
+| Atomicidad | Operaciones críticas multi-módulo deben ser transaccionales | `CONFIRMED` |
 
 ---
 
@@ -110,21 +117,31 @@ Antes de implementar una funcionalidad, revisar:
 |---|---|---|---|---|---|
 | Crear venta | sales | `POST /api/v1/sales` | `sales.create` | sales, sale_items, sale_payments, inventory_stock, inventory_movements, cash_movements | `sale.created` |
 | Venta con saldo a favor | sales/customers | `POST /api/v1/sales` | `sales.create` | sales, sale_payments, customer_credit_applications, customer_balance_movements | `sale.created`, `customer_credit.used` |
-| Anular venta | sales | `POST /api/v1/sales/<built-in function id>/void` | `sales.void` | sales, inventory_movements, cash_movements, customer_credit_applications | `sale.voided` |
-| Devolucion venta | sales | `POST /api/v1/sales/<built-in function id>/return` | `sales.return` | sale_returns, sale_return_items, inventory_movements, cash_movements | `sale.returned` |
+| Anular venta | sales | `POST /api/v1/sales/{id}/void` | `sales.void` | sales, inventory_movements, cash_movements, customer_credit_applications | `sale.voided` |
+| Devolucion venta | sales | `POST /api/v1/sales/{id}/return` | `sales.return` | sale_returns, sale_return_items, inventory_movements, cash_movements | `sale.returned` |
 | Crear apartado | layaways | `POST /api/v1/layaways` | `layaways.create` | layaways, layaway_items, layaway_payments, inventory_movements | `layaway.created` |
-| Completar apartado | layaways/sales | `POST /api/v1/layaways/<built-in function id>/complete` | `layaways.payment` | layaways, sales, sale_items, inventory_movements | `layaway.completed`, `sale.created` |
-| Reembolsar saldo cliente | customers/cash | `POST /api/v1/customers/<built-in function id>/credit-refund` | `customers.balance_refund` | customer_balance_movements, customer_credit_applications, cash_movements | `customer_credit.refunded` |
+| Completar apartado | layaways/sales | `POST /api/v1/layaways/{id}/complete` | `layaways.payment` | layaways, sales, sale_items, inventory_movements | `layaway.completed`, `sale.created` |
+| Reembolsar saldo cliente | customers/cash | `POST /api/v1/customers/{id}/credit-refund` | `customers.balance_refund` | customer_balance_movements, customer_credit_applications, cash_movements | `customer_credit.refunded` |
 | Crear prestamo | inventory | `POST /api/v1/inventory/loans` | `inventory.loan` | inventory_loans, inventory_stock, inventory_movements | `inventory.loaned` |
-| Retornar prestamo | inventory | `POST /api/v1/inventory/loans/<built-in function id>/return` | `inventory.return_loan` | inventory_loans, inventory_stock, inventory_movements | `inventory.loan_returned` |
-| Recibir compra | purchases/inventory | `POST /api/v1/purchases/<built-in function id>/receive` | `purchases.create` | purchases, purchase_items, inventory_stock, inventory_movements | `purchase.received` |
-| Resolver retorno proveedor | suppliers/inventory | `POST /api/v1/suppliers/returns/<built-in function id>/resolve` | `supplier_returns.resolve` | supplier_returns, supplier_credits, inventory_movements | `supplier_return.resolved` |
+| Retornar prestamo | inventory | `POST /api/v1/inventory/loans/{id}/return` | `inventory.return_loan` | inventory_loans, inventory_stock, inventory_movements | `inventory.loan_returned` |
+| Recibir compra | purchases/inventory | `POST /api/v1/purchases/{id}/receive` | `purchases.create` | purchases, purchase_items, inventory_stock, inventory_movements | `purchase.received` |
+| Resolver retorno proveedor | suppliers/inventory | `POST /api/v1/suppliers/returns/{id}/resolve` | `supplier_returns.resolve` | supplier_returns, supplier_credits, inventory_movements | `supplier_return.resolved` |
 
 ---
 
 ## 7. Siguiente paso
 
-Despues de aprobar `09-frontend-routes.md`, continuar con la fase posterior de documentos AI:
+Despues de aprobar `10-validation-rules.md`, continuar con:
+
+```text
+11-error-handling.md
+12-audit-log.md
+13-development-roadmap.md
+14-mvp-scope.md
+15-implementation-checklist.md
+```
+
+La fase posterior de documentos AI se mantiene pendiente hasta completar los documentos principales:
 
 ```text
 AI_CONTEXT.md

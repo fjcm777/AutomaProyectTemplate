@@ -177,3 +177,63 @@ La implementacion frontend debe tomar como referencia `09-frontend-routes.md` y 
 - `06-auth-rbac.md` para permisos;
 - `08-api-contracts.md` para consumo de API;
 - `01-business-rules.md` y `02-process-flows.md` para flujos criticos.
+
+
+---
+
+# Complemento v7 - Validaciones, errores y transacciones
+
+`10-validation-rules.md` define el patrón objetivo para validaciones del sistema.
+
+## Implicaciones para el código actual
+
+| Área | Ajuste esperado |
+|---|---|
+| Schemas | Validar estructura, tipos básicos, campos requeridos y formatos simples. |
+| Services | Validar reglas de negocio, permisos funcionales, estados, stock, caja, saldos y transacciones. |
+| Repositories | Persistencia y consultas; no deben contener reglas de negocio principales. |
+| API handlers | Orquestar request/response, dependencias, permisos y conversión a respuestas estándar. |
+| Frontend | Validar para UX, mostrar mensajes en español y respetar respuestas del backend. |
+
+## Errores backend
+
+El código debe respetar `08-api-contracts.md`:
+
+```json
+{
+  "status_code": 422,
+  "code": "validation.invalid_input",
+  "message": "Hay campos inválidos. Revise la información ingresada.",
+  "details": {
+    "errors": []
+  }
+}
+```
+
+No debe implementarse una estructura paralela con `error_code`.
+
+## Warnings
+
+Las advertencias no bloqueantes deben regresar en respuestas exitosas mediante `warnings`.
+
+Ejemplo:
+
+```json
+{
+  "status_code": 200,
+  "message": "Pago registrado correctamente.",
+  "data": {},
+  "warnings": [
+    {
+      "code": "layaway.expired_payment_allowed",
+      "message": "El apartado está vencido, pero puede registrar el pago si desea continuar."
+    }
+  ]
+}
+```
+
+## Transacciones
+
+Los services que afecten múltiples módulos deben ejecutar la operación como una transacción atómica.
+Esto aplica a ventas, apartados, devoluciones, anulaciones, compras recibidas, retornos a proveedor,
+bajas de inventario, conversiones de préstamos a venta y cierre de caja.

@@ -799,3 +799,40 @@ Calcula utilidad estimada simple usando `sale_items`.
 estimated_profit =
 sum((unit_price * quantity - discount_amount) - (unit_cost * quantity))
 ```
+
+
+---
+
+# Complemento v7 - Validaciones por módulo
+
+Este complemento resume responsabilidades de validación confirmadas en `10-validation-rules.md`.
+
+## Regla transversal
+
+```text
+Cada módulo debe validar sus reglas funcionales en `service.py`.
+Los schemas validan estructura; el service valida negocio; la base de datos protege integridad.
+```
+
+## Responsabilidades principales
+
+| Módulo | Validaciones críticas |
+|---|---|
+| Auth / Users | Login con username, usuario activo, roles válidos, permisos en backend. |
+| Products | Código único, categoría/marca válidas, variantes no duplicadas, precios válidos, autorización para venta por debajo del costo. |
+| Customers | Datos mínimos, teléfono, dirección, talla de pie, saldo no editable directamente. |
+| Suppliers | Nombre y teléfono obligatorios, proveedor activo para operaciones, no eliminación física con historial. |
+| Inventory | Stock disponible, no stock negativo, movimientos trazables, ajustes/dañados/prestados con motivo y permisos. |
+| Sales | Items válidos, stock suficiente, pagos válidos, caja abierta, anulación/devolución con estado, motivo, permisos y auditoría. |
+| Layaways | Cliente válido, reserva de inventario, pago inicial mínimo, vencimiento configurable, pagos sobre vencidos con warning si el estado lo permite. |
+| Cash | Caja abierta, día operativo, movimientos trazables, cierre, diferencias con motivo obligatorio. |
+| Purchases | Proveedor activo, productos válidos, costo unitario mayor que cero, recepción trazable, pagos contra saldo pendiente. |
+| Supplier Returns | Proveedor activo, inventario disponible, motivo, envío/resolución por estado, resolución con tipo obligatorio. |
+| Reports | Filtros válidos, rangos configurables, tipo de cambio oficial para USD, formatos permitidos. |
+| Admin / Catalogs | No duplicados normalizados, no eliminación física si hay uso histórico. |
+| Admin / Settings | Permisos, auditoría y reglas específicas cuando existan procesos activos afectados. |
+
+## Operaciones atómicas
+
+Las operaciones críticas multi-módulo deben coordinarse transaccionalmente desde la capa service.
+Si una parte falla, no deben quedar cambios parciales.
