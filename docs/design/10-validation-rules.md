@@ -435,16 +435,19 @@ Si existe diferencia de caja, el motivo es obligatorio.
 Regla general:
 
 ```text
-Compras debe asegurar proveedor válido, productos válidos, cantidades correctas,
+Compras debe asegurar proveedor válido, productos y variantes existentes, cantidades correctas,
 costos consistentes, estado controlado, recepción trazable y pagos que no excedan
 saldo pendiente. La recepción registra inventario y costo histórico.
+
+En el MVP, Purchases no debe crear productos ni variantes directamente. Si el producto o variante no existe, debe crearse primero desde Products.
 ```
 
 | Field / Condition | Rule | Frontend | Backend | Severity | Recommended message |
 |---|---|---:|---:|---|---|
 | Supplier | Proveedor válido y activo | Sí | Sí | `blocking` | `Debe seleccionar un proveedor válido.` |
 | Purchase items | Al menos un producto | Sí | Sí | `blocking` | `Debe agregar al menos un producto a la compra.` |
-| Product variant | Producto/variante válido y activo | Sí | Sí | `blocking` | `El producto seleccionado no existe o no está activo.` |
+| Product variant | Producto/variante existente, válido y activo | Sí | Sí | `blocking` | `El producto seleccionado no existe o no está activo.` |
+| Missing product in purchase | No se permite crear producto/variante desde Purchases en el MVP | Sí | Sí | `blocking` | `Debe crear primero el producto y su variante desde Products antes de registrar la compra.` |
 | Quantity | Cantidad mayor que cero | Sí | Sí | `blocking` | `La cantidad debe ser mayor que cero.` |
 | Unit cost | Costo unitario mayor que cero | Sí | Sí | `blocking` | `El costo unitario debe ser mayor que cero.` |
 | Purchase total | Total mayor que cero | Sí | Sí | `blocking` | `El total de la compra debe ser mayor que cero.` |
@@ -617,6 +620,8 @@ Aplica a Sales, Sale Returns, Sale Voids, Layaway Payments, Cash Movements y Pur
 Aplica a price override, void sale, return sale, cancel layaway, write off damaged goods, convert loaned goods to sale, send/resolve supplier return, close/reopen cash y settings.
 
 ### 6.5 Auditoría transversal
+
+Nota de alcance: `12-audit-log.md` define que, en primera etapa, la auditoría funcional persistente se limita a operaciones sensibles de Sales e Inventory. Las reglas siguientes describen la validación general para acciones sensibles, pero la persistencia en `audit_logs` se aplicará según el alcance confirmado del documento 12.
 
 | Field / Condition | Rule | Frontend | Backend | Severity | Recommended message |
 |---|---|---:|---:|---|---|

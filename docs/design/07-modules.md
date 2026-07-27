@@ -254,6 +254,8 @@ La compensación puede resolverse como crédito, reembolso, reemplazo o sin comp
 
 Responsable de compras, recepción de mercadería, costos históricos, cuentas por pagar básicas y pagos a proveedor.
 
+En el MVP, `purchases` no crea productos ni variantes. Toda compra debe usar productos y variantes existentes en el catálogo maestro de `products`. Si durante una compra se detecta un producto inexistente, el usuario debe crear primero el producto/variante desde `products` y luego continuar con la compra.
+
 Tablas relacionadas:
 
 ```text
@@ -267,6 +269,8 @@ Reglas:
 ```text
 purchases registra entradas de inventario usando inventory.service.
 purchases puede aplicar créditos de proveedor usando suppliers.service.
+purchases valida que cada producto/variante exista antes de registrar o recibir la compra.
+purchases no debe crear productos incompletos ni variantes rápidas en el MVP.
 ```
 
 ### 5.11 `reports/`
@@ -564,7 +568,7 @@ Un evento representa que algo importante ocurrió en el negocio.
 Diferencia:
 
 ```text
-audit_logs      -> quién hizo qué, cuándo y por qué.
+audit_logs      -> quién hizo qué, cuándo, sobre qué recurso, con qué resultado y por qué.
 business_events -> qué ocurrió en el negocio.
 ```
 
@@ -575,9 +579,11 @@ Los módulos pueden registrar eventos usando shared/events.py.
 Los módulos pueden registrar auditoría usando shared/audit.py.
 La decisión de cuándo auditar vive en service.py del módulo.
 No se auditan consultas normales.
-Se auditan operaciones sensibles.
+En la primera etapa, audit_logs se limita a operaciones sensibles de Sales e Inventory.
+No se usará una interfaz de consulta de audit log en primera etapa.
 No se usarán colas externas como Kafka/RabbitMQ en MVP.
 ```
+
 
 Ejemplos:
 
@@ -826,7 +832,7 @@ Los schemas validan estructura; el service valida negocio; la base de datos prot
 | Sales | Items válidos, stock suficiente, pagos válidos, caja abierta, anulación/devolución con estado, motivo, permisos y auditoría. |
 | Layaways | Cliente válido, reserva de inventario, pago inicial mínimo, vencimiento configurable, pagos sobre vencidos con warning si el estado lo permite. |
 | Cash | Caja abierta, día operativo, movimientos trazables, cierre, diferencias con motivo obligatorio. |
-| Purchases | Proveedor activo, productos válidos, costo unitario mayor que cero, recepción trazable, pagos contra saldo pendiente. |
+| Purchases | Proveedor activo, productos/variantes existentes, costo unitario mayor que cero, recepción trazable, pagos contra saldo pendiente. |
 | Supplier Returns | Proveedor activo, inventario disponible, motivo, envío/resolución por estado, resolución con tipo obligatorio. |
 | Reports | Filtros válidos, rangos configurables, tipo de cambio oficial para USD, formatos permitidos. |
 | Admin / Catalogs | No duplicados normalizados, no eliminación física si hay uso histórico. |

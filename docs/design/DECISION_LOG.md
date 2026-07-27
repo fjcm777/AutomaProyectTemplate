@@ -52,3 +52,23 @@
 | 43 | Categorías funcionales de error usan prefijos por dominio (`auth.*`, `validation.*`, `business.*`, etc.). | CONFIRMED | API, frontend |
 | 44 | La ubicación física definitiva de logs técnicos se definirá más adelante. | CONFIRMED | arquitectura, operación |
 | 45 | Error handling técnico queda separado de auditoría funcional; auditoría se profundiza en `12-audit-log.md`. | CONFIRMED | audit, backend |
+
+| 46 | `12-audit-log.md` documenta auditoría funcional separada de logs técnicos. | CONFIRMED | audit, backend, DB |
+| 47 | La auditoría funcional se guarda en tabla persistente `audit_logs`. | CONFIRMED | DB, trazabilidad |
+| 48 | `audit_logs` usa estructura genérica con `action`, `resource_type`, `resource_id`, `operation_result`, `reason`, `before_data`, `after_data` y `metadata`. | CONFIRMED | DB, backend |
+| 49 | `operation_result` usa `success`, `failed` y `blocked`. | CONFIRMED | audit, backend |
+| 50 | En primera etapa, el audit log funcional se limita a Sales e Inventory. | CONFIRMED | audit, MVP |
+| 51 | `before_data` y `after_data` guardan datos resumidos y relevantes, no snapshots completos. | CONFIRMED | audit, storage |
+| 52 | `reason` representa el motivo funcional de la acción y es obligatorio solo para operaciones sensibles/correctivas. | CONFIRMED | audit, validation |
+| 53 | No habrá interfaz de audit log ni eliminación automática en primera etapa. | CONFIRMED | frontend, DB, operación |
+
+
+| 54 | `13-development-roadmap.md` organiza el desarrollo por fases incrementales con dependencias y criterios de finalización. | CONFIRMED | roadmap, planificación |
+| 55 | Phase 0 establece la base técnica antes de implementar módulos funcionales. | CONFIRMED | backend, DB, Docker, migrations |
+| 56 | El orden base confirmado es seguridad/catálogos -> entidades comerciales -> inventario -> caja -> ventas. | CONFIRMED | roadmap, dependencies |
+| 57 | Cash base debe implementarse antes de ventas completas; Cash es operativo y no equivale a contabilidad. | CONFIRMED | cash, sales, MVP |
+| 58 | Accounting / Contabilidad queda fuera del MVP y se implementará en una etapa futura. | CONFIRMED | accounting, future |
+| 59 | Layaways se implementa después de Sales. | CONFIRMED | layaways, sales, inventory, cash |
+| 60 | Purchases se implementa después de Layaways y usa productos/variantes existentes; no crea productos desde compras en el MVP. | CONFIRMED | purchases, products, inventory |
+| 61 | Supplier Returns, Damaged Goods, Loaned Goods, Sale Returns y Sale Voids son flujos de excepción operativa posteriores a los módulos base. | CONFIRMED | operational flows |
+| 62 | Reports se implementa después de datos operativos suficientes; Phase 10 cierra con estabilización, checklist y documentos AI. | CONFIRMED | reports, AI docs, checklist |

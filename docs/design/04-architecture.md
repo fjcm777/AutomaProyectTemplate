@@ -177,6 +177,8 @@ No seran modulos funcionales independientes:
 
 El modulo `accounting` queda documentado como etapa futura.
 
+Cash / Caja es un modulo operativo del MVP. Accounting / Contabilidad no forma parte del MVP. La arquitectura debe conservar trazabilidad operativa suficiente para integrar contabilidad en una etapa posterior sin rediseñar ventas, caja, compras, inventario o retornos.
+
 ## 8. Comunicacion entre modulos
 
 Reglas:
@@ -476,29 +478,42 @@ warnings, no como errores HTTP.
 ```
 
 
-## 18. Auditoria selectiva
+## 18. Auditoria funcional selectiva
 
-Automata usara auditoria selectiva, no auditoria de todo.
+Automata usará auditoría funcional selectiva, no auditoría de todo.
 
-No se auditaran consultas normales como consultar producto, buscar cliente, ver listado o filtrar productos.
+No se auditarán consultas normales como consultar producto, buscar cliente, ver listados o filtrar productos.
 
-Si se auditaran operaciones sensibles: ventas, anulaciones, devoluciones, apartados, ajustes de inventario, caja, compras, retornos a proveedor, cambios de clientes, cambios de roles/permisos y contabilidad futura.
+En la primera etapa, la auditoría funcional se enfocará únicamente en operaciones sensibles relacionadas con ventas e inventario.
 
-La auditoria sera registrada desde backend.
+La auditoría será registrada desde backend, en una tabla persistente de base de datos llamada `audit_logs`, separada de los logs técnicos de errores.
 
-Ubicacion sugerida: `backend/app/shared/audit.py`.
+Ubicación sugerida del helper: `backend/app/shared/audit.py`.
 
-Campos recomendados:
+Campos base confirmados:
 
-- Usuario.
-- Accion.
-- Entidad.
-- ID de entidad.
-- Fecha/hora.
-- Motivo.
-- Valor anterior si aplica.
-- Valor nuevo si aplica.
-- IP/dispositivo si aplica.
+- `user_id`.
+- `action`.
+- `resource_type`.
+- `resource_id`.
+- `operation_result`.
+- `reason` cuando aplique.
+- `before_data` resumido cuando aplique.
+- `after_data` resumido cuando aplique.
+- `metadata`.
+- `ip_address` si está disponible.
+- `user_agent` si está disponible.
+- `created_at`.
+
+Reglas:
+
+```text
+La auditoría funcional inicial se limita a Sales e Inventory.
+La tabla debe ser genérica para permitir expansión futura a otros módulos.
+No habrá interfaz de audit log en primera etapa.
+No habrá eliminación automática de audit log en primera etapa.
+```
+
 
 ## 19. Eventos internos
 
@@ -530,9 +545,10 @@ En el MVP no se implementaran tablas historicas.
 Reglas:
 
 - Las tablas principales conservaran registros importantes mediante estados o borrado logico.
-- `audit_logs` y `business_events` podran limpiarse por antiguedad.
-- La politica de retencion podra ser configurable.
-- No se eliminaran registros recientes ni necesarios para procesos abiertos o investigaciones activas.
+- `audit_logs` no se eliminará automáticamente en primera etapa.
+- La política de retención, archivado o limpieza de auditoría se definirá en una etapa posterior.
+- `business_events` podrá tener limpieza por antigüedad cuando se defina la política correspondiente.
+- No se eliminarán registros recientes ni necesarios para procesos abiertos o investigaciones activas.
 
 ## 21. Borrado logico y estados
 

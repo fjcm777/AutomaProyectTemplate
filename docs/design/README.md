@@ -2,8 +2,8 @@
 
 **Version:** documentacion recuperada, corregida y ajustada v5  
 **Fecha:** 2026-07-05  
-**Estado:** base documental valida hasta `11-error-handling.md`  
-**Siguiente documento pendiente:** `12-audit-log.md`
+**Estado:** base documental valida hasta `13-development-roadmap.md`  
+**Siguiente documento pendiente:** `14-mvp-scope.md`
 
 ---
 
@@ -38,6 +38,8 @@ Debe servir como mapa para desarrollo humano y desarrollo asistido con IA.
 09 -> rutas frontend
 10 -> reglas de validación
 11 -> manejo de errores
+12 -> auditoría funcional
+13 -> roadmap de desarrollo
 ```
 
 Antes de implementar una funcionalidad, revisar:
@@ -51,7 +53,9 @@ Antes de implementar una funcionalidad, revisar:
 7. `09-frontend-routes.md`
 8. `10-validation-rules.md`
 9. `11-error-handling.md`
-10. `CODE_ALIGNMENT.md`
+10. `12-audit-log.md`
+11. `13-development-roadmap.md`
+12. `CODE_ALIGNMENT.md`
 
 ---
 
@@ -71,6 +75,8 @@ Antes de implementar una funcionalidad, revisar:
 | 09 | [`09-frontend-routes.md`](09-frontend-routes.md) | Rutas navegables del frontend, layouts, guards, permisos sugeridos y navegación. | Implementar router, pantallas, guards y menú. |
 | 10 | [`10-validation-rules.md`](10-validation-rules.md) | Reglas de validación frontend/backend, severidad documental, mensajes y alineación con errores API. | Implementar validaciones, QA y manejo de errores. |
 | 11 | [`11-error-handling.md`](11-error-handling.md) | Manejo de errores técnicos, negocio, permisos, transacciones, warnings, trace_id y comportamiento por ambiente. | Implementar respuestas seguras, excepciones estándar y diagnóstico. |
+| 12 | [`12-audit-log.md`](12-audit-log.md) | Auditoría funcional persistente para acciones sensibles de ventas e inventario. | Implementar trazabilidad funcional en backend y base de datos. |
+| 13 | [`13-development-roadmap.md`](13-development-roadmap.md) | Fases incrementales de desarrollo, dependencias, criterios de finalización y alcance post-MVP. | Planificar implementación y evitar desarrollar módulos fuera de orden. |
 | CA | [`CODE_ALIGNMENT.md`](CODE_ALIGNMENT.md) | Codigo actual vs diseno objetivo. | Evitar confundir template con sistema final. |
 | DL | [`DECISION_LOG.md`](DECISION_LOG.md) | Registro de decisiones confirmadas. | Revisar historial de decisiones. |
 
@@ -114,6 +120,11 @@ Antes de implementar una funcionalidad, revisar:
 | Error interno | Usar `system.internal_error` para errores inesperados | `CONFIRMED` |
 | Fallo transaccional | Usar `business.transaction_failed` con `trace_id` | `CONFIRMED` |
 | Logs técnicos | Registrar errores relevantes internamente; almacenamiento físico definitivo pendiente | `CONFIRMED` |
+| Audit log | Persistente en DB, separado de logs técnicos, sin interfaz ni eliminación automática en primera etapa | `CONFIRMED` |
+| Alcance auditoría | Primera etapa limitada a Sales e Inventory | `CONFIRMED` |
+| Roadmap | Fases incrementales: foundation, seguridad/catálogos, entidades, inventario, caja, ventas, apartados, compras, excepciones, reportes y estabilización | `CONFIRMED` |
+| Contabilidad | Fuera del MVP; queda para etapa futura con puntos de integración preparados | `CONFIRMED` |
+| Purchases | No crea productos/variantes en MVP; usa catálogo Products existente | `CONFIRMED` |
 
 ---
 
@@ -123,13 +134,13 @@ Antes de implementar una funcionalidad, revisar:
 |---|---|---|---|---|---|
 | Crear venta | sales | `POST /api/v1/sales` | `sales.create` | sales, sale_items, sale_payments, inventory_stock, inventory_movements, cash_movements | `sale.created` |
 | Venta con saldo a favor | sales/customers | `POST /api/v1/sales` | `sales.create` | sales, sale_payments, customer_credit_applications, customer_balance_movements | `sale.created`, `customer_credit.used` |
-| Anular venta | sales | `POST /api/v1/sales/{id}/void` | `sales.void` | sales, inventory_movements, cash_movements, customer_credit_applications | `sale.voided` |
-| Devolucion venta | sales | `POST /api/v1/sales/{id}/return` | `sales.return` | sale_returns, sale_return_items, inventory_movements, cash_movements | `sale.returned` |
+| Anular venta | sales | `POST /api/v1/sales/{id}/void` | `sales.void` | sales, inventory_movements, cash_movements, customer_credit_applications, audit_logs | `sale.voided` |
+| Devolucion venta | sales | `POST /api/v1/sales/{id}/return` | `sales.return` | sale_returns, sale_return_items, inventory_movements, cash_movements, audit_logs | `sale.returned` |
 | Crear apartado | layaways | `POST /api/v1/layaways` | `layaways.create` | layaways, layaway_items, layaway_payments, inventory_movements | `layaway.created` |
 | Completar apartado | layaways/sales | `POST /api/v1/layaways/{id}/complete` | `layaways.payment` | layaways, sales, sale_items, inventory_movements | `layaway.completed`, `sale.created` |
 | Reembolsar saldo cliente | customers/cash | `POST /api/v1/customers/{id}/credit-refund` | `customers.balance_refund` | customer_balance_movements, customer_credit_applications, cash_movements | `customer_credit.refunded` |
-| Crear prestamo | inventory | `POST /api/v1/inventory/loans` | `inventory.loan` | inventory_loans, inventory_stock, inventory_movements | `inventory.loaned` |
-| Retornar prestamo | inventory | `POST /api/v1/inventory/loans/{id}/return` | `inventory.return_loan` | inventory_loans, inventory_stock, inventory_movements | `inventory.loan_returned` |
+| Crear prestamo | inventory | `POST /api/v1/inventory/loans` | `inventory.loan` | inventory_loans, inventory_stock, inventory_movements, audit_logs | `inventory.loaned` |
+| Retornar prestamo | inventory | `POST /api/v1/inventory/loans/{id}/return` | `inventory.return_loan` | inventory_loans, inventory_stock, inventory_movements, audit_logs | `inventory.loan_returned` |
 | Recibir compra | purchases/inventory | `POST /api/v1/purchases/{id}/receive` | `purchases.create` | purchases, purchase_items, inventory_stock, inventory_movements | `purchase.received` |
 | Resolver retorno proveedor | suppliers/inventory | `POST /api/v1/suppliers/returns/{id}/resolve` | `supplier_returns.resolve` | supplier_returns, supplier_credits, inventory_movements | `supplier_return.resolved` |
 
@@ -137,11 +148,9 @@ Antes de implementar una funcionalidad, revisar:
 
 ## 7. Siguiente paso
 
-Despues de aprobar `11-error-handling.md`, continuar con:
+Despues de aprobar `13-development-roadmap.md`, continuar con:
 
 ```text
-12-audit-log.md
-13-development-roadmap.md
 14-mvp-scope.md
 15-implementation-checklist.md
 ```

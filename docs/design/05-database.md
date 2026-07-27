@@ -855,25 +855,34 @@ Tipo de cambio manual por fecha.
 
 ## `audit_logs`
 
-Auditoría de acciones sensibles.
+Auditoría funcional de acciones sensibles.
+
+En la primera etapa, el audit log se enfocará únicamente en operaciones sensibles relacionadas con ventas e inventario. La estructura se mantiene genérica para permitir auditoría de otros módulos en etapas posteriores.
 
 | Campo | Tipo PostgreSQL | Null | Default | Restricciones / Índices | Descripción |
 | --- | --- | --- | --- | --- | --- |
 | id | BIGSERIAL | No | auto | PK | Identificador. |
-| user_id | BIGINT | Sí | NULL | FK users.id, INDEX | Usuario. |
-| action | VARCHAR(100) | No | — | INDEX | Acción. |
-| entity_type | VARCHAR(100) | No | — | INDEX | Entidad. |
-| entity_id | BIGINT | Sí | NULL | INDEX | ID entidad. |
-| old_values | JSONB | Sí | NULL | — | Antes. |
-| new_values | JSONB | Sí | NULL | — | Después. |
-| reason | VARCHAR(500) | Sí | NULL | — | Motivo. |
-| ip_address | VARCHAR(45) | Sí | NULL | — | IP. |
-| user_agent | VARCHAR(500) | Sí | NULL | — | Agente. |
-| created_at | TIMESTAMPTZ | No | now() | INDEX | Fecha. |
+| user_id | BIGINT | Sí | NULL | FK users.id, INDEX | Usuario que ejecutó la acción. |
+| action | VARCHAR(100) | No | — | INDEX | Acción funcional realizada, por ejemplo `sales.void` o `inventory.adjust`. |
+| resource_type | VARCHAR(100) | No | — | INDEX | Tipo de recurso afectado: `sale`, `inventory_stock`, `inventory_movement`, etc. |
+| resource_id | VARCHAR(100) | Sí | NULL | INDEX | Identificador del recurso afectado. Se define como texto para soportar BIGINT, UUID u otros identificadores futuros. |
+| operation_result | VARCHAR(30) | No | — | CHECK sugerido: `success`, `failed`, `blocked`; INDEX | Resultado de la operación. |
+| reason | TEXT | Sí | NULL | — | Motivo funcional de la acción cuando aplique. |
+| before_data | JSONB | Sí | NULL | — | Resumen del estado anterior relevante. |
+| after_data | JSONB | Sí | NULL | — | Resumen del estado posterior relevante. |
+| metadata | JSONB | Sí | NULL | — | Contexto adicional de la operación. |
+| ip_address | VARCHAR(45) | Sí | NULL | — | IP de origen si está disponible. |
+| user_agent | TEXT | Sí | NULL | — | Navegador/dispositivo si está disponible. |
+| created_at | TIMESTAMPTZ | No | now() | INDEX | Fecha/hora del evento. |
 
 **Reglas funcionales:**
 
-No auditar cada consulta; auditar acciones sensibles.
+- No auditar cada consulta; auditar acciones sensibles.
+- En primera etapa, auditar únicamente ventas e inventario.
+- `before_data` y `after_data` deben guardar datos resumidos y relevantes, no snapshots completos innecesarios.
+- `reason` es obligatorio en operaciones sensibles/correctivas como anulación, devolución, ajuste manual, baja por daño, préstamo, retorno de préstamo y conversión a venta.
+- No habrá interfaz de consulta de audit log en primera etapa.
+- No habrá eliminación automática de audit log en primera etapa.
 
 
 ## `business_events`

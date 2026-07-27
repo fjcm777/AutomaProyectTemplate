@@ -12,7 +12,7 @@ Este documento no redefine el contrato API. Debe mantenerse alineado con:
 - `06-auth-rbac.md`
 - `08-api-contracts.md`
 - `10-validation-rules.md`
-- `12-audit-log.md` cuando sea creado
+- `12-audit-log.md`
 
 ---
 
@@ -653,7 +653,7 @@ Un error técnico no reemplaza un registro de auditoría funcional.
 Una acción sensible puede requerir auditoría incluso si termina exitosamente.
 ```
 
-La estructura detallada de auditoría se definirá en `12-audit-log.md`.
+La estructura detallada de auditoría se define en `12-audit-log.md`. En primera etapa, la auditoría funcional persistente se limita a operaciones sensibles de Sales e Inventory.
 
 ---
 
@@ -752,14 +752,15 @@ Debe mostrar los mensajes seguros entregados por el backend.
 
 ## 20. Relación con documentos posteriores
 
-`11-error-handling.md` deja pendiente para `12-audit-log.md`:
+`12-audit-log.md` define:
 
 - estructura de tabla de auditoría;
-- eventos auditables;
-- retención de auditoría;
-- consulta de auditoría;
-- permisos para ver auditoría;
-- separación entre auditoría técnica y funcional si aplica.
+- alcance inicial limitado a Sales e Inventory;
+- acciones auditables iniciales;
+- uso de `reason`, `before_data`, `after_data` y `metadata`;
+- ausencia de interfaz de audit log en primera etapa;
+- ausencia de eliminación automática en primera etapa;
+- separación entre auditoría funcional y logs técnicos.
 
 También deja pendiente para una etapa posterior:
 

@@ -271,3 +271,68 @@ business.transaction_failed
 - En `development` puede existir detalle técnico controlado dentro de `details.debug`.
 - La ubicación física definitiva de logs técnicos queda pendiente para una etapa posterior.
 - Error handling técnico no reemplaza auditoría funcional.
+
+## Alineación agregada por 12-audit-log.md
+
+La auditoría funcional debe implementarse como capacidad compartida de backend, preferiblemente en `shared/audit.py`, pero su alcance inicial queda limitado a operaciones sensibles de Sales e Inventory.
+
+Reglas de implementación:
+
+```text
+- No crear interfaz frontend de audit log en primera etapa.
+- No auditar consultas normales.
+- No auditar todavía todos los módulos.
+- Registrar audit_logs desde service.py/backend, no desde frontend.
+- El frontend solo envía reason cuando la operación lo requiera.
+- El backend completa user_id, action, resource_type, resource_id, operation_result, before_data, after_data, metadata, ip_address, user_agent y created_at.
+- before_data y after_data deben ser resumidos y relevantes, no snapshots completos innecesarios.
+- No implementar eliminación automática de audit_logs en primera etapa.
+```
+
+Campos confirmados para la tabla:
+
+```text
+user_id
+action
+resource_type
+resource_id
+operation_result
+reason
+before_data
+after_data
+metadata
+ip_address
+user_agent
+created_at
+```
+
+
+---
+
+# Complemento v10 - Roadmap de desarrollo
+
+El orden de implementacion objetivo queda definido en `13-development-roadmap.md`.
+
+```text
+Phase 0  - Technical foundation
+Phase 1  - Auth, Users, Roles, Permissions, Catalogs base
+Phase 2  - Products, Customers, Suppliers
+Phase 3  - Inventory base
+Phase 4  - Cash base
+Phase 5  - Sales base
+Phase 6  - Layaways
+Phase 7  - Purchases
+Phase 8  - Operational exception flows
+Phase 9  - Reports
+Phase 10 - Stabilization, implementation checklist, AI documentation
+```
+
+Reglas de alineacion para desarrollo:
+
+```text
+- No implementar ventas completas antes de caja base.
+- No implementar compras antes de productos, proveedores e inventario base.
+- Purchases no debe crear productos ni variantes en el MVP.
+- Accounting / Contabilidad no forma parte del MVP; queda para etapa futura.
+- Los documentos AI se generan al final de la documentacion principal.
+```
