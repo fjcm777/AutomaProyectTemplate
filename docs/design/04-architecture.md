@@ -834,3 +834,33 @@ Si una parte de la operación falla, toda la operación debe revertirse.
 ```
 
 La capa `service.py` debe coordinar la transacción cuando el flujo afecte varias tablas o módulos.
+
+---
+
+## Complemento v8 - Error handling y logs técnicos
+
+`11-error-handling.md` define el manejo estándar de errores del sistema.
+
+Reglas arquitectónicas confirmadas:
+
+- El backend debe responder errores usando el contrato estándar de `08-api-contracts.md`.
+- Los errores inesperados usan `system.internal_error`.
+- Los fallos transaccionales usan `business.transaction_failed`.
+- Los errores internos, críticos y transaccionales deben incluir `trace_id`.
+- En producción no se deben exponer stack traces, SQL, constraints, tokens, secretos ni rutas internas.
+- En desarrollo puede existir detalle técnico controlado para debugging.
+- Error handling técnico no reemplaza auditoría funcional.
+
+### Ajuste sobre logging técnico
+
+La arquitectura mantiene la necesidad de logging técnico, pero la ubicación física definitiva queda pendiente.
+
+Regla vigente:
+
+```text
+El sistema debe registrar internamente los errores relevantes para soporte y diagnóstico.
+Los errores críticos, internos y transaccionales deben incluir trace_id.
+La estrategia definitiva de almacenamiento de logs técnicos será definida en una etapa posterior.
+```
+
+Por tanto, cualquier referencia previa a consola, archivo, base de datos o servicio externo debe interpretarse como opción técnica futura o inicial, no como decisión definitiva de almacenamiento persistente.

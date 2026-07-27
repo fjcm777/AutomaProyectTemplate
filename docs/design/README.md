@@ -2,8 +2,8 @@
 
 **Version:** documentacion recuperada, corregida y ajustada v5  
 **Fecha:** 2026-07-05  
-**Estado:** base documental valida hasta `10-validation-rules.md`  
-**Siguiente documento pendiente:** `11-error-handling.md`
+**Estado:** base documental valida hasta `11-error-handling.md`  
+**Siguiente documento pendiente:** `12-audit-log.md`
 
 ---
 
@@ -37,6 +37,7 @@ Debe servir como mapa para desarrollo humano y desarrollo asistido con IA.
 08 -> contratos API
 09 -> rutas frontend
 10 -> reglas de validación
+11 -> manejo de errores
 ```
 
 Antes de implementar una funcionalidad, revisar:
@@ -49,7 +50,8 @@ Antes de implementar una funcionalidad, revisar:
 6. `08-api-contracts.md`
 7. `09-frontend-routes.md`
 8. `10-validation-rules.md`
-9. `CODE_ALIGNMENT.md`
+9. `11-error-handling.md`
+10. `CODE_ALIGNMENT.md`
 
 ---
 
@@ -68,6 +70,7 @@ Antes de implementar una funcionalidad, revisar:
 | 08 | [`08-api-contracts.md`](08-api-contracts.md) | Endpoints, respuestas, errores y acciones criticas. | Implementar API y cliente frontend. |
 | 09 | [`09-frontend-routes.md`](09-frontend-routes.md) | Rutas navegables del frontend, layouts, guards, permisos sugeridos y navegación. | Implementar router, pantallas, guards y menú. |
 | 10 | [`10-validation-rules.md`](10-validation-rules.md) | Reglas de validación frontend/backend, severidad documental, mensajes y alineación con errores API. | Implementar validaciones, QA y manejo de errores. |
+| 11 | [`11-error-handling.md`](11-error-handling.md) | Manejo de errores técnicos, negocio, permisos, transacciones, warnings, trace_id y comportamiento por ambiente. | Implementar respuestas seguras, excepciones estándar y diagnóstico. |
 | CA | [`CODE_ALIGNMENT.md`](CODE_ALIGNMENT.md) | Codigo actual vs diseno objetivo. | Evitar confundir template con sistema final. |
 | DL | [`DECISION_LOG.md`](DECISION_LOG.md) | Registro de decisiones confirmadas. | Revisar historial de decisiones. |
 
@@ -108,6 +111,9 @@ Antes de implementar una funcionalidad, revisar:
 | Errores API | Usar `status_code`, `code`, `message`, `details`; validaciones múltiples en `details.errors` | `CONFIRMED` |
 | Warnings API | Advertencias no bloqueantes en respuestas exitosas con `warnings` | `CONFIRMED` |
 | Atomicidad | Operaciones críticas multi-módulo deben ser transaccionales | `CONFIRMED` |
+| Error interno | Usar `system.internal_error` para errores inesperados | `CONFIRMED` |
+| Fallo transaccional | Usar `business.transaction_failed` con `trace_id` | `CONFIRMED` |
+| Logs técnicos | Registrar errores relevantes internamente; almacenamiento físico definitivo pendiente | `CONFIRMED` |
 
 ---
 
@@ -131,10 +137,9 @@ Antes de implementar una funcionalidad, revisar:
 
 ## 7. Siguiente paso
 
-Despues de aprobar `10-validation-rules.md`, continuar con:
+Despues de aprobar `11-error-handling.md`, continuar con:
 
 ```text
-11-error-handling.md
 12-audit-log.md
 13-development-roadmap.md
 14-mvp-scope.md

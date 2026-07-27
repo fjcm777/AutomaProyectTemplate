@@ -237,3 +237,37 @@ Ejemplo:
 Los services que afecten múltiples módulos deben ejecutar la operación como una transacción atómica.
 Esto aplica a ventas, apartados, devoluciones, anulaciones, compras recibidas, retornos a proveedor,
 bajas de inventario, conversiones de préstamos a venta y cierre de caja.
+
+
+---
+
+# Complemento v8 - Error handling
+
+`11-error-handling.md` define el patrón objetivo para manejo de errores del sistema.
+
+## Implicaciones para el código actual
+
+| Área | Ajuste esperado |
+|---|---|
+| Excepciones estándar | Crear o consolidar helpers en `core/errors.py` o `shared/errors.py` para responder con `status_code`, `code`, `message` y `details`. |
+| API handlers | Convertir excepciones controladas en respuestas API estándar sin duplicar lógica por endpoint. |
+| Services | Lanzar errores funcionales para reglas de negocio, estados, permisos, inventario, caja y transacciones. |
+| Repositories | No deben convertir errores técnicos en mensajes de usuario; deben propagar fallos a capas superiores. |
+| Frontend | Consumir `message`, `details.errors` y `warnings` sin inventar mensajes técnicos. |
+| Logging | Registrar errores relevantes internamente y usar `trace_id` en errores internos, críticos y transaccionales. |
+
+## Códigos confirmados
+
+```text
+system.internal_error
+business.transaction_failed
+```
+
+## Reglas importantes
+
+- No implementar una estructura paralela con `error_code`.
+- No hacer `severity` obligatorio en el JSON público.
+- No exponer stack traces, SQL, constraints, tokens, secretos ni rutas internas en producción.
+- En `development` puede existir detalle técnico controlado dentro de `details.debug`.
+- La ubicación física definitiva de logs técnicos queda pendiente para una etapa posterior.
+- Error handling técnico no reemplaza auditoría funcional.

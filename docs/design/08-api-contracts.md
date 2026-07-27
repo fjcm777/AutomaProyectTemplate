@@ -1219,3 +1219,49 @@ cuando la regla de negocio permite continuar.
 `severity` puede usarse en documentación de validaciones para clasificar reglas
 como `blocking`, `warning` o `informational`, pero no es campo obligatorio del
 contrato público de error.
+
+---
+
+## Complemento v8 - Error handling
+
+`11-error-handling.md` profundiza el manejo operativo y técnico de errores sin redefinir el contrato API.
+
+Reglas confirmadas:
+
+- El formato estándar de error sigue siendo `status_code`, `code`, `message` y `details`.
+- No se debe introducir `error_code`.
+- `severity` no es campo obligatorio del JSON público.
+- Los errores inesperados deben usar `system.internal_error`.
+- Los fallos de operaciones atómicas/transaccionales deben usar `business.transaction_failed`.
+- Los errores internos, críticos y transaccionales deben incluir `trace_id` cuando aplique.
+- Las advertencias no bloqueantes siguen viajando en respuestas exitosas mediante `warnings`.
+- En producción no se deben exponer detalles técnicos internos.
+- En desarrollo puede existir detalle técnico controlado, sin romper el contrato base.
+
+Ejemplo de error interno seguro:
+
+```json
+{
+  "status_code": 500,
+  "code": "system.internal_error",
+  "message": "Ocurrió un error inesperado. Intente nuevamente o contacte al administrador.",
+  "details": {
+    "trace_id": "REQ-20260726-000124"
+  }
+}
+```
+
+Ejemplo de fallo transaccional:
+
+```json
+{
+  "status_code": 409,
+  "code": "business.transaction_failed",
+  "message": "No se pudo completar la operación. No se aplicaron cambios.",
+  "details": {
+    "resource": "sale",
+    "operation": "confirm_sale",
+    "trace_id": "REQ-20260726-000123"
+  }
+}
+```
