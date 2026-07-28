@@ -3,7 +3,7 @@
 **Version:** documentacion recuperada, corregida y ajustada v5  
 **Fecha:** 2026-07-05  
 **Estado:** base documental valida hasta `13-development-roadmap.md`  
-**Siguiente documento pendiente:** `14-mvp-scope.md`
+**Siguiente documento pendiente:** `15-implementation-checklist.md`
 
 ---
 
@@ -77,6 +77,7 @@ Antes de implementar una funcionalidad, revisar:
 | 11 | [`11-error-handling.md`](11-error-handling.md) | Manejo de errores técnicos, negocio, permisos, transacciones, warnings, trace_id y comportamiento por ambiente. | Implementar respuestas seguras, excepciones estándar y diagnóstico. |
 | 12 | [`12-audit-log.md`](12-audit-log.md) | Auditoría funcional persistente para acciones sensibles de ventas e inventario. | Implementar trazabilidad funcional en backend y base de datos. |
 | 13 | [`13-development-roadmap.md`](13-development-roadmap.md) | Fases incrementales de desarrollo, dependencias, criterios de finalización y alcance post-MVP. | Planificar implementación y evitar desarrollar módulos fuera de orden. |
+| 14 | [`14-mvp-scope.md`](14-mvp-scope.md) | Alcance del MVP, módulos incluidos, workflows incluidos, exclusiones, restricciones y criterios de finalización. | Evitar scope creep y orientar desarrollo asistido por IA. |
 | CA | [`CODE_ALIGNMENT.md`](CODE_ALIGNMENT.md) | Codigo actual vs diseno objetivo. | Evitar confundir template con sistema final. |
 | DL | [`DECISION_LOG.md`](DECISION_LOG.md) | Registro de decisiones confirmadas. | Revisar historial de decisiones. |
 
@@ -151,7 +152,6 @@ Antes de implementar una funcionalidad, revisar:
 Despues de aprobar `13-development-roadmap.md`, continuar con:
 
 ```text
-14-mvp-scope.md
 15-implementation-checklist.md
 ```
 
@@ -161,4 +161,27 @@ La fase posterior de documentos AI se mantiene pendiente hasta completar los doc
 AI_CONTEXT.md
 AI_DEVELOPMENT_GUIDE.md
 AI_TASK_PROMPTS.md
+```
+
+
+## v11 - MVP Scope summary
+
+`14-mvp-scope.md` confirms the first operational scope of Automata / Calzado Norita.
+
+Key confirmations:
+
+- MVP Scope is separate from the roadmap.
+- Included modules and included workflows are documented separately.
+- Sales and Cash are separate but integrated modules.
+- Cash is operational and included in the MVP.
+- Accounting remains future/post-MVP.
+- Purchases does not create products or variants in MVP.
+- Audit Log is included only for Sales and Inventory, without UI.
+- Technical logs are emitted through backend stdout/stderr and visible with Docker logs.
+- Advanced observability, integrations, BI, e-commerce, mobile app and advanced multi-store functionality remain future scope.
+
+Current pending main document:
+
+```text
+15-implementation-checklist.md
 ```

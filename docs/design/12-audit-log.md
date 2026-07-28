@@ -21,7 +21,7 @@ El audit log funcional y los logs técnicos no son lo mismo.
 
 | Concepto | Propósito | Ejemplo | Persistencia |
 |---|---|---|---|
-| Logs técnicos | Diagnóstico de errores, excepciones y fallos internos | error 500, stack controlado en development, fallo de DB | La ubicación física definitiva se definirá más adelante |
+| Logs técnicos | Diagnóstico de errores, excepciones y fallos internos | error 500, stack controlado en development, fallo de DB | stdout/stderr del backend; visible con Docker logs / Docker Compose logs |
 | Audit log funcional | Historial consultable de acciones sensibles del usuario | anular venta, devolución, ajuste de inventario | Tabla persistente en base de datos |
 
 Regla:

@@ -602,20 +602,32 @@ Deben registrarse internamente:
 - errores repetidos de permisos cuando puedan indicar mal uso o intento no autorizado;
 - fallos de integración futura.
 
-Regla confirmada:
+Regla confirmada para MVP:
 
 ```text
-La ubicación física definitiva de los logs técnicos se definirá más adelante.
+En el MVP, los logs técnicos del backend se emitirán por stdout/stderr
+del contenedor de la API y serán visibles mediante Docker logs o Docker Compose logs.
 ```
 
-Por tanto, este documento solo establece la necesidad de logging interno, sin decidir todavía si la persistencia final será consola, archivo, base de datos o servicio externo.
+Comandos esperados en desarrollo o despliegue básico:
 
-Regla provisional:
+```bash
+docker logs <api_container_name>
+docker compose logs api
+docker compose logs -f api
+```
+
+Regla vigente:
 
 ```text
 El sistema debe registrar internamente los errores relevantes para soporte y diagnóstico.
 Los errores críticos, internos y transaccionales deben incluir trace_id.
-La estrategia definitiva de almacenamiento de logs técnicos será definida en una etapa posterior.
+
+No habrá interfaz dentro del sistema para consultar logs técnicos.
+No habrá dashboard de monitoreo, alertas ni centralización avanzada en el MVP.
+
+La centralización, retención formal, monitoreo, alertas y almacenamiento externo
+de logs técnicos quedan para una etapa posterior.
 ```
 
 ---
@@ -764,9 +776,9 @@ Debe mostrar los mensajes seguros entregados por el backend.
 
 También deja pendiente para una etapa posterior:
 
-- almacenamiento físico definitivo de logs técnicos;
+- centralización avanzada o almacenamiento externo de logs técnicos;
 - herramienta externa de observabilidad;
-- retención de logs técnicos;
+- retención formal de logs técnicos;
 - alertas automáticas por errores críticos.
 
 ---
@@ -786,4 +798,4 @@ También deja pendiente para una etapa posterior:
 | Ocultar detalle técnico en producción | `CONFIRMED` |
 | Permitir detalle técnico controlado en desarrollo | `CONFIRMED` |
 | Diferenciar error handling de auditoría funcional | `CONFIRMED` |
-| Definir almacenamiento físico de logs más adelante | `CONFIRMED` |
+| Logs técnicos del MVP por stdout/stderr visibles con Docker logs; centralización/retención/monitoreo quedan futuros | `CONFIRMED` |

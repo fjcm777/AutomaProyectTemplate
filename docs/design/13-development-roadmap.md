@@ -73,7 +73,7 @@ Establish the minimum technical foundation before implementing functional module
 | API structure | `/api` prefix and module-oriented organization |
 | Error handling | Standard error format from `08-api-contracts.md` and `11-error-handling.md` |
 | Validation base | Validation pattern aligned with `10-validation-rules.md` |
-| Technical logging | Basic internal logging; final physical log storage remains pending |
+| Technical logging | Basic backend stdout/stderr logging visible with Docker logs; advanced observability remains future scope |
 | Seeds | Base seed structure through Alembic migrations |
 | Code alignment | Folder and service conventions aligned with `CODE_ALIGNMENT.md` |
 
@@ -669,3 +669,20 @@ Key dependency rules:
 | `CODE_ALIGNMENT.md` | Must reference the roadmap order for implementation. |
 | `README.md` | Must include this document in the reading order and mark next pending document. |
 | `DECISION_LOG.md` | Must record confirmed roadmap decisions. |
+
+
+---
+
+## Complement v11 - MVP scope alignment
+
+`14-mvp-scope.md` confirms the functional boundary of the first operational version.
+
+Roadmap interpretation rules:
+
+- The roadmap defines development order.
+- MVP Scope defines what belongs to the first version and what remains future scope.
+- Cash must remain before Sales in the roadmap because Sales depends on open cash.
+- Accounting remains future/post-MVP, even though Cash is included in the MVP.
+- Purchases must use existing products and variants from Products.
+- Supplier Returns, Damaged Goods, Loaned Goods, Sale Returns and Sale Voids are operational workflows, not accounting.
+- Advanced observability, centralized logs, monitoring dashboards and log retention policies are future scope.

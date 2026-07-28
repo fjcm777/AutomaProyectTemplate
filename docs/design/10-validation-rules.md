@@ -881,3 +881,18 @@ Las reglas de este documento impactan o complementan:
 - Cambios de settings con procesos activos se comportan según tipo de configuración.
 - Operaciones críticas multi-módulo deben ser atómicas.
 - Errores backend siguen `08-api-contracts.md`; warnings no bloqueantes van en respuestas exitosas.
+
+
+---
+
+## Complemento v11 - Relación con MVP Scope
+
+`14-mvp-scope.md` confirma que las reglas de validación del MVP aplican a los módulos y workflows incluidos en la primera versión operativa.
+
+Reglas de alcance relevantes:
+
+- Purchases no crea productos ni variantes en el MVP; debe validar que existan previamente en Products.
+- Audit Log funcional se limita inicialmente a Sales e Inventory.
+- Technical logs no son audit log; los errores técnicos se registran por stdout/stderr del backend y se consultan con Docker logs.
+- Accounting / Contabilidad queda fuera del MVP.
+- Sales y Cash son módulos separados pero integrados; las ventas requieren caja abierta y Cash consolida movimientos para cierre.

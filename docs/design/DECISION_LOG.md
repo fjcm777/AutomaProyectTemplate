@@ -50,7 +50,7 @@
 | 41 | Errores internos, críticos y transaccionales deben incluir `trace_id`. | CONFIRMED | soporte, logging |
 | 42 | Producción oculta detalle técnico; development puede mostrar detalle controlado. | CONFIRMED | seguridad, debugging |
 | 43 | Categorías funcionales de error usan prefijos por dominio (`auth.*`, `validation.*`, `business.*`, etc.). | CONFIRMED | API, frontend |
-| 44 | La ubicación física definitiva de logs técnicos se definirá más adelante. | CONFIRMED | arquitectura, operación |
+| 44 | La ubicación física definitiva de logs técnicos quedaba pendiente; decisión reemplazada por v11: stdout/stderr + Docker logs en MVP. | UPDATED | arquitectura, operación |
 | 45 | Error handling técnico queda separado de auditoría funcional; auditoría se profundiza en `12-audit-log.md`. | CONFIRMED | audit, backend |
 
 | 46 | `12-audit-log.md` documenta auditoría funcional separada de logs técnicos. | CONFIRMED | audit, backend, DB |
@@ -72,3 +72,13 @@
 | 60 | Purchases se implementa después de Layaways y usa productos/variantes existentes; no crea productos desde compras en el MVP. | CONFIRMED | purchases, products, inventory |
 | 61 | Supplier Returns, Damaged Goods, Loaned Goods, Sale Returns y Sale Voids son flujos de excepción operativa posteriores a los módulos base. | CONFIRMED | operational flows |
 | 62 | Reports se implementa después de datos operativos suficientes; Phase 10 cierra con estabilización, checklist y documentos AI. | CONFIRMED | reports, AI docs, checklist |
+
+
+| 64 | `14-mvp-scope.md` define el alcance del MVP separado del roadmap. | CONFIRMED | MVP, documentación |
+| 65 | Los módulos reales y workflows operativos deben documentarse por separado en MVP Scope. | CONFIRMED | MVP, modules |
+| 66 | Sales y Cash son módulos separados pero integrados; Cash Closing pertenece a Cash. | CONFIRMED | sales, cash |
+| 67 | Workflows incluidos en MVP: anulaciones/devoluciones de venta, cierre/diferencias de caja, ajustes, dañados, préstamos, pagos/cancelación de apartados, recepción de compra y retornos a proveedor. | CONFIRMED | MVP, workflows |
+| 68 | Funcionalidades fuera del MVP: Accounting, analítica avanzada, integraciones externas, e-commerce, app móvil, audit log UI, BI avanzado y operaciones multi-tienda complejas. | CONFIRMED | MVP, future |
+| 69 | Logs técnicos del MVP se emiten por stdout/stderr del backend y son visibles con Docker logs / Docker Compose logs. | CONFIRMED | logs, backend, Docker |
+| 70 | No habrá UI de logs técnicos, dashboard de monitoreo, alertas, centralización ni retención formal de logs en el MVP. | CONFIRMED | logs, future |
+| 71 | El MVP se considera completo al operar ventas, inventario, caja, apartados, compras, clientes, proveedores, reportes básicos y trazabilidad mínima con documentación alineada. | CONFIRMED | MVP, acceptance |

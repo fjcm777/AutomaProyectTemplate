@@ -655,7 +655,7 @@ Deben registrar errores inesperados, fallos de conexion a DB, errores en jobs, e
 
 No deben registrar contrasenas, tokens JWT, claves secretas ni datos sensibles innecesarios.
 
-En el MVP se usara logging estandar de Python con salida a consola o archivo.
+En el MVP se usara logging estandar de Python emitido por stdout/stderr del contenedor backend. Estos logs seran visibles mediante Docker logs o Docker Compose logs. No habra interfaz, dashboard, monitoreo avanzado ni centralizacion de logs en el MVP.
 
 ## 27. Testing
 
@@ -867,16 +867,21 @@ Reglas arquitectónicas confirmadas:
 - En desarrollo puede existir detalle técnico controlado para debugging.
 - Error handling técnico no reemplaza auditoría funcional.
 
-### Ajuste sobre logging técnico
+### Ajuste v11 sobre logging técnico
 
-La arquitectura mantiene la necesidad de logging técnico, pero la ubicación física definitiva queda pendiente.
+La arquitectura define para el MVP un mecanismo básico y práctico de logging técnico.
 
 Regla vigente:
 
 ```text
-El sistema debe registrar internamente los errores relevantes para soporte y diagnóstico.
-Los errores críticos, internos y transaccionales deben incluir trace_id.
-La estrategia definitiva de almacenamiento de logs técnicos será definida en una etapa posterior.
+En el MVP, los logs técnicos del backend se emitirán por stdout/stderr del contenedor de la API.
+Serán visibles mediante Docker logs o Docker Compose logs.
+
+No habrá interfaz dentro del sistema para consultar logs técnicos.
+No habrá dashboard de monitoreo, alertas ni centralización avanzada en el MVP.
+
+La centralización, retención formal, monitoreo, alertas y almacenamiento externo
+de logs técnicos quedan para una etapa posterior.
 ```
 
-Por tanto, cualquier referencia previa a consola, archivo, base de datos o servicio externo debe interpretarse como opción técnica futura o inicial, no como decisión definitiva de almacenamiento persistente.
+Los errores críticos, internos y transaccionales deben incluir `trace_id` tanto en la respuesta segura cuando aplique como en los logs técnicos internos.

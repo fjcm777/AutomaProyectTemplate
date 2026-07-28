@@ -269,7 +269,7 @@ business.transaction_failed
 - No hacer `severity` obligatorio en el JSON público.
 - No exponer stack traces, SQL, constraints, tokens, secretos ni rutas internas en producción.
 - En `development` puede existir detalle técnico controlado dentro de `details.debug`.
-- La ubicación física definitiva de logs técnicos queda pendiente para una etapa posterior.
+- Los logs técnicos del MVP deben emitirse por stdout/stderr del backend y ser visibles mediante Docker logs / Docker Compose logs; la centralización, monitoreo, alertas y retención formal quedan para etapa posterior.
 - Error handling técnico no reemplaza auditoría funcional.
 
 ## Alineación agregada por 12-audit-log.md
@@ -335,4 +335,29 @@ Reglas de alineacion para desarrollo:
 - Purchases no debe crear productos ni variantes en el MVP.
 - Accounting / Contabilidad no forma parte del MVP; queda para etapa futura.
 - Los documentos AI se generan al final de la documentacion principal.
+```
+
+
+---
+
+## v11 - MVP Scope alignment
+
+`14-mvp-scope.md` defines what is included in the first operational version and what must remain future scope.
+
+Implementation rules:
+
+- Do not implement modules or workflows outside MVP unless explicitly re-scoped.
+- Treat real modules and workflows separately. Workflows such as sale voids, sale returns, cash closing, damaged goods, loaned goods, purchase receiving and supplier returns belong inside their related modules.
+- Keep Sales and Cash as separate modules. Sales records the commercial operation; Cash records and controls money movements and closing.
+- Cash is part of the MVP. Accounting is not part of the MVP.
+- Purchases must not create products or variants in the MVP. It must reference existing Products/Variants.
+- Audit Log is limited to sensitive Sales and Inventory actions and has no UI in the MVP.
+- Technical logs must be emitted by the backend through stdout/stderr and be visible with Docker logs / Docker Compose logs. Do not implement a logs UI, monitoring dashboard, alerting or centralized observability in the MVP.
+- Advanced analytics, e-commerce, native mobile app, external integrations, advanced multi-store workflows and advanced inventory planning are future scope.
+
+Required Docker log visibility for MVP:
+
+```bash
+docker compose logs api
+docker compose logs -f api
 ```

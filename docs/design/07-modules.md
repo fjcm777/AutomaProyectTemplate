@@ -3,6 +3,33 @@
 Proyecto: **Automata**  
 Fecha de actualización: 2026-06-28
 
+## Nota v11 - Módulos vs workflows en MVP
+
+`14-mvp-scope.md` separa explícitamente los módulos reales de los workflows operativos.
+
+Regla vigente:
+
+```text
+Los módulos reales son las unidades funcionales principales acordadas.
+Los workflows como anulación de venta, devolución, cierre de caja, productos dañados,
+productos prestados, recepción de compra y retorno a proveedor pertenecen a sus módulos
+correspondientes y no deben interpretarse automáticamente como módulos independientes.
+```
+
+Ejemplos:
+
+| Workflow | Módulo relacionado |
+|---|---|
+| Sale Voids / Anulación de venta | Sales |
+| Sale Returns / Devolución de venta | Sales |
+| Cash Closing / Cierre de caja | Cash |
+| Damaged Goods / Productos dañados | Inventory |
+| Loaned Goods / Productos prestados | Inventory |
+| Purchase Receiving / Recepción de compra | Purchases + Inventory |
+| Supplier Returns / Retornos a proveedor | Suppliers + Inventory + Purchases |
+
+Sales y Cash son módulos separados pero integrados. Cash es operativo y entra al MVP; Accounting queda fuera del MVP.
+
 ## 1. Objetivo
 
 Este documento define cómo se organizará el backend de Automata por módulos funcionales.
