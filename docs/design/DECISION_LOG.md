@@ -82,3 +82,11 @@
 | 69 | Logs técnicos del MVP se emiten por stdout/stderr del backend y son visibles con Docker logs / Docker Compose logs. | CONFIRMED | logs, backend, Docker |
 | 70 | No habrá UI de logs técnicos, dashboard de monitoreo, alertas, centralización ni retención formal de logs en el MVP. | CONFIRMED | logs, future |
 | 71 | El MVP se considera completo al operar ventas, inventario, caja, apartados, compras, clientes, proveedores, reportes básicos y trazabilidad mínima con documentación alineada. | CONFIRMED | MVP, acceptance |
+
+| 72 | `15-implementation-checklist.md` se organiza como checklist práctico por áreas/fases para implementar, revisar y validar el MVP. | CONFIRMED | implementation, QA, AI-assisted development |
+| 73 | La base técnica debe estar estable antes de módulos funcionales: backend, frontend, DB, Docker, migrations, errores, validaciones, logs y estructura modular. | CONFIRMED | technical foundation |
+| 74 | El checklist de Security/Auth/RBAC valida login con username, usuarios activos/inactivos, roles, permisos dinámicos y validación backend de permisos. | CONFIRMED | security, auth, RBAC |
+| 75 | El checklist por módulo cubre los módulos reales del MVP y sus restricciones, incluyendo Products como catálogo maestro y Purchases sin creación de productos/variantes. | CONFIRMED | modules, MVP |
+| 76 | El checklist de workflows críticos valida implementación end-to-end, transaccionalidad, permisos, inventario, caja, auditoría cuando aplique y errores estructurados. | CONFIRMED | workflows, transactions |
+| 77 | El checklist Validation/API/Frontend refuerza validaciones backend, contrato API, warnings, trace_id, React Router v6, guards y manejo de errores por formulario. | CONFIRMED | validation, API, frontend |
+| 78 | El checklist final confirma audit log limitado, logs técnicos básicos, exclusiones del MVP y criterios para considerar el MVP completo. | CONFIRMED | audit, logs, MVP completion |

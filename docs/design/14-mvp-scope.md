@@ -370,7 +370,7 @@ for MVP completion.
 | `11-error-handling.md` | Error handling, `trace_id` and technical logging behavior |
 | `12-audit-log.md` | Functional audit log scope and persistence |
 | `13-development-roadmap.md` | Development order for MVP and future scope |
-| `15-implementation-checklist.md` | Next document; checklist to validate implementation readiness |
+| `15-implementation-checklist.md` | Checklist to validate implementation readiness and MVP completion |
 
 ---
 
@@ -389,3 +389,18 @@ for MVP completion.
 | Technical logs use backend stdout/stderr and Docker logs in MVP | `CONFIRMED` |
 | Advanced observability and log centralization are future scope | `CONFIRMED` |
 | MVP completion criteria are operational, not future-feature complete | `CONFIRMED` |
+
+
+---
+
+## Complement v12 - Implementation checklist alignment
+
+`15-implementation-checklist.md` validates this MVP scope during implementation.
+
+The MVP should not be considered complete unless the checklist confirms:
+
+- modules included in this document are implemented with their minimum operations;
+- workflows included in this document are implemented end-to-end;
+- excluded features were not implemented without explicit scope change;
+- backend validations, RBAC, API contracts, frontend routes, audit scope and technical logs match the confirmed documentation;
+- Accounting, Audit Log UI, Technical Logs UI, BI/advanced analytics, external integrations and product creation from Purchases remain outside the MVP.

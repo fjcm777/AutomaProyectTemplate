@@ -2,8 +2,8 @@
 
 **Version:** documentacion recuperada, corregida y ajustada v5  
 **Fecha:** 2026-07-05  
-**Estado:** base documental valida hasta `13-development-roadmap.md`  
-**Siguiente documento pendiente:** `15-implementation-checklist.md`
+**Estado:** base documental valida hasta `15-implementation-checklist.md`  
+**Siguiente documento pendiente:** `AI_CONTEXT.md`
 
 ---
 
@@ -40,6 +40,8 @@ Debe servir como mapa para desarrollo humano y desarrollo asistido con IA.
 11 -> manejo de errores
 12 -> auditoría funcional
 13 -> roadmap de desarrollo
+14 -> alcance MVP
+15 -> checklist de implementacion
 ```
 
 Antes de implementar una funcionalidad, revisar:
@@ -55,7 +57,9 @@ Antes de implementar una funcionalidad, revisar:
 9. `11-error-handling.md`
 10. `12-audit-log.md`
 11. `13-development-roadmap.md`
-12. `CODE_ALIGNMENT.md`
+12. `14-mvp-scope.md`
+13. `15-implementation-checklist.md`
+14. `CODE_ALIGNMENT.md`
 
 ---
 
@@ -78,6 +82,7 @@ Antes de implementar una funcionalidad, revisar:
 | 12 | [`12-audit-log.md`](12-audit-log.md) | Auditoría funcional persistente para acciones sensibles de ventas e inventario. | Implementar trazabilidad funcional en backend y base de datos. |
 | 13 | [`13-development-roadmap.md`](13-development-roadmap.md) | Fases incrementales de desarrollo, dependencias, criterios de finalización y alcance post-MVP. | Planificar implementación y evitar desarrollar módulos fuera de orden. |
 | 14 | [`14-mvp-scope.md`](14-mvp-scope.md) | Alcance del MVP, módulos incluidos, workflows incluidos, exclusiones, restricciones y criterios de finalización. | Evitar scope creep y orientar desarrollo asistido por IA. |
+| 15 | [`15-implementation-checklist.md`](15-implementation-checklist.md) | Checklist práctico para implementar, revisar y validar el MVP. | Guiar desarrollo, QA y desarrollo asistido por IA. |
 | CA | [`CODE_ALIGNMENT.md`](CODE_ALIGNMENT.md) | Codigo actual vs diseno objetivo. | Evitar confundir template con sistema final. |
 | DL | [`DECISION_LOG.md`](DECISION_LOG.md) | Registro de decisiones confirmadas. | Revisar historial de decisiones. |
 
@@ -126,6 +131,7 @@ Antes de implementar una funcionalidad, revisar:
 | Roadmap | Fases incrementales: foundation, seguridad/catálogos, entidades, inventario, caja, ventas, apartados, compras, excepciones, reportes y estabilización | `CONFIRMED` |
 | Contabilidad | Fuera del MVP; queda para etapa futura con puntos de integración preparados | `CONFIRMED` |
 | Purchases | No crea productos/variantes en MVP; usa catálogo Products existente | `CONFIRMED` |
+| Implementation checklist | Checklist práctico por áreas/fases para validar implementación del MVP | `CONFIRMED` |
 
 ---
 
@@ -149,13 +155,7 @@ Antes de implementar una funcionalidad, revisar:
 
 ## 7. Siguiente paso
 
-Despues de aprobar `13-development-roadmap.md`, continuar con:
-
-```text
-15-implementation-checklist.md
-```
-
-La fase posterior de documentos AI se mantiene pendiente hasta completar los documentos principales:
+Despues de aprobar `15-implementation-checklist.md`, continuar con los documentos derivados para desarrollo asistido por IA:
 
 ```text
 AI_CONTEXT.md
@@ -180,8 +180,26 @@ Key confirmations:
 - Technical logs are emitted through backend stdout/stderr and visible with Docker logs.
 - Advanced observability, integrations, BI, e-commerce, mobile app and advanced multi-store functionality remain future scope.
 
-Current pending main document:
+---
+
+## v12 - Implementation Checklist summary
+
+`15-implementation-checklist.md` converts the confirmed documentation into a practical verification guide for implementation, QA and AI-assisted development.
+
+Key confirmations:
+
+- Checklist is organized by areas/fases, not only by modules.
+- Technical foundation must be stable before functional modules.
+- Security/Auth/RBAC checklist validates username login, active users, roles, permissions and backend permission checks.
+- Module checklist covers all real MVP modules and confirmed restrictions.
+- Workflow checklist covers critical end-to-end flows and transactional requirements.
+- Validation/API/Frontend checklist reinforces contracts from documents 08, 09 and 10.
+- Audit/Logs/MVP completion checklist confirms audit scope, technical logs, MVP exclusions and final acceptance criteria.
+
+Current pending derived AI documents:
 
 ```text
-15-implementation-checklist.md
+AI_CONTEXT.md
+AI_DEVELOPMENT_GUIDE.md
+AI_TASK_PROMPTS.md
 ```

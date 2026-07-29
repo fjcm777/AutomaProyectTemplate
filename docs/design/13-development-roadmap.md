@@ -686,3 +686,21 @@ Roadmap interpretation rules:
 - Purchases must use existing products and variants from Products.
 - Supplier Returns, Damaged Goods, Loaned Goods, Sale Returns and Sale Voids are operational workflows, not accounting.
 - Advanced observability, centralized logs, monitoring dashboards and log retention policies are future scope.
+
+---
+
+## Complement v12 - Implementation checklist alignment
+
+`15-implementation-checklist.md` is the practical verification gate for the roadmap.
+
+Roadmap phases should not be considered complete only because code exists. Each phase must also be checked against:
+
+- technical foundation requirements;
+- security/RBAC requirements;
+- module implementation checklist;
+- critical workflow checklist;
+- validation/API/frontend checklist;
+- audit/log checklist;
+- MVP completion criteria.
+
+The checklist reinforces that Accounting, external integrations, audit log UI, log UI, BI/advanced analytics and product creation from Purchases remain outside the MVP.

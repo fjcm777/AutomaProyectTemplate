@@ -361,3 +361,36 @@ Required Docker log visibility for MVP:
 docker compose logs api
 docker compose logs -f api
 ```
+
+---
+
+## v12 - Implementation Checklist alignment
+
+`15-implementation-checklist.md` must be used as the practical verification guide before considering any feature, workflow or MVP phase complete.
+
+Implementation rules:
+
+- Use the checklist after each development phase and before accepting generated code.
+- Verify technical foundation before implementing functional modules.
+- Verify Security/Auth/RBAC before exposing protected routes or sensitive actions.
+- Verify each real MVP module against its minimum operations and confirmed restrictions.
+- Verify critical workflows end-to-end, not only CRUD screens.
+- Verify backend validations even when frontend validations exist.
+- Verify API responses follow `status_code`, `code`, `message`, `details` and `warnings` when applicable.
+- Verify frontend routes follow `09-frontend-routes.md`, including `/login`, `/dashboard`, `/admin`, `/forbidden`, `/session-expired`, `/not-found` and fallback `*`.
+- Verify audit log remains limited to Sales and Inventory in the MVP and has no UI.
+- Verify technical logs remain stdout/stderr-based and visible through Docker logs in the MVP.
+- Do not mark MVP complete if Accounting, BI, external integrations, audit UI, log UI, monitoring dashboards or product creation from Purchases were implemented without explicit scope change.
+
+Checklist gate before accepting code:
+
+```text
+1. Does the implementation respect MVP scope?
+2. Does it respect the roadmap order and module boundaries?
+3. Are backend validations and permissions enforced?
+4. Are critical workflows transactional?
+5. Do API errors and warnings follow the confirmed contract?
+6. Are frontend routes, guards and forms aligned?
+7. Are audit/logging decisions respected?
+8. Are out-of-scope features avoided?
+```
