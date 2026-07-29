@@ -90,3 +90,90 @@
 | 76 | El checklist de workflows críticos valida implementación end-to-end, transaccionalidad, permisos, inventario, caja, auditoría cuando aplique y errores estructurados. | CONFIRMED | workflows, transactions |
 | 77 | El checklist Validation/API/Frontend refuerza validaciones backend, contrato API, warnings, trace_id, React Router v6, guards y manejo de errores por formulario. | CONFIRMED | validation, API, frontend |
 | 78 | El checklist final confirma audit log limitado, logs técnicos básicos, exclusiones del MVP y criterios para considerar el MVP completo. | CONFIRMED | audit, logs, MVP completion |
+
+---
+
+## v13 - AI documentation decisions
+
+### Decision 79 - Generate derived AI documentation package
+
+**Status:** CONFIRMED  
+**Decision:** Generate the derived AI documentation after completing documents `00` through `15`.
+
+Included files:
+
+```text
+AI_CONTEXT.md
+AI_DEVELOPMENT_GUIDE.md
+AI_TASK_PROMPTS.md
+```
+
+### Decision 80 - AI documents must not introduce new functional decisions
+
+**Status:** CONFIRMED  
+**Decision:** The AI documents are derived from confirmed documentation and must not introduce new scope, modules, workflows, API formats or business rules.
+
+They must summarize, organize and convert confirmed decisions into reusable guidance for AI-assisted development.
+
+### Decision 81 - AI context must reinforce non-negotiable project constraints
+
+**Status:** CONFIRMED  
+**Decision:** `AI_CONTEXT.md` must explicitly reinforce the most important decisions:
+
+- Accounting remains outside the MVP.
+- Cash is operational and included in MVP.
+- Sales and Cash are separate but integrated modules.
+- Products is the master catalog.
+- Purchases does not create products or variants in MVP.
+- Audit Log is limited initially to Sales and Inventory.
+- Audit Log has no UI in MVP.
+- Technical logs are emitted through backend stdout/stderr and visible with Docker logs.
+- API errors use `status_code`, `code`, `message`, `details`.
+
+### Decision 82 - AI development guide as guardrail for implementation
+
+**Status:** CONFIRMED  
+**Decision:** `AI_DEVELOPMENT_GUIDE.md` must define how an AI/developer should work with the documentation, including what to check before coding and what not to implement without a confirmed decision.
+
+### Decision 83 - AI task prompts as reusable development prompts
+
+**Status:** CONFIRMED  
+**Decision:** `AI_TASK_PROMPTS.md` must provide reusable prompts for backend, frontend, migrations, workflow validation, testing, documentation review and MVP scope evaluation.
+
+---
+
+## v14 - Final documentation package
+
+### Decision 84 - Consolidate final complete documentation package
+
+**Status:** CONFIRMED  
+**Decision:** Consolidate the full documentation package after completing documents `00` through `15` and the derived AI documentation files.
+
+Included final baseline:
+
+```text
+00-business-context.md
+01-business-rules.md
+02-process-flows.md
+03-use-cases.md
+04-architecture.md
+05-database.md
+06-auth-rbac.md
+07-modules.md
+08-api-contracts.md
+09-frontend-routes.md
+10-validation-rules.md
+11-error-handling.md
+12-audit-log.md
+13-development-roadmap.md
+14-mvp-scope.md
+15-implementation-checklist.md
+AI_CONTEXT.md
+AI_DEVELOPMENT_GUIDE.md
+AI_TASK_PROMPTS.md
+README.md
+CODE_ALIGNMENT.md
+DECISION_LOG.md
+```
+
+This package becomes the current complete documentation baseline for implementation.

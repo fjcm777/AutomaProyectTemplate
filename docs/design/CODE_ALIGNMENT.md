@@ -394,3 +394,39 @@ Checklist gate before accepting code:
 7. Are audit/logging decisions respected?
 8. Are out-of-scope features avoided?
 ```
+
+---
+
+## v13 - AI-assisted development alignment
+
+The derived AI documentation files must be used as guardrails before asking an AI to generate code:
+
+```text
+AI_CONTEXT.md
+AI_DEVELOPMENT_GUIDE.md
+AI_TASK_PROMPTS.md
+```
+
+Implementation tasks should follow this order:
+
+1. Read `AI_CONTEXT.md` for project-wide context.
+2. Read `AI_DEVELOPMENT_GUIDE.md` for mandatory rules.
+3. Use a focused prompt from `AI_TASK_PROMPTS.md`.
+4. Verify implementation against `15-implementation-checklist.md`.
+5. Check module-specific rules in source documents before coding.
+
+AI-generated code must not:
+
+- add Accounting to the MVP;
+- turn workflows into modules;
+- merge Sales and Cash;
+- create products from Purchases;
+- add Audit Log UI;
+- add Technical Logs UI;
+- add external integrations as mandatory MVP behavior;
+- change API error format;
+- skip backend permission checks;
+- skip backend validations;
+- skip transactions in critical workflows.
+
+If a requested implementation requires changing confirmed documentation, the AI/developer must stop and identify affected documents before coding.

@@ -1,9 +1,9 @@
 # Automata / Calzado Norita - Indice de documentacion
 
-**Version:** documentacion recuperada, corregida y ajustada v5  
-**Fecha:** 2026-07-05  
-**Estado:** base documental valida hasta `15-implementation-checklist.md`  
-**Siguiente documento pendiente:** `AI_CONTEXT.md`
+**Version:** documentación final completa v14  
+**Fecha:** 2026-07-29  
+**Estado:** documentación principal y documentos derivados de IA completados  
+**Siguiente documento pendiente:** ninguno; corresponde revisión final y uso para implementación
 
 ---
 
@@ -153,15 +153,40 @@ Antes de implementar una funcionalidad, revisar:
 
 ---
 
-## 7. Siguiente paso
+## 7. Estado final
 
-Despues de aprobar `15-implementation-checklist.md`, continuar con los documentos derivados para desarrollo asistido por IA:
+La documentación principal y los documentos derivados de IA están completos.
+
+Documentos principales completados:
+
+```text
+00-business-context.md
+01-business-rules.md
+02-process-flows.md
+03-use-cases.md
+04-architecture.md
+05-database.md
+06-auth-rbac.md
+07-modules.md
+08-api-contracts.md
+09-frontend-routes.md
+10-validation-rules.md
+11-error-handling.md
+12-audit-log.md
+13-development-roadmap.md
+14-mvp-scope.md
+15-implementation-checklist.md
+```
+
+Documentos derivados para desarrollo asistido por IA completados:
 
 ```text
 AI_CONTEXT.md
 AI_DEVELOPMENT_GUIDE.md
 AI_TASK_PROMPTS.md
 ```
+
+Siguiente paso recomendado: usar `AI_CONTEXT.md`, `AI_DEVELOPMENT_GUIDE.md`, `AI_TASK_PROMPTS.md` y `15-implementation-checklist.md` para iniciar tareas de implementación controladas contra la documentación fuente.
 
 
 ## v11 - MVP Scope summary
@@ -199,7 +224,55 @@ Key confirmations:
 Current pending derived AI documents:
 
 ```text
+None. AI documentation package completed in v13.
+```
+
+---
+
+## v13 - AI Documentation summary
+
+This iteration adds the derived AI documentation package:
+
+```text
 AI_CONTEXT.md
 AI_DEVELOPMENT_GUIDE.md
 AI_TASK_PROMPTS.md
 ```
+
+Key purpose:
+
+- `AI_CONTEXT.md` gives a compact but complete project context for AI-assisted development.
+- `AI_DEVELOPMENT_GUIDE.md` defines how an AI/developer must work without violating confirmed decisions.
+- `AI_TASK_PROMPTS.md` provides reusable prompts for implementation, review, testing and documentation alignment.
+
+Important constraints reinforced:
+
+- Accounting remains outside the MVP.
+- Cash is operational and included in the MVP.
+- Sales and Cash remain separate but integrated modules.
+- Products is the master catalog.
+- Purchases does not create products or variants in the MVP.
+- Audit Log is limited initially to Sales and Inventory and has no UI.
+- Technical logs use backend stdout/stderr and are visible through Docker logs.
+- API errors use `status_code`, `code`, `message`, `details`.
+- Validation, API, frontend, audit/log and MVP checklist rules must guide AI-assisted development.
+
+Current next step:
+
+```text
+Use the final complete ZIP as the documentation baseline for implementation.
+```
+
+---
+
+## v14 - Final complete package summary
+
+This final package consolidates the base documentation and all incremental updates through v13.
+
+Included scope:
+
+- Main documentation from `00` through `15`.
+- Derived AI documentation package.
+- Updated README, CODE_ALIGNMENT and DECISION_LOG.
+
+This ZIP should be treated as the current complete documentation baseline for Automata / Calzado Norita.
