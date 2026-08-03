@@ -5,6 +5,25 @@
 
 ---
 
+## Nota de alineación v15
+
+Este documento fue alineado con las decisiones confirmadas en documentos posteriores.
+
+Cuando exista conflicto entre un caso de uso antiguo y documentos más recientes, prevalecen:
+
+1. `DECISION_LOG.md`
+2. `14-mvp-scope.md`
+3. `13-development-roadmap.md`
+4. `15-implementation-checklist.md`
+5. `10-validation-rules.md`
+6. `08-api-contracts.md`
+7. `07-modules.md`
+8. `05-database.md`
+
+`03-use-cases.md` describe casos funcionales, pero no debe usarse para reintroducir funcionalidades excluidas del MVP, estados no confirmados, campos inexistentes o flujos revertidos por decisiones posteriores.
+
+---
+
 ## Actores del Sistema
 
 | Actor | Descripción |
@@ -44,13 +63,13 @@
 | CU-103a | Warehouse / Admin | Gestionar catálogos de tallas y colores |
 | CU-104 | Warehouse | Registrar entrada de mercancía desde orden de compra |
 | CU-105 | Warehouse | Registrar ajuste de inventario |
-| CU-106 | Warehouse | Registrar traslado entre bodegas |
+| CU-106 | Warehouse | Registrar traslado interno entre ubicaciones **(Future / no MVP)** |
 | CU-107 | Warehouse / Admin / Manager | Ver stock actual por producto, variante y bodega |
 | CU-108 | Admin | Configurar stock mínimo y alertas |
 | CU-109 | System | Descontar stock automáticamente al facturar |
 | CU-110 | Admin / Warehouse / Manager | Ver kardex completo |
 | CU-111 | Warehouse / Admin | Registrar devolución de venta con movimiento de inventario |
-| CU-112 | Warehouse / Admin | Revertir entrada de mercancía o recepción errónea |
+| CU-112 | Warehouse / Admin | Registrar corrección controlada de recepción según proceso definido, sin revertir directamente compras recibidas |
 | CU-113 | System | Reservar stock al crear apartado |
 | CU-114 | System | Liberar stock reservado por apartado vencido o cancelado según política |
 | CU-115 | Seller / Warehouse / Admin / Manager | Consultar productos disponibles por nombre, código, talla, color y bodega |
@@ -63,6 +82,12 @@
 | Consulta de disponibilidad | El vendedor debe poder confirmar existencia de productos por variante, talla, color y bodega |
 | Devoluciones de venta | Si el producto devuelto está en condiciones de reventa, debe reingresar al inventario; si está defectuoso, debe registrarse sin disponibilidad para venta |
 | Reservas por apartado | La venta por apartado reserva inventario, no lo descuenta definitivamente hasta completar el flujo definido |
+
+### Alineación MVP de inventario
+
+- Las transferencias internas entre bodegas/ubicaciones quedan como **future scope** y no deben implementarse en el MVP.
+- El MVP puede preparar el modelo para ubicación o bodega lógica, pero no debe desarrollar flujos avanzados de transferencias internas.
+- Una compra recibida no debe revertirse directamente. Las correcciones deben manejarse mediante procesos controlados de ajuste, retorno o corrección según las reglas confirmadas.
 
 ---
 
@@ -78,10 +103,10 @@
 | CU-205a | Seller / Cashier | Registrar abonos parciales o anular pagos |
 | CU-205b | Seller / Cashier | Crear venta por sistema de apartado con pago inicial mínimo |
 | CU-205c | Seller / Cashier | Registrar pagos parciales de apartado durante el plazo permitido |
-| CU-205d | System | Alertar apartados vencidos cuando el cliente no complete el pago en máximo 2 meses |
+| CU-205d | System | Alertar apartados vencidos cuando el cliente no complete el pago dentro del plazo máximo configurable |
 | CU-205e | Seller / Cashier | Cerrar apartado pagado y generar factura o documento final según proceso definido |
 | CU-206 | Seller | Generar nota de crédito / devolución |
-| CU-206a | Seller / Admin / System | Registrar devolución de venta con movimiento de inventario y evento contable |
+| CU-206a | Seller / Admin / System | Registrar devolución de venta con movimiento de inventario y trazabilidad operativa |
 | CU-207 | Seller / Admin | Anular factura con motivo |
 | CU-207a | Seller / Admin | Gestionar estados de factura |
 | CU-208 | Admin | Configurar impuestos y series de factura |
@@ -101,18 +126,18 @@
 | Modalidad | Descripción |
 |-----------|-------------|
 | **Venta en efectivo** | Venta pagada al momento. Incluye efectivo físico, transferencia bancaria y tarjeta |
-| **Venta a crédito** | Venta entregada al cliente con saldo pendiente, sujeta a límite de crédito |
-| **Venta por apartado** | El cliente selecciona productos, paga un porcentaje inicial y cancela el saldo por partes en máximo 2 meses |
+| **Venta a crédito** | Venta entregada al cliente con saldo pendiente, sujeta a validación de deuda/saldo y permisos de override cuando aplique |
+| **Venta por apartado** | El cliente selecciona productos, paga un porcentaje inicial y cancela el saldo por partes dentro del plazo máximo configurable |
 
 ### Reglas de apartado
 
 | Regla | Descripción |
 |-------|-------------|
 | Porcentaje inicial | Debe ser configurable por el negocio |
-| Plazo máximo | 2 meses para completar el pago |
+| Plazo máximo | Configurable mediante settings de apartados, por ejemplo `layaways.default_term_days` |
 | Pagos parciales | Se permiten múltiples abonos |
 | Inventario | Se reserva mientras el apartado esté activo |
-| Vencimiento | Si no se completa el pago en 2 meses, se genera alerta |
+| Vencimiento | Si no se completa el pago dentro del plazo configurado, se genera alerta |
 | Liberación | La liberación de inventario por vencimiento debe ser configurable |
 | Cierre | Al completar el pago, el apartado se convierte en venta cerrada/factura según el flujo definido |
 
@@ -135,8 +160,8 @@
 | Regla | Descripción |
 |-------|-------------|
 | Movimiento de inventario | Toda devolución debe generar movimiento de inventario si el producto regresa físicamente |
-| Evento contable | Toda devolución debe generar un evento interno para contabilidad |
-| Nota de crédito | La devolución puede generar nota de crédito o reversa según política definida |
+| Integración contable futura | La devolución debe conservar trazabilidad suficiente para una futura integración contable, sin generar contabilidad formal en el MVP |
+| Devolución operativa | La devolución debe registrar el resultado operativo definido: reintegro de inventario y devolución de efectivo cuando aplique |
 | Producto defectuoso | Si el producto no está disponible para reventa, debe registrarse sin incrementar stock disponible |
 | Auditoría | Toda devolución debe registrar usuario, fecha, motivo y documento relacionado |
 
@@ -147,15 +172,24 @@
 | ID | Actor | Caso de Uso |
 |----|-------|-------------|
 | CU-301 | Admin / Manager / Seller | Crear y editar cliente |
-| CU-302 | Admin | Asignar límite de crédito |
-| CU-303 | Admin | Aprobar o rechazar solicitud de crédito |
+| CU-302 | Admin / Manager | Consultar y revisar saldo/deuda del cliente |
+| CU-303 | Admin / Manager | Autorizar operación con cliente que tiene deuda mediante permiso de override cuando aplique |
 | CU-304 | Seller / Cashier | Registrar abono a cuenta del cliente |
 | CU-305 | Seller / Cashier / Manager / Accountant | Ver estado de cuenta del cliente |
 | CU-306 | Admin / Manager | Ver clientes con saldo vencido |
-| CU-307 | System | Bloquear venta si cliente excede límite de crédito |
-| CU-307a | System | Bloquear nuevas ventas y notificar al vendedor si supera límite de crédito |
+| CU-307 | System | Bloquear venta con deuda/saldo pendiente cuando no exista permiso de override aplicable |
+| CU-307a | System | Bloquear operación y notificar al vendedor cuando el cliente no cumpla reglas de deuda/saldo configuradas |
 | CU-308 | Admin | Generar estado de cuenta para cliente |
 | CU-309 | Seller / Manager | Ver apartados activos, pagados y vencidos del cliente |
+
+### Reglas de clientes y crédito alineadas al MVP
+
+| Regla | Descripción |
+|---|---|
+| Sin `credit_limit` en MVP | El esquema confirmado no define un campo `credit_limit` para clientes. |
+| Control de deuda/saldo | Las operaciones deben validar saldo/deuda del cliente según reglas confirmadas. |
+| Override autorizado | Si una operación requiere excepción, debe usarse un permiso de override, por ejemplo `sales.credit_override`, no un flujo formal de aprobación de límite de crédito. |
+| Saldo del cliente | El saldo no se modifica directamente; debe cambiar mediante movimientos trazables. |
 
 ---
 
@@ -165,12 +199,21 @@
 |----|-------|-------------|
 | CU-401 | Admin / Purchasing | Crear y editar proveedor |
 | CU-402 | Purchasing | Crear orden de compra |
-| CU-402a | Purchasing / Admin | Confirmar o rechazar orden de compra |
+| CU-402a | Purchasing / Admin | Revisar compra en borrador antes de recibir o cancelar, sin flujo formal de aprobación/rechazo en MVP |
 | CU-403 | Warehouse | Recibir mercancía contra orden de compra |
 | CU-404 | Admin | Registrar factura de proveedor |
 | CU-405 | Admin | Registrar pago a proveedor |
 | CU-406 | Admin / Manager / Accountant | Ver cuentas por pagar |
 | CU-407 | Admin / Manager / Purchasing | Ver historial de compras por proveedor |
+
+### Reglas de compras alineadas al MVP
+
+| Regla | Descripción |
+|---|---|
+| Estados de compra | El flujo confirmado para compras es `draft -> received` o `draft -> cancelled`. |
+| Compra recibida | Una compra `received` es final y no debe cancelarse ni revertirse directamente. |
+| Sin aprobación/rechazo formal | El MVP no incluye un flujo formal de confirmar/rechazar orden de compra. |
+| Productos existentes | Purchases no crea productos ni variantes; toda compra referencia productos existentes en Products. |
 
 ---
 
@@ -329,8 +372,8 @@
 | `mercaderia_danada_registrada` | Inventory | Registrar mercadería dañada |
 | `mercaderia_danada_dada_baja` | Inventory | Registrar baja definitiva |
 | `retorno_proveedor_creado` | Suppliers / Inventory | Registrar retorno a proveedor |
-| `credito_proveedor_generado` | Suppliers / Accounting | Registrar crédito a favor |
-| `credito_proveedor_aplicado` | Suppliers / Accounting | Registrar aplicación de crédito |
+| `credito_proveedor_generado` | Suppliers | Registrar crédito a favor del proveedor para trazabilidad operativa |
+| `credito_proveedor_aplicado` | Suppliers | Registrar aplicación operativa de crédito de proveedor |
 
 ---
 

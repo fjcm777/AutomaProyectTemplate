@@ -303,7 +303,6 @@ Reglas:
 GET  /api/v1/inventory/stock
 GET  /api/v1/inventory/movements
 POST /api/v1/inventory/adjustments
-POST /api/v1/inventory/transfers
 POST /api/v1/inventory/damaged
 POST /api/v1/inventory/writeoff
 POST /api/v1/inventory/loans
@@ -344,23 +343,17 @@ Ajuste:
 }
 ```
 
-Transferencia:
+Transferencia interna:
 
-```json
-{
-  "product_variant_id": 10,
-  "source_warehouse_id": 1,
-  "target_warehouse_id": 2,
-  "quantity": 3,
-  "reason": "Traslado a exhibición",
-  "business_date": "2026-06-28"
-}
+```text
+POST /api/v1/inventory/transfers queda como endpoint futuro/no-MVP.
+No debe implementarse en la primera versión operativa.
 ```
 
 Reglas:
 
-- Todo cambio genera movimiento.
-- Transferencia genera salida y entrada.
+- Todo cambio confirmado en el MVP genera movimiento.
+- Las transferencias internas entre bodegas/ubicaciones quedan como future scope.
 - Dañado deja de estar disponible.
 - Baja reduce existencia física.
 - Prestado no es venta.
@@ -401,7 +394,7 @@ Ajuste saldo:
 
 ```json
 {
-  "movement_type": "credit_adjustment",
+  "movement_type": "adjustment_in",
   "amount": 100.00,
   "reason": "Ajuste autorizado por gerencia.",
   "business_date": "2026-06-28"
@@ -605,6 +598,7 @@ Reglas:
 - Producto puede separarse como no vendible.
 - Resolución: credit, refund, replacement, none.
 - Reemplazo genera entrada de inventario.
+- Aplicar crédito de proveedor requiere permiso `suppliers.credits.apply`.
 
 ---
 

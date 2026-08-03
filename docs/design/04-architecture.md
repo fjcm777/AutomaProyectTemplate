@@ -350,7 +350,6 @@ sales.void
 sales.return
 inventory.view
 inventory.adjust
-inventory.transfer
 inventory.mark_damaged
 cash.view
 cash.open
@@ -363,6 +362,8 @@ layaways.extend
 reports.sales.view
 reports.inventory.view
 ```
+
+`inventory.transfer` queda reservado para una etapa futura/no-MVP y no debe usarse para implementar transferencias internas en la primera versión.
 
 El backend validara usando el codigo tecnico. En pantalla pueden mostrarse nombres en espanol.
 

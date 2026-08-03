@@ -276,3 +276,19 @@ Included scope:
 - Updated README, CODE_ALIGNMENT and DECISION_LOG.
 
 This ZIP should be treated as the current complete documentation baseline for Automata / Calzado Norita.
+
+
+---
+
+## v15 Consistency Corrections
+
+This package includes a consistency correction pass focused on preventing AI-assisted implementation from following obsolete or contradictory instructions.
+
+Corrected areas:
+
+- `03-use-cases.md` aligned with confirmed MVP scope, purchase states, configurable layaway terms, customer balance/override rules, and no internal transfers in MVP.
+- `08-api-contracts.md` corrected customer balance movement enum example from invalid `credit_adjustment` to valid `adjustment_in`.
+- `06-auth-rbac.md` added `suppliers.credits.apply` for applying supplier credits.
+- `09-frontend-routes.md` updated AI documentation status.
+- `CODE_ALIGNMENT.md` removed obsolete open question about categories.
+- `AI_DEVELOPMENT_GUIDE.md` updated document precedence to avoid reintroducing obsolete use cases.

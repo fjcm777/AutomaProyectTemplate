@@ -91,14 +91,12 @@ El diseño documentado incluye:
 En el código actual ya existen bases para:
 
 - `products`
-- `categories`, actualmente como módulo separado; en la documentación objetivo, catálogos de producto pueden integrarse bajo `products` o mantenerse con una decisión técnica explícita.
+- `categories`, actualmente como base técnica separada en el código; en la documentación objetivo, las categorías de producto forman parte de `Admin / Catalogs` y son consumidas por `Products`. No deben tratarse como una pregunta abierta.
 - `health`
 
 ## Regla de trabajo para continuar
 
-Antes de avanzar a `09-frontend-routes.md`, el usuario debe revisar y aprobar este ZIP corregido.
-
-Una vez aprobado, el documento `09-frontend-routes.md` debe tomar en cuenta:
+Para continuar cualquier implementación o ajuste documental, se debe tomar en cuenta:
 
 - La arquitectura objetivo.
 - La estructura real actual del frontend.

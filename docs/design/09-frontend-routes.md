@@ -929,4 +929,4 @@ Este documento no cubre en detalle:
 - testing de rutas;
 - documentación AI (`AI_CONTEXT.md`, `AI_DEVELOPMENT_GUIDE.md`, `AI_TASK_PROMPTS.md`).
 
-Los documentos AI todavía no existen en la base actual y quedan pendientes para una fase posterior.
+Los documentos AI ya existen en el paquete final y deben usarse como guías derivadas para desarrollo asistido por IA.

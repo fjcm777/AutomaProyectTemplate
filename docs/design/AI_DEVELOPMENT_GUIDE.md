@@ -46,15 +46,16 @@ Cuando exista duda, la IA debe:
 Antes de implementar una tarea, consultar:
 
 1. `AI_CONTEXT.md`
-2. `14-mvp-scope.md`
-3. `13-development-roadmap.md`
-4. `15-implementation-checklist.md`
-5. Documento funcional específico:
+2. `DECISION_LOG.md`
+3. `14-mvp-scope.md`
+4. `13-development-roadmap.md`
+5. `15-implementation-checklist.md`
+6. Documento funcional específico:
    - `01-business-rules.md`
    - `02-process-flows.md`
    - `03-use-cases.md`
    - `07-modules.md`
-6. Documento técnico específico:
+7. Documento técnico específico:
    - `04-architecture.md`
    - `05-database.md`
    - `06-auth-rbac.md`
@@ -63,8 +64,15 @@ Antes de implementar una tarea, consultar:
    - `10-validation-rules.md`
    - `11-error-handling.md`
    - `12-audit-log.md`
-7. `CODE_ALIGNMENT.md`
-8. `DECISION_LOG.md`
+8. `CODE_ALIGNMENT.md`
+
+Regla de precedencia:
+
+```text
+Si un caso de uso antiguo entra en conflicto con decisiones posteriores, prevalecen DECISION_LOG.md, 14-mvp-scope.md, 13-development-roadmap.md, 15-implementation-checklist.md y los documentos técnicos específicos.
+
+03-use-cases.md no debe usarse para reintroducir funcionalidades excluidas del MVP, campos inexistentes, estados no confirmados o flujos revertidos.
+```
 
 ---
 

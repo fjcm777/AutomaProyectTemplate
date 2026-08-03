@@ -339,7 +339,6 @@ products.deactivate
 ```text
 inventory.view
 inventory.adjust
-inventory.transfer
 inventory.mark_damaged
 inventory.writeoff
 inventory.loan
@@ -394,6 +393,7 @@ suppliers.view
 suppliers.create
 suppliers.update
 suppliers.deactivate
+suppliers.credits.apply
 ```
 
 ### Compras
@@ -520,7 +520,6 @@ Enfocado en inventario físico.
 products.view
 inventory.view
 inventory.adjust
-inventory.transfer
 inventory.mark_damaged
 inventory.loan
 inventory.return_loan
@@ -764,3 +763,26 @@ Regla:
 ```text
 Ningún endpoint protegido debe depender únicamente de validaciones del frontend.
 ```
+
+
+---
+
+## Complemento v15 - Permiso para créditos de proveedor
+
+Se confirma el permiso `suppliers.credits.apply` para proteger la operación de aplicar créditos de proveedor a compras futuras o saldos relacionados.
+
+Regla:
+
+```text
+Todo endpoint protegido debe tener un permiso documentado.
+POST /api/v1/suppliers/credits/{id}/apply requiere `suppliers.credits.apply`.
+```
+
+
+### Permisos futuros / no MVP
+
+```text
+inventory.transfer
+```
+
+`inventory.transfer` queda reservado para una etapa futura de transferencias internas entre bodegas/ubicaciones. No debe asignarse como permiso operativo requerido para el MVP.
