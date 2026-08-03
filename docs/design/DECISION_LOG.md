@@ -177,3 +177,90 @@ DECISION_LOG.md
 ```
 
 This package becomes the current complete documentation baseline for implementation.
+
+---
+
+## v15 - Consistency correction pass
+
+### Decision 85 - Align use cases with confirmed MVP scope
+
+**Status:** CONFIRMED  
+**Decision:** `03-use-cases.md` was corrected to remove or reclassify obsolete use cases that contradicted later confirmed decisions.
+
+Confirmed alignment:
+
+- Internal transfers between warehouses/locations are not part of the MVP and must be treated as future scope.
+- Purchases use the confirmed MVP state flow: `draft -> received / cancelled`.
+- Confirm/reject purchase order flows are not part of the MVP.
+- Received purchases are final and must not be directly cancelled or reversed.
+- Layaway term must be configurable, not hardcoded as a fixed two-month rule.
+- Customer balance/debt handling must not depend on a `credit_limit` field in the MVP.
+- Customer debt exceptions use confirmed permissions/override behavior instead of an undefined credit-limit approval workflow.
+
+### Decision 86 - Correct customer balance movement enum in API examples
+
+**Status:** CONFIRMED  
+**Decision:** `08-api-contracts.md` was corrected so customer balance adjustment examples use a valid `customer_balance_movements.movement_type` value.
+
+The invalid example value:
+
+```text
+credit_adjustment
+```
+
+was replaced with a valid confirmed value:
+
+```text
+adjustment_in
+```
+
+### Decision 87 - Add missing supplier credit apply permission
+
+**Status:** CONFIRMED  
+**Decision:** The permission required for applying supplier credits was added to RBAC documentation and aligned with API contracts.
+
+Confirmed permission:
+
+```text
+suppliers.credits.apply
+```
+
+This closes the gap for:
+
+```text
+POST /api/v1/suppliers/credits/{id}/apply
+```
+
+### Decision 88 - Update AI documentation status and category alignment notes
+
+**Status:** CONFIRMED  
+**Decision:** Documentation references were cleaned up to avoid obsolete implementation guidance.
+
+Confirmed corrections:
+
+- `09-frontend-routes.md` no longer states that AI documentation files are pending/nonexistent.
+- `CODE_ALIGNMENT.md` no longer treats category placement as an open question when it is already confirmed by module documentation.
+
+### Decision 89 - Document precedence rule for AI-assisted implementation
+
+**Status:** CONFIRMED  
+**Decision:** `AI_DEVELOPMENT_GUIDE.md` was updated to make document precedence explicit when older documents conflict with later confirmed corrections.
+
+Confirmed rule:
+
+```text
+When documents conflict, DECISION_LOG.md and the latest corrected documents take precedence over older uncorrected content.
+```
+
+This prevents AI-assisted implementation from reintroducing obsolete use cases, endpoints, database fields or workflows.
+
+---
+
+## v16 - Traceability patch
+
+### Decision 90 - Register v15 corrections in DECISION_LOG
+
+**Status:** CONFIRMED  
+**Decision:** Add the missing v15 correction decisions to `DECISION_LOG.md` so that the highest-precedence document reflects the consistency corrections already applied in the v15 documentation package.
+
+This is a traceability correction only. It does not introduce new functional scope or change implementation behavior.

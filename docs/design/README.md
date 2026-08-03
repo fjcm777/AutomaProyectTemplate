@@ -1,7 +1,7 @@
 # Automata / Calzado Norita - Indice de documentacion
 
-**Version:** documentación final completa v14  
-**Fecha:** 2026-07-29  
+**Version:** documentación final completa v16  
+**Fecha:** 2026-08-03  
 **Estado:** documentación principal y documentos derivados de IA completados  
 **Siguiente documento pendiente:** ninguno; corresponde revisión final y uso para implementación
 
@@ -267,7 +267,7 @@ Use the final complete ZIP as the documentation baseline for implementation.
 
 ## v14 - Final complete package summary
 
-This final package consolidates the base documentation and all incremental updates through v13.
+This final package consolidates the base documentation and all incremental updates through v16.
 
 Included scope:
 
@@ -292,3 +292,17 @@ Corrected areas:
 - `09-frontend-routes.md` updated AI documentation status.
 - `CODE_ALIGNMENT.md` removed obsolete open question about categories.
 - `AI_DEVELOPMENT_GUIDE.md` updated document precedence to avoid reintroducing obsolete use cases.
+
+
+---
+
+## v16 - Traceability patch summary
+
+This iteration closes a documentation traceability gap identified after the v15 consistency correction pass.
+
+Updated area:
+
+- `DECISION_LOG.md` now explicitly records the v15 consistency corrections as confirmed decisions.
+- `README.md` now identifies the current complete package as v16.
+
+This patch does not introduce new functional scope or change implementation behavior. It only ensures the highest-precedence decision document reflects the corrections already applied in v15.
