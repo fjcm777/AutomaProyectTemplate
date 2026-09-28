@@ -87,8 +87,8 @@ La facturación legal debe ser configurable.
 ```text
 sales
 sale_items
-payments
-stock_movements
+sale_payments
+inventory_movements
 cash_sessions
 ```
 
@@ -153,9 +153,8 @@ El producto se descuenta del inventario al confirmar la venta.
 ```text
 sales
 sale_items
-payments
-customer_accounts
-stock_movements
+sale_payments
+inventory_movements
 cash_sessions
 ```
 
@@ -215,8 +214,8 @@ Todo abono debe dejar trazabilidad para contabilidad futura.
 ### Datos afectados
 
 ```text
-payments
-customer_accounts
+sales
+sale_payments
 cash_sessions
 ```
 
@@ -279,8 +278,9 @@ La mercadería apartada no está disponible para venta.
 ```text
 layaways
 layaway_items
-payments
-stock_reservations
+layaway_payments
+inventory_stock
+inventory_movements
 cash_sessions
 ```
 
@@ -340,9 +340,10 @@ El inventario no debe descontarse dos veces.
 
 ```text
 layaways
-payments
+layaway_payments
 sales
-stock_reservations
+inventory_stock
+inventory_movements
 cash_sessions
 ```
 
@@ -413,10 +414,11 @@ El nuevo apartado debe ser un registro independiente.
 ```text
 layaways
 layaway_items
-stock_reservations
-customer_credits
+inventory_stock
+inventory_movements
+customer_balance_movements
 customer_credit_applications
-payments
+layaway_payments
 audit_logs
 ```
 
@@ -476,9 +478,10 @@ Cancelar apartado y liberar inventario.
 
 ```text
 layaways
-stock_reservations
-customer_credits
-payments
+inventory_stock
+inventory_movements
+customer_balance_movements
+cash_movements
 cash_sessions
 audit_logs
 ```
@@ -536,11 +539,12 @@ El saldo a favor puede aplicarse parcial o totalmente.
 ### Datos afectados
 
 ```text
-customer_credits
+customer_balance_movements
 customer_credit_applications
 sales
 layaways
-payments
+sale_payments
+layaway_payments
 ```
 
 ### Eventos sugeridos
@@ -596,9 +600,7 @@ Reabrir caja requiere permiso especial.
 
 ```text
 cash_sessions
-cash_counts
 cash_movements
-payments
 audit_logs
 ```
 
@@ -656,7 +658,7 @@ La venta no debe quedar asociada a una caja cerrada.
 ```text
 cash_sessions
 sales
-payments
+sale_payments
 ```
 
 ### Eventos sugeridos
@@ -710,8 +712,8 @@ Debe tener responsable y fecha esperada de devolución.
 ### Datos afectados
 
 ```text
-stock_reservations
-stock_movements
+inventory_loans
+inventory_movements
 ```
 
 ### Eventos sugeridos
@@ -762,8 +764,8 @@ La mercadería dañada no debe volver a inventario disponible.
 ### Datos afectados
 
 ```text
-stock_reservations
-stock_movements
+inventory_loans
+inventory_movements
 warehouses
 ```
 
@@ -819,11 +821,10 @@ Debe conservar relación entre préstamo y venta.
 ### Datos afectados
 
 ```text
-stock_reservations
+inventory_loans
 sales
 sale_items
-payments
-customer_accounts
+sale_payments
 ```
 
 ### Eventos sugeridos
@@ -883,7 +884,7 @@ Debe conservarse motivo y origen del daño.
 ### Datos afectados
 
 ```text
-stock_movements
+inventory_movements
 warehouses
 audit_logs
 ```
@@ -935,7 +936,7 @@ No debe realizarse sin motivo.
 ### Datos afectados
 
 ```text
-stock_movements
+inventory_movements
 audit_logs
 ```
 
@@ -990,10 +991,10 @@ El producto separado para retorno no está disponible para venta.
 ### Datos afectados
 
 ```text
-purchase_returns
-purchase_return_items
-stock_movements
-stock_reservations
+supplier_returns
+supplier_return_items
+inventory_stock
+inventory_movements
 ```
 
 ### Eventos sugeridos
@@ -1048,10 +1049,9 @@ Si existe diferencia de valor, debe registrarse como saldo, crédito o ajuste.
 ### Datos afectados
 
 ```text
-purchase_returns
-purchase_return_items
-stock_movements
-inventory_receipts
+supplier_returns
+supplier_return_items
+inventory_movements
 ```
 
 ### Eventos sugeridos
@@ -1105,7 +1105,7 @@ Debe conservar saldo inicial, aplicado y restante.
 ```text
 supplier_credits
 supplier_credit_applications
-purchase_returns
+supplier_returns
 ```
 
 ### Eventos sugeridos
@@ -1174,7 +1174,7 @@ El documento de proveedor es opcional, pero recomendado para trazabilidad.
 ```text
 purchases
 purchase_items
-stock_movements
+inventory_movements
 products
 suppliers
 ```
@@ -1218,7 +1218,7 @@ El usuario tiene permiso para registrar devolución.
 6. Si el producto está en buen estado, puede volver a inventario disponible.
 7. Si el producto está dañado, se registra como mercadería dañada.
 8. El sistema registra devolución.
-9. El usuario decide si devuelve dinero o genera saldo a favor del cliente.
+9. El sistema devuelve el dinero al cliente por el método de reembolso indicado.
 10. El sistema guarda auditoría.
 ```
 
@@ -1227,7 +1227,7 @@ El usuario tiene permiso para registrar devolución.
 ```text
 Devolución sobre venta no es lo mismo que retorno a proveedor.
 El producto devuelto no siempre vuelve a inventario disponible.
-El dinero puede devolverse o convertirse en saldo a favor.
+La devolución sobre venta siempre devuelve dinero; no genera saldo a favor.
 ```
 
 ### Datos afectados
@@ -1235,11 +1235,10 @@ El dinero puede devolverse o convertirse en saldo a favor.
 ```text
 sales
 sale_items
-sales_returns
-sales_return_items
-stock_movements
-customer_credits
-payments
+sale_returns
+sale_return_items
+inventory_movements
+sale_payments
 audit_logs
 ```
 
@@ -1247,7 +1246,6 @@ audit_logs
 
 ```text
 devolucion_venta_registrada
-saldo_cliente_generado
 mercaderia_danada_registrada
 ```
 
@@ -1266,7 +1264,7 @@ La mercadería prestada puede convertirse en venta de contado o crédito.
 La mercadería dañada puede originarse en distintos procesos.
 El retorno a proveedor puede quedar pendiente antes de la entrega física.
 La compra a proveedor debe guardar costo histórico y documento de proveedor si existe.
-La devolución sobre venta puede devolver dinero o generar saldo a favor.
+La devolución sobre venta siempre devuelve dinero; no genera saldo a favor.
 ```
 
 ---

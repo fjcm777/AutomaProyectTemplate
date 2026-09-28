@@ -356,7 +356,7 @@ Cuando exista conflicto entre un caso de uso antiguo y documentos más recientes
 ### Reglas de retorno a proveedor
 
 - Retorno a proveedor es independiente de devolución sobre venta.
-- Debe registrar salida de inventario con `stock_movements.type = supplier_return`.
+- Debe registrar salida de inventario con `inventory_movements.movement_type` = `supplier_return_reserved` / `supplier_return_out` (ver `inventory_movement_types` en `05-database.md`).
 - El proveedor puede reconocer crédito, reemplazo o reembolso.
 - Si reconoce crédito, se registra en `supplier_credits`.
 - Si el crédito se usa parcialmente, se registra en `supplier_credit_applications`.

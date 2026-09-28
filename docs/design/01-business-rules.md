@@ -239,7 +239,7 @@ Este saldo debe poder aplicarse a futuras ventas, apartados u otras operaciones 
 Estructura sugerida para implementación futura:
 
 ```text
-customer_credits
+customer_balance_movements
 customer_credit_applications
 ```
 
@@ -502,7 +502,7 @@ El sistema debe permitir registrar la entrada de mercadería aunque no sea el mi
 
 El sistema debe permitir manejar saldo a favor del cliente cuando aplique.
 
-Esto puede originarse por apartado vencido cuyo abono no se devuelve, cambio de producto apartado por uno de menor valor, devolución de venta sin devolución inmediata de efectivo o ajuste autorizado.
+Esto puede originarse por apartado vencido o cancelado cuyo abono no se devuelve, cambio de producto apartado por uno de menor valor o ajuste autorizado. La devolución sobre venta siempre devuelve dinero y no genera saldo a favor.
 
 ### RN-042 — El saldo a favor del cliente debe poder aplicarse a operaciones futuras
 
@@ -513,7 +513,7 @@ Toda aplicación debe quedar registrada y auditada.
 Estructura sugerida:
 
 ```text
-customer_credits
+customer_balance_movements
 customer_credit_applications
 ```
 
@@ -673,15 +673,15 @@ Cuando un apartado se completa:
 
 ### Estados finales
 
-Como regla MVP, los estados finales no se reabren. Las correcciones posteriores se manejan mediante movimientos o procesos nuevos.
+Como regla MVP, los estados finales no se reabren. Las correcciones posteriores se manejan mediante procesos compensatorios, movimientos nuevos o ajustes autorizados.
 
-Estados finales:
-
-- `sales.voided`.
-- `layaways.completed`.
-- `layaways.cancelled`.
-- `cash_sessions.closed`.
-- `supplier_returns.completed`.
+| Entidad | Estados finales |
+|---|---|
+| sales | `voided`, `returned_total` |
+| layaways | `completed`, `cancelled`, `expired` |
+| cash_sessions | `closed` |
+| supplier_returns | `completed`, `cancelled` |
+| purchases | `received`, `cancelled` |
 
 ### Reportes mínimos
 
@@ -781,17 +781,7 @@ Esto aplica a anulacion, no a devolucion sobre venta.
 
 ## Estados finales
 
-Estados finales no se reabren.
-
-| Entidad | Estados finales |
-|---|---|
-| sales | `voided`, `returned_total` |
-| layaways | `completed`, `cancelled`, `expired` |
-| cash_sessions | `closed` |
-| supplier_returns | `completed`, `cancelled` |
-| purchases | `received`, `cancelled` |
-
-Correcciones posteriores se manejan con procesos compensatorios, movimientos nuevos o ajustes autorizados.
+Ver tabla de estados finales en la sección "Estados finales" arriba (consolidada en la primera parte de este documento).
 
 ## Retorno proveedor
 

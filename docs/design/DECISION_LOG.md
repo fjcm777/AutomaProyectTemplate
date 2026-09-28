@@ -74,28 +74,28 @@
 | 62 | Reports se implementa después de datos operativos suficientes; Phase 10 cierra con estabilización, checklist y documentos AI. | CONFIRMED | reports, AI docs, checklist |
 
 
-| 64 | `14-mvp-scope.md` define el alcance del MVP separado del roadmap. | CONFIRMED | MVP, documentación |
-| 65 | Los módulos reales y workflows operativos deben documentarse por separado en MVP Scope. | CONFIRMED | MVP, modules |
-| 66 | Sales y Cash son módulos separados pero integrados; Cash Closing pertenece a Cash. | CONFIRMED | sales, cash |
-| 67 | Workflows incluidos en MVP: anulaciones/devoluciones de venta, cierre/diferencias de caja, ajustes, dañados, préstamos, pagos/cancelación de apartados, recepción de compra y retornos a proveedor. | CONFIRMED | MVP, workflows |
-| 68 | Funcionalidades fuera del MVP: Accounting, analítica avanzada, integraciones externas, e-commerce, app móvil, audit log UI, BI avanzado y operaciones multi-tienda complejas. | CONFIRMED | MVP, future |
-| 69 | Logs técnicos del MVP se emiten por stdout/stderr del backend y son visibles con Docker logs / Docker Compose logs. | CONFIRMED | logs, backend, Docker |
-| 70 | No habrá UI de logs técnicos, dashboard de monitoreo, alertas, centralización ni retención formal de logs en el MVP. | CONFIRMED | logs, future |
-| 71 | El MVP se considera completo al operar ventas, inventario, caja, apartados, compras, clientes, proveedores, reportes básicos y trazabilidad mínima con documentación alineada. | CONFIRMED | MVP, acceptance |
+| 63 | `14-mvp-scope.md` define el alcance del MVP separado del roadmap. | CONFIRMED | MVP, documentación |
+| 64 | Los módulos reales y workflows operativos deben documentarse por separado en MVP Scope. | CONFIRMED | MVP, modules |
+| 65 | Sales y Cash son módulos separados pero integrados; Cash Closing pertenece a Cash. | CONFIRMED | sales, cash |
+| 66 | Workflows incluidos en MVP: anulaciones/devoluciones de venta, cierre/diferencias de caja, ajustes, dañados, préstamos, pagos/cancelación de apartados, recepción de compra y retornos a proveedor. | CONFIRMED | MVP, workflows |
+| 67 | Funcionalidades fuera del MVP: Accounting, analítica avanzada, integraciones externas, e-commerce, app móvil, audit log UI, BI avanzado y operaciones multi-tienda complejas. | CONFIRMED | MVP, future |
+| 68 | Logs técnicos del MVP se emiten por stdout/stderr del backend y son visibles con Docker logs / Docker Compose logs. | CONFIRMED | logs, backend, Docker |
+| 69 | No habrá UI de logs técnicos, dashboard de monitoreo, alertas, centralización ni retención formal de logs en el MVP. | CONFIRMED | logs, future |
+| 70 | El MVP se considera completo al operar ventas, inventario, caja, apartados, compras, clientes, proveedores, reportes básicos y trazabilidad mínima con documentación alineada. | CONFIRMED | MVP, acceptance |
 
-| 72 | `15-implementation-checklist.md` se organiza como checklist práctico por áreas/fases para implementar, revisar y validar el MVP. | CONFIRMED | implementation, QA, AI-assisted development |
-| 73 | La base técnica debe estar estable antes de módulos funcionales: backend, frontend, DB, Docker, migrations, errores, validaciones, logs y estructura modular. | CONFIRMED | technical foundation |
-| 74 | El checklist de Security/Auth/RBAC valida login con username, usuarios activos/inactivos, roles, permisos dinámicos y validación backend de permisos. | CONFIRMED | security, auth, RBAC |
-| 75 | El checklist por módulo cubre los módulos reales del MVP y sus restricciones, incluyendo Products como catálogo maestro y Purchases sin creación de productos/variantes. | CONFIRMED | modules, MVP |
-| 76 | El checklist de workflows críticos valida implementación end-to-end, transaccionalidad, permisos, inventario, caja, auditoría cuando aplique y errores estructurados. | CONFIRMED | workflows, transactions |
-| 77 | El checklist Validation/API/Frontend refuerza validaciones backend, contrato API, warnings, trace_id, React Router v6, guards y manejo de errores por formulario. | CONFIRMED | validation, API, frontend |
-| 78 | El checklist final confirma audit log limitado, logs técnicos básicos, exclusiones del MVP y criterios para considerar el MVP completo. | CONFIRMED | audit, logs, MVP completion |
+| 71 | `15-implementation-checklist.md` se organiza como checklist práctico por áreas/fases para implementar, revisar y validar el MVP. | CONFIRMED | implementation, QA, AI-assisted development |
+| 72 | La base técnica debe estar estable antes de módulos funcionales: backend, frontend, DB, Docker, migrations, errores, validaciones, logs y estructura modular. | CONFIRMED | technical foundation |
+| 73 | El checklist de Security/Auth/RBAC valida login con username, usuarios activos/inactivos, roles, permisos dinámicos y validación backend de permisos. | CONFIRMED | security, auth, RBAC |
+| 74 | El checklist por módulo cubre los módulos reales del MVP y sus restricciones, incluyendo Products como catálogo maestro y Purchases sin creación de productos/variantes. | CONFIRMED | modules, MVP |
+| 75 | El checklist de workflows críticos valida implementación end-to-end, transaccionalidad, permisos, inventario, caja, auditoría cuando aplique y errores estructurados. | CONFIRMED | workflows, transactions |
+| 76 | El checklist Validation/API/Frontend refuerza validaciones backend, contrato API, warnings, trace_id, React Router v6, guards y manejo de errores por formulario. | CONFIRMED | validation, API, frontend |
+| 77 | El checklist final confirma audit log limitado, logs técnicos básicos, exclusiones del MVP y criterios para considerar el MVP completo. | CONFIRMED | audit, logs, MVP completion |
 
 ---
 
 ## v13 - AI documentation decisions
 
-### Decision 79 - Generate derived AI documentation package
+### Decision 78 - Generate derived AI documentation package
 
 **Status:** CONFIRMED  
 **Decision:** Generate the derived AI documentation after completing documents `00` through `15`.
@@ -108,14 +108,14 @@ AI_DEVELOPMENT_GUIDE.md
 AI_TASK_PROMPTS.md
 ```
 
-### Decision 80 - AI documents must not introduce new functional decisions
+### Decision 79 - AI documents must not introduce new functional decisions
 
 **Status:** CONFIRMED  
 **Decision:** The AI documents are derived from confirmed documentation and must not introduce new scope, modules, workflows, API formats or business rules.
 
 They must summarize, organize and convert confirmed decisions into reusable guidance for AI-assisted development.
 
-### Decision 81 - AI context must reinforce non-negotiable project constraints
+### Decision 80 - AI context must reinforce non-negotiable project constraints
 
 **Status:** CONFIRMED  
 **Decision:** `AI_CONTEXT.md` must explicitly reinforce the most important decisions:
@@ -130,12 +130,12 @@ They must summarize, organize and convert confirmed decisions into reusable guid
 - Technical logs are emitted through backend stdout/stderr and visible with Docker logs.
 - API errors use `status_code`, `code`, `message`, `details`.
 
-### Decision 82 - AI development guide as guardrail for implementation
+### Decision 81 - AI development guide as guardrail for implementation
 
 **Status:** CONFIRMED  
 **Decision:** `AI_DEVELOPMENT_GUIDE.md` must define how an AI/developer should work with the documentation, including what to check before coding and what not to implement without a confirmed decision.
 
-### Decision 83 - AI task prompts as reusable development prompts
+### Decision 82 - AI task prompts as reusable development prompts
 
 **Status:** CONFIRMED  
 **Decision:** `AI_TASK_PROMPTS.md` must provide reusable prompts for backend, frontend, migrations, workflow validation, testing, documentation review and MVP scope evaluation.
@@ -144,7 +144,7 @@ They must summarize, organize and convert confirmed decisions into reusable guid
 
 ## v14 - Final documentation package
 
-### Decision 84 - Consolidate final complete documentation package
+### Decision 83 - Consolidate final complete documentation package
 
 **Status:** CONFIRMED  
 **Decision:** Consolidate the full documentation package after completing documents `00` through `15` and the derived AI documentation files.
@@ -182,7 +182,7 @@ This package becomes the current complete documentation baseline for implementat
 
 ## v15 - Consistency correction pass
 
-### Decision 85 - Align use cases with confirmed MVP scope
+### Decision 84 - Align use cases with confirmed MVP scope
 
 **Status:** CONFIRMED  
 **Decision:** `03-use-cases.md` was corrected to remove or reclassify obsolete use cases that contradicted later confirmed decisions.
@@ -197,7 +197,7 @@ Confirmed alignment:
 - Customer balance/debt handling must not depend on a `credit_limit` field in the MVP.
 - Customer debt exceptions use confirmed permissions/override behavior instead of an undefined credit-limit approval workflow.
 
-### Decision 86 - Correct customer balance movement enum in API examples
+### Decision 85 - Correct customer balance movement enum in API examples
 
 **Status:** CONFIRMED  
 **Decision:** `08-api-contracts.md` was corrected so customer balance adjustment examples use a valid `customer_balance_movements.movement_type` value.
@@ -214,7 +214,7 @@ was replaced with a valid confirmed value:
 adjustment_in
 ```
 
-### Decision 87 - Add missing supplier credit apply permission
+### Decision 86 - Add missing supplier credit apply permission
 
 **Status:** CONFIRMED  
 **Decision:** The permission required for applying supplier credits was added to RBAC documentation and aligned with API contracts.
@@ -231,7 +231,7 @@ This closes the gap for:
 POST /api/v1/suppliers/credits/{id}/apply
 ```
 
-### Decision 88 - Update AI documentation status and category alignment notes
+### Decision 87 - Update AI documentation status and category alignment notes
 
 **Status:** CONFIRMED  
 **Decision:** Documentation references were cleaned up to avoid obsolete implementation guidance.
@@ -241,7 +241,7 @@ Confirmed corrections:
 - `09-frontend-routes.md` no longer states that AI documentation files are pending/nonexistent.
 - `CODE_ALIGNMENT.md` no longer treats category placement as an open question when it is already confirmed by module documentation.
 
-### Decision 89 - Document precedence rule for AI-assisted implementation
+### Decision 88 - Document precedence rule for AI-assisted implementation
 
 **Status:** CONFIRMED  
 **Decision:** `AI_DEVELOPMENT_GUIDE.md` was updated to make document precedence explicit when older documents conflict with later confirmed corrections.
@@ -258,7 +258,7 @@ This prevents AI-assisted implementation from reintroducing obsolete use cases, 
 
 ## v16 - Traceability patch
 
-### Decision 90 - Register v15 corrections in DECISION_LOG
+### Decision 89 - Register v15 corrections in DECISION_LOG
 
 **Status:** CONFIRMED  
 **Decision:** Add the missing v15 correction decisions to `DECISION_LOG.md` so that the highest-precedence document reflects the consistency corrections already applied in the v15 documentation package.
