@@ -68,6 +68,9 @@
         <mxCell id="reports" value="reports&#xa;solo lectura" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8f0fb;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="modules">
           <mxGeometry x="300" y="190" width="110" height="40" as="geometry"/>
         </mxCell>
+        <mxCell id="settings" value="settings&#xa;config funcional" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8f0fb;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="modules">
+          <mxGeometry x="440" y="190" width="110" height="40" as="geometry"/>
+        </mxCell>
 
         <mxCell id="jobs" value="app/jobs&#xa;tareas simples&#xa;cleanup logs/events&#xa;expire layaways&#xa;low stock" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="1">
           <mxGeometry x="1010" y="430" width="230" height="140" as="geometry"/>
