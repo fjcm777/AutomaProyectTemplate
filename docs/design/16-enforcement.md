@@ -9,6 +9,8 @@ Fecha de creación: 2026-09-29
 
 Esas reglas son correctas pero, escritas como texto, dependen de que cada desarrollador (o cada sesión de IA) las recuerde. Este documento define cómo se verifican **automáticamente**, para que una violación falle antes de llegar a producción, en lugar de descubrirse meses después cuando ya es difícil desenredar.
 
+> **Nota sobre `categories`/`products` en los ejemplos de este documento:** son el código de plantilla/referencia actual (ver `CODE_ALIGNMENT.md`), no módulos confirmados del diseño. Se usan aquí solo porque son el único código real disponible hoy para ilustrar la sintaxis de `import-linter`. Al iniciar desarrollo oficial del primer módulo del MVP (ver `DECISION_LOG.md` Decisión 92), esos contratos se reemplazan por los de los módulos reales definidos en `07-modules.md` sección 4.
+
 ## 2. Herramienta
 
 ```text
