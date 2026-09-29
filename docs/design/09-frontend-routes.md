@@ -71,9 +71,7 @@ CODE_ALIGNMENT.md
 DECISION_LOG.md
 ```
 
-El template de código actual es una base técnica inicial, pero no limita el diseño funcional final.
-
-Rutas o módulos de prueba presentes en el template, como `test` o `tictactoe`, no forman parte de la navegación oficial del ERP.
+El código actual es una base técnica desechable (ver `CODE_ALIGNMENT.md` y `DECISION_LOG.md`) y no limita el diseño funcional final.
 
 ---
 
@@ -831,43 +829,7 @@ Aunque consuma datos de ventas, inventario, caja o apartados, representa una exp
 
 ---
 
-## 28. Estado actual del template vs diseño objetivo
-
-El template actual contiene una base React con rutas y features iniciales.
-
-Rutas observadas en el template:
-
-```text
-/
-/products
-/products/new
-/products/:id
-/products/:id/edit
-/login
-/tictactoe
-/test
-```
-
-Interpretación:
-
-| Elemento actual | Tratamiento |
-|---|---|
-| `/products` | Se mantiene como ruta final. |
-| `/products/new` | Debe evolucionar a `/products/create`. |
-| `/products/:id` | Se mantiene como ruta final. |
-| `/products/:id/edit` | Se mantiene como ruta final. |
-| `/login` | Se mantiene, pero debe usar `PublicLayout`. |
-| `/` | Debe redirigir a `/dashboard`, no mostrar productos. |
-| `/tictactoe` | Ruta de prueba; no pertenece al diseño final. |
-| `/test` | Ruta de prueba; no pertenece al diseño final. |
-| `features/login` | Debe evolucionar a `features/auth`. |
-| `App` actual con `Outlet` | Puede evolucionar a `AppLayout`. |
-
-El código actual no se considera incorrecto. Es una base inicial abierta a ajustes.
-
----
-
-## 29. Rutas futuras / no-MVP
+## 28. Rutas futuras / no-MVP
 
 | Route | Estado | Motivo |
 |---|---|---|
@@ -876,7 +838,7 @@ El código actual no se considera incorrecto. Es una base inicial abierta a ajus
 
 ---
 
-## 30. Reglas finales confirmadas
+## 29. Reglas finales confirmadas
 
 | Código | Decisión |
 |---|---|
@@ -917,7 +879,7 @@ El código actual no se considera incorrecto. Es una base inicial abierta a ajus
 
 ---
 
-## 31. Pendientes para documentos posteriores
+## 30. Pendientes para documentos posteriores
 
 Este documento no cubre en detalle:
 

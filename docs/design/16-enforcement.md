@@ -9,8 +9,6 @@ Fecha de creación: 2026-09-29
 
 Esas reglas son correctas pero, escritas como texto, dependen de que cada desarrollador (o cada sesión de IA) las recuerde. Este documento define cómo se verifican **automáticamente**, para que una violación falle antes de llegar a producción, en lugar de descubrirse meses después cuando ya es difícil desenredar.
 
-> **Nota sobre `categories`/`products` en los ejemplos de este documento:** son el código de plantilla/referencia actual (ver `CODE_ALIGNMENT.md`), no módulos confirmados del diseño. Se usan aquí solo porque son el único código real disponible hoy para ilustrar la sintaxis de `import-linter`. Al iniciar desarrollo oficial del primer módulo del MVP (ver `DECISION_LOG.md` Decisión 92), esos contratos se reemplazan por los de los módulos reales definidos en `07-modules.md` sección 4.
-
 ## 2. Herramienta
 
 ```text
@@ -27,59 +25,49 @@ Se eligió por ser específico para este problema (verificar reglas de arquitect
 | Sección 9: "repository.py no debe llamar a repositories de otros módulos" | Contrato tipo `forbidden`: nadie fuera del propio módulo puede importar su `repository` |
 | Sección 7: "un módulo puede usar otro módulo únicamente a través de funciones públicas de su service.py" | Mismo contrato `forbidden`, extendido a `models.py` (bloquea el otro camino de acceso directo a datos ajenos) |
 
-## 4. Ejemplo de configuración (`backend/.importlinter`)
+## 4. Patrón de configuración (`backend/.importlinter`)
 
 ```ini
 [importlinter]
 root_package = app
 
 ; --- Capas dentro de cada módulo: api -> service -> repository ---
-[importlinter:contract:layers-categories]
-name = categories: api -> service -> repository
+[importlinter:contract:layers-<modulo>]
+name = <modulo>: api -> service -> repository
 type = layers
 layers =
-    app.modules.categories.api
-    app.modules.categories.service
-    app.modules.categories.repository
-
-[importlinter:contract:layers-products]
-name = products: api -> service -> repository
-type = layers
-layers =
-    app.modules.products.api
-    app.modules.products.service
-    app.modules.products.repository
+    app.modules.<modulo>.api
+    app.modules.<modulo>.service
+    app.modules.<modulo>.repository
 
 ; --- Límite entre módulos: nadie toca el repository/models ajeno ---
 [importlinter:contract:cross-module-boundary]
 name = Modules cannot import another module's repository or models directly
 type = forbidden
 source_modules =
-    app.modules.categories
-    app.modules.products
+    app.modules.<modulo_a>
+    app.modules.<modulo_b>
 forbidden_modules =
-    app.modules.categories.repository
-    app.modules.categories.models
-    app.modules.products.repository
-    app.modules.products.models
+    app.modules.<modulo_a>.repository
+    app.modules.<modulo_a>.models
+    app.modules.<modulo_b>.repository
+    app.modules.<modulo_b>.models
 ignore_imports =
-    app.modules.categories.* -> app.modules.categories.repository
-    app.modules.categories.* -> app.modules.categories.models
-    app.modules.products.* -> app.modules.products.repository
-    app.modules.products.* -> app.modules.products.models
+    app.modules.<modulo_a>.* -> app.modules.<modulo_a>.repository
+    app.modules.<modulo_a>.* -> app.modules.<modulo_a>.models
+    app.modules.<modulo_b>.* -> app.modules.<modulo_b>.repository
+    app.modules.<modulo_b>.* -> app.modules.<modulo_b>.models
 ```
 
 ## 5. Agregar un módulo nuevo
 
-Cada módulo nuevo (`inventory`, `sales`, `customers`, etc.) agrega, en el mismo PR que lo introduce:
+Cada módulo nuevo confirmado en `07-modules.md` sección 4 (`auth`, `users`, `products`, `inventory`, `customers`, `sales`, `layaways`, `cash`, `suppliers`, `purchases`, `reports`, `settings`) agrega, en el mismo PR que lo introduce:
 
 ```text
 1. Un bloque [importlinter:contract:layers-<modulo>] copiando el patrón de arriba.
 2. Su nombre en source_modules y sus dos entradas (repository, models) en forbidden_modules
    del contrato cross-module-boundary, más sus dos líneas correspondientes en ignore_imports.
 ```
-
-`health` no necesita contrato de capas mientras no tenga `service.py`/`repository.py` propios.
 
 ## 6. Dónde se ejecuta (3 capas)
 

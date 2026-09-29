@@ -118,7 +118,6 @@ Antes de implementar una funcionalidad, revisar:
 | Compra recibida | No puede cancelarse directamente | `CONFIRMED` |
 | Reportes ventas | Incluyen utilidad estimada simple | `CONFIRMED` |
 | Frontend routes | `09-frontend-routes.md` define diseño objetivo de rutas navegables | `CONFIRMED` |
-| Rutas de prueba frontend | `test` y `tictactoe` no forman parte del diseño final | `CONFIRMED` |
 | Validaciones | Backend es fuente definitiva; frontend valida para UX | `CONFIRMED` |
 | Errores API | Usar `status_code`, `code`, `message`, `details`; validaciones múltiples en `details.errors` | `CONFIRMED` |
 | Warnings API | Advertencias no bloqueantes en respuestas exitosas con `warnings` | `CONFIRMED` |

@@ -2,78 +2,26 @@
 
 ## Propósito
 
-Este documento resume lo observado en `AutomaProyectTemplate.zip` y explica cómo debe interpretarse frente a la documentación funcional/técnica recuperada.
+Este documento explica cómo debe interpretarse el estado del código del repositorio frente a la documentación funcional/técnica confirmada.
 
-## Estado actual del código revisado
+## Estado actual del código
 
-### Backend
+El repositorio incluye un backend FastAPI y un frontend React + TypeScript + Vite con una estructura de **ejemplo desechable**: valida que el patrón de capas (`api.py`/`service.py`/`repository.py`/`models.py`/`schemas.py` en backend), el enforcement de límites entre módulos (`16-enforcement.md`) y el contrato de API (`08-api-contracts.md`) funcionan de extremo a extremo contra una base de datos real, antes de empezar a construir los módulos de negocio confirmados.
 
-El proyecto contiene un backend FastAPI con estructura modular inicial:
-
-```text
-backend/app/
-  main.py
-  core/
-  db/
-  shared/
-  modules/
-    health/
-    categories/
-    products/
-```
-
-Módulos implementados actualmente:
-
-- `health`
-- `categories`
-- `products`
-
-Patrón ya presente en módulos:
-
-```text
-api.py
-models.py
-schemas.py
-service.py
-repository.py
-```
-
-Esto coincide con la arquitectura objetivo del sistema, aunque el ERP completo aún no está implementado.
-
-### Frontend
-
-El proyecto contiene frontend React + TypeScript + Vite.
-
-Estructura observada:
-
-```text
-frontend/src/
-  app/router/router.tsx
-  features/login/
-  features/products/
-  features/test/
-  features/tictactoe/
-  shared/api/
-  shared/contexts/
-```
-
-El frontend actual sirve como base para continuar con `09-frontend-routes.md` después de aprobar esta documentación corregida.
+Ese código de ejemplo es solo referencia técnica. Se elimina al iniciar desarrollo oficial del primer módulo real del MVP y no debe extenderse ni tratarse como un módulo confirmado (ver `DECISION_LOG.md`, decisión de limpieza de código de plantilla).
 
 ## Interpretación correcta
-
-El código actual es un **template/base inicial**. La documentación recuperada define el **diseño objetivo confirmado** para Automata / Calzado Norita.
-
-Por tanto:
 
 ```text
 El código actual no limita el diseño final.
 La documentación debe guiar la evolución del código.
-Los módulos faltantes se implementarán progresivamente siguiendo la documentación.
+Los módulos del MVP se implementarán progresivamente siguiendo la documentación,
+no extendiendo el código de ejemplo existente.
 ```
 
-## Módulos pendientes respecto al diseño objetivo
+## Módulos confirmados del MVP
 
-El diseño documentado incluye:
+El diseño documentado (`07-modules.md`) incluye:
 
 - `auth`
 - `users`
@@ -88,20 +36,16 @@ El diseño documentado incluye:
 - `reports`
 - `settings`
 
-En el código actual ya existen bases para:
-
-- `products`
-- `categories`, actualmente como base técnica separada en el código; en la documentación objetivo, las categorías de producto forman parte de `Admin / Catalogs` y son consumidas por `Products`. No deben tratarse como una pregunta abierta.
-- `health`
+Ninguno de estos módulos está implementado todavía en el código.
 
 ## Regla de trabajo para continuar
 
 Para continuar cualquier implementación o ajuste documental, se debe tomar en cuenta:
 
-- La arquitectura objetivo.
-- La estructura real actual del frontend.
+- La arquitectura objetivo (`04-architecture.md`, `07-modules.md`).
 - Los permisos definidos en `06-auth-rbac.md`.
 - Los contratos definidos en `08-api-contracts.md`.
+- Las rutas objetivo de `09-frontend-routes.md`.
 
 ---
 
@@ -123,19 +67,7 @@ La documentacion v5 incluye decisiones objetivo que pueden no existir aun en el 
 
 # Complemento 09 - Frontend routes
 
-`09-frontend-routes.md` define el diseno objetivo de rutas navegables del frontend.
-
-## Diferencias relevantes con el template actual
-
-| Elemento actual | Diseno objetivo |
-|---|---|
-| `/` muestra productos o pantalla inicial del template | `/` debe redirigir a `/dashboard` si hay sesion o a `/login` si no hay sesion |
-| `/products/new` | Debe evolucionar a `/products/create` |
-| `features/login` | Debe evolucionar a `features/auth` |
-| `App` actual con `Outlet` | Puede evolucionar a `AppLayout` para rutas protegidas |
-| `/login` dentro del layout actual | Debe usar `PublicLayout` separado |
-| `/test` | Ruta de prueba; no pertenece al diseno final |
-| `/tictactoe` | Ruta de prueba; no pertenece al diseno final |
+`09-frontend-routes.md` define el diseño objetivo de rutas navegables del frontend.
 
 ## Estructura frontend objetivo
 
@@ -168,9 +100,7 @@ frontend/src/
 
 ## Regla de alineacion
 
-El template actual es una base tecnica ajustable. Las rutas y features de prueba no deben guiar el diseno final del ERP.
-
-La implementacion frontend debe tomar como referencia `09-frontend-routes.md` y mantener consistencia con:
+El código de ejemplo actual es una base técnica desechable, no una referencia de rutas. La implementación frontend debe tomar como referencia `09-frontend-routes.md` y mantener consistencia con:
 
 - `06-auth-rbac.md` para permisos;
 - `08-api-contracts.md` para consumo de API;
@@ -183,7 +113,7 @@ La implementacion frontend debe tomar como referencia `09-frontend-routes.md` y 
 
 `10-validation-rules.md` define el patrón objetivo para validaciones del sistema.
 
-## Implicaciones para el código actual
+## Implicaciones para el código
 
 | Área | Ajuste esperado |
 |---|---|
@@ -243,11 +173,11 @@ bajas de inventario, conversiones de préstamos a venta y cierre de caja.
 
 `11-error-handling.md` define el patrón objetivo para manejo de errores del sistema.
 
-## Implicaciones para el código actual
+## Implicaciones para el código
 
 | Área | Ajuste esperado |
 |---|---|
-| Excepciones estándar | Crear o consolidar helpers en `core/errors.py` o `shared/errors.py` para responder con `status_code`, `code`, `message` y `details`. |
+| Excepciones estándar | Helpers compartidos que respondan con `status_code`, `code`, `message` y `details`. |
 | API handlers | Convertir excepciones controladas en respuestas API estándar sin duplicar lógica por endpoint. |
 | Services | Lanzar errores funcionales para reglas de negocio, estados, permisos, inventario, caja y transacciones. |
 | Repositories | No deben convertir errores técnicos en mensajes de usuario; deben propagar fallos a capas superiores. |
@@ -431,30 +361,20 @@ If a requested implementation requires changing confirmed documentation, the AI/
 
 ---
 
-## v14 - Template base alignment (resolved)
+## v14 - Template base validation (resolved)
 
-A review confirmed that the example modules (`categories`, `products`) are meant to be the literal pattern copied for every future business module — so any deviation from confirmed documentation in the shared base (`core/`, `shared/`, `main.py`) would have been replicated into every module built afterward. The following gaps were found and fixed at the base level, then demonstrated in `categories`/`products`:
+Before starting the confirmed MVP modules, the disposable example code was used to validate that the shared technical base works end-to-end: the layering pattern, the module-boundary enforcement (`16-enforcement.md`), the API envelope contract, and the async database session model all needed to work correctly before being relied upon by real modules.
 
-| Gap found | Fix applied |
-|---|---|
-| No endpoint returned the `{status_code, message, data}` success envelope required by `08-api-contracts.md` §2 | Added `app/shared/responses.py` (`SuccessResponse[T]`, `success()`); wired into `health`, `categories`, `products` |
-| Errors used FastAPI's native `{"detail": "..."}` instead of `{status_code, code, message, details}` | Replaced `HTTPException` usage in `app/shared/exceptions.py` with a custom `AppError`; added global exception handlers in `main.py` for `AppError`, `RequestValidationError` (→ `validation.invalid_input`) and unhandled exceptions (→ `system.internal_error` with `trace_id`) |
-| `app/shared/pagination.py` used `items/total/limit/offset` instead of the documented `items/total/page/page_size` | Corrected field names to match `08-api-contracts.md` §2.3 and wired into `GET /products`/`GET /categories` (see v15 below — initially left unwired, then connected once §4 was re-checked) |
-| Backend used synchronous SQLAlchemy (`Session`, `create_engine`) instead of the `AsyncSession` required throughout `04-architecture.md` and `07-modules.md` (including the multi-module transaction rule) | Migrated `core/database.py`, `core/dependencies.py`, and every layer of `categories`/`products` to `create_async_engine` / `AsyncSession`; `DATABASE_URL` stays driver-less so Alembic keeps using sync psycopg2 unchanged |
-
-Verified end-to-end against a real PostgreSQL instance: full CRUD on `products`, `categories` listing, `404`/`400`/`422` error shapes, and `import-linter` contracts all pass after the migration.
-
----
-
-## v15 - Second alignment pass: pagination and logical delete
-
-A follow-up check against `08-api-contracts.md` §4 ("Reglas CRUD comunes") found two more gaps missed in v14:
+The following gaps were found against confirmed documentation and fixed at the shared-base level (`core/`, `shared/`, `main.py`), then verified through the disposable example code:
 
 | Gap found | Fix applied |
 |---|---|
-| §4 requires "Listar" to return `items/total/page/page_size`; `GET /products` and `GET /categories` returned a bare array | Added `page`/`page_size`/`is_active` query params; both endpoints now return `PaginatedResponse` inside the success envelope |
-| §4 requires "Desactivar (DELETE)" to be a logical delete; `DELETE /products/{id}` removed the row physically | Added `is_active` column to `products`/`categories` (Alembic migration `2eab12afd94d`); `ProductRepository.deactivate()` replaces the old `delete()`; listings default to `is_active=true` unless the query param says otherwise |
+| No endpoint returned the `{status_code, message, data}` success envelope required by `08-api-contracts.md` §2 | Added a shared response helper (`SuccessResponse[T]`, `success()`) |
+| Errors used the framework's native error shape instead of `{status_code, code, message, details}` | Replaced native HTTP exceptions with a custom `AppError`; added global exception handlers for `AppError`, request validation errors (→ `validation.invalid_input`) and unhandled exceptions (→ `system.internal_error` with `trace_id`) |
+| The shared pagination helper used `items/total/limit/offset` instead of the documented `items/total/page/page_size` | Corrected field names to match `08-api-contracts.md` §2.3, and wired pagination into the example list endpoints |
+| The backend used synchronous SQLAlchemy (`Session`, `create_engine`) instead of the `AsyncSession` required throughout `04-architecture.md` and `07-modules.md` (including the multi-module transaction rule) | Migrated the database engine/session setup to `create_async_engine` / `AsyncSession`; the DB connection string stays driver-less so Alembic keeps using sync psycopg2 unchanged |
+| `08-api-contracts.md` §4 requires "Listar" to return `items/total/page/page_size`, and "Desactivar (DELETE)" to be a logical delete, not a physical row removal | Added pagination query params to list endpoints; added a logical `is_active` flag so `DELETE` deactivates instead of removing rows |
 
-Also added `resource`/`id` (or `name`) to error `details`, matching the shape shown in `08-api-contracts.md` §2.4's example, previously left as an empty `{}`.
+Verified end-to-end against a real PostgreSQL instance: full CRUD, pagination envelope, `404`/`400`/`422` error shapes, logical delete, and `import-linter` contracts all pass.
 
-Verified end-to-end: pagination envelope confirmed on both list endpoints; confirmed a deactivated product disappears from the default listing but its row still exists and is returned with `is_active=false` when explicitly queried; `import-linter` contracts still pass.
+This validation is complete. The disposable example code that was used to verify it is removed before implementing the first confirmed MVP module — only the corrected shared base and the enforcement setup carry forward.

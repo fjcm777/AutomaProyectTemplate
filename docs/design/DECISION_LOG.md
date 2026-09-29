@@ -276,38 +276,34 @@ This is a traceability correction only. It does not introduce new functional sco
 
 Enforcement runs in three layers: manual (`lint-imports`), a local pre-commit hook, and CI as a final safety net. This is quality/tooling infrastructure; it does not introduce new functional scope or change business behavior.
 
-As part of this change, `products.service` and `products.api` (template/reference code — see Decision 92) were corrected to stop importing `categories.repository` directly (pre-existing violation found while designing the contracts) and now use `categories.service.get_category_service()` instead.
+The contracts were validated against the disposable example code described in Decision 92, which also surfaced a real cross-module boundary violation that was corrected as part of this change.
 
 ---
 
 ## v18 - Template base alignment
 
-### Decision 91 - Align template base with documented architecture
+### Decision 91 - Align the shared technical base with documented architecture
 
 **Status:** CONFIRMED
-**Decision:** The example modules (`categories`, `products` — template/reference code, see Decision 92) are the literal pattern future business modules will copy, so their shared base was corrected to match confirmed documentation instead of documenting the gap and moving on:
+**Decision:** Before implementing the confirmed MVP modules, the shared technical base (`core/`, `shared/`, `main.py`) was corrected to match already-confirmed documentation, since every future module depends on it:
 
-- `core/database.py`/`dependencies.py` migrated from synchronous SQLAlchemy (`Session`) to `AsyncSession`, per the multi-module transaction rule in `07-modules.md`.
-- Added `shared/responses.py` (`SuccessResponse[T]`) so every endpoint returns the `{status_code, message, data}` envelope required by `08-api-contracts.md`.
-- Replaced `HTTPException`-based errors with a custom `AppError` and global exception handlers in `main.py`, producing `{status_code, code, message, details}` for `AppError`, `RequestValidationError` and unhandled exceptions.
-- Corrected `shared/pagination.py` to `items/total/page/page_size` and wired it into `GET /products` and `GET /categories`, per the "Listar" rule in `08-api-contracts.md` §4.
-- Added `is_active` to `products`/`categories` (Alembic migration `2eab12afd94d`) so `DELETE` performs a logical deactivation instead of a physical row removal, per `08-api-contracts.md` §4 and the "no eliminación física" rule for catalogs in `CODE_ALIGNMENT.md`.
+- Database engine/session migrated from synchronous SQLAlchemy (`Session`) to `AsyncSession`, per the multi-module transaction rule in `07-modules.md`.
+- Added a shared response helper (`SuccessResponse[T]`) so every endpoint returns the `{status_code, message, data}` envelope required by `08-api-contracts.md`.
+- Replaced framework-native error responses with a custom application error type and global exception handlers, producing `{status_code, code, message, details}` for functional errors, request validation errors and unhandled exceptions.
+- Corrected the shared pagination helper to `items/total/page/page_size` and wired it into the "Listar" endpoints, per `08-api-contracts.md` §4.
+- Added a logical `is_active` flag so `DELETE` performs a logical deactivation instead of a physical row removal, per `08-api-contracts.md` §4 and the "no eliminación física" rule for catalogs.
 
-This is a correction to match already-confirmed documentation; it does not introduce new functional scope. Verified end-to-end against a real PostgreSQL instance and confirmed `import-linter` contracts still pass.
+This is a correction to match already-confirmed documentation; it does not introduce new functional scope. Verified end-to-end against a real PostgreSQL instance using the disposable example code described in Decision 92, and confirmed `import-linter` contracts still pass.
 
 ---
 
 ## v19 - Template code is reference-only
 
-### Decision 92 - Template/example code must be cleaned up before official module development, not extended
+### Decision 92 - Example/reference code must be cleaned up before official module development, not extended
 
 **Status:** CONFIRMED
-**Decision:** The code currently in `backend/app/modules/{categories,products}` and `frontend/src/features/{test,tictactoe}` is disposable scaffolding used to validate patterns (module layering, response/error envelope, async session handling, module-boundary enforcement) before real MVP development starts. It is not, and must not be treated as, a confirmed module of the system.
+**Decision:** The backend and frontend currently include disposable example code, used only to validate that the shared technical patterns work end-to-end (module layering, response/error envelope, async session handling, module-boundary enforcement) before real MVP development starts. This example code is not, and must not be treated as, a confirmed module of the system, and none of its specific module/feature names should be referenced elsewhere in the confirmed documentation.
 
-Concretely:
+Decisions 90 and 91 corrected the shared technical base and validated it through this example code — those corrections (async, envelopes, `import-linter` contracts, the logical-delete migration) are permanent; the example code used to validate them is not.
 
-- `categories` is not one of the 12 confirmed modules in `07-modules.md` section 4; the real design keeps product categories as a catalog owned by `products` (`07-modules.md` section 15, `08-api-contracts.md`'s `/api/v1/products/categories`).
-- `frontend/src/features/test` and `frontend/src/features/tictactoe` are already documented as test routes outside the final design (`09-frontend-routes.md`, `AI_CONTEXT.md`, `CODE_ALIGNMENT.md`, `README.md`).
-- Decisions 90 and 91 corrected this template/reference code so it would demonstrate the right patterns while it existed — those corrections (async, envelopes, `import-linter` contracts, the `is_active` migration) are not a commitment to keep `categories`/`products`/`test`/`tictactoe` as-is.
-
-When official development starts on the first real MVP module (per `13-development-roadmap.md`'s phase order), this reference code — backend `categories`/`products` modules and their migrations, and frontend `test`/`tictactoe` features — must be removed, not extended. The layering pattern, the enforcement contracts, and the envelope/async setup are what carry forward; the specific example code does not.
+When official development starts on the first real MVP module (per `13-development-roadmap.md`'s phase order), all disposable example code — backend and frontend alike, including its database migrations — must be removed, not extended. Only the corrected shared base, the enforcement setup, and the confirmed module list in `07-modules.md` carry forward.

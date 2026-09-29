@@ -300,7 +300,6 @@ Reglas confirmadas:
 - Editar usa `/:id/edit`.
 - Acciones complejas pueden tener ruta propia.
 - Acciones simples pueden usar modales, botones o formularios internos.
-- Rutas de prueba como `test` y `tictactoe` no pertenecen al diseño final.
 
 ---
 
