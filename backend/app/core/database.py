@@ -1,13 +1,22 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, create_engine, func
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
+from sqlalchemy import DateTime, func
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from app.core.config import settings
 
 
-engine = create_engine(settings.DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+def _to_async_url(url: str) -> str:
+    # settings.DATABASE_URL stays driver-less (postgresql://...) so Alembic keeps using
+    # the sync psycopg2 driver unchanged; the app runtime derives its own async URL here.
+    if "+asyncpg" in url:
+        return url
+    return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+
+engine = create_async_engine(_to_async_url(settings.DATABASE_URL))
+AsyncSessionLocal = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 
 
 class Base(DeclarativeBase):

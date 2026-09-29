@@ -1,14 +1,12 @@
-from collections.abc import Generator
-from sqlalchemy.orm import Session
+from collections.abc import AsyncGenerator
 
-from app.core.database import SessionLocal
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.database import AsyncSessionLocal
 
 
-def get_db() -> Generator[Session, None, None]:
-    """Provide one SQLAlchemy session per request and close it safely."""
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    """Provide one async SQLAlchemy session per request and close it safely."""
 
-    db = SessionLocal()
-    try:
+    async with AsyncSessionLocal() as db:
         yield db
-    finally:
-        db.close()

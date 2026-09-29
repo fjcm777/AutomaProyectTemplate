@@ -428,3 +428,18 @@ AI-generated code must not:
 - skip transactions in critical workflows.
 
 If a requested implementation requires changing confirmed documentation, the AI/developer must stop and identify affected documents before coding.
+
+---
+
+## v14 - Template base alignment (resolved)
+
+A review confirmed that the example modules (`categories`, `products`) are meant to be the literal pattern copied for every future business module — so any deviation from confirmed documentation in the shared base (`core/`, `shared/`, `main.py`) would have been replicated into every module built afterward. The following gaps were found and fixed at the base level, then demonstrated in `categories`/`products`:
+
+| Gap found | Fix applied |
+|---|---|
+| No endpoint returned the `{status_code, message, data}` success envelope required by `08-api-contracts.md` §2 | Added `app/shared/responses.py` (`SuccessResponse[T]`, `success()`); wired into `health`, `categories`, `products` |
+| Errors used FastAPI's native `{"detail": "..."}` instead of `{status_code, code, message, details}` | Replaced `HTTPException` usage in `app/shared/exceptions.py` with a custom `AppError`; added global exception handlers in `main.py` for `AppError`, `RequestValidationError` (→ `validation.invalid_input`) and unhandled exceptions (→ `system.internal_error` with `trace_id`) |
+| `app/shared/pagination.py` used `items/total/limit/offset` instead of the documented `items/total/page/page_size` | Corrected field names to match `08-api-contracts.md` §2.3 (not wired into list endpoints yet — no module needs pagination today) |
+| Backend used synchronous SQLAlchemy (`Session`, `create_engine`) instead of the `AsyncSession` required throughout `04-architecture.md` and `07-modules.md` (including the multi-module transaction rule) | Migrated `core/database.py`, `core/dependencies.py`, and every layer of `categories`/`products` to `create_async_engine` / `AsyncSession`; `DATABASE_URL` stays driver-less so Alembic keeps using sync psycopg2 unchanged |
+
+Verified end-to-end against a real PostgreSQL instance: full CRUD on `products`, `categories` listing, `404`/`400`/`422` error shapes, and `import-linter` contracts all pass after the migration.

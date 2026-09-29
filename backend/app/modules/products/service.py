@@ -11,39 +11,37 @@ class ProductService:
         self.product_repository = product_repository
         self.category_service = category_service
 
-    def list_products(self):
-        return self.product_repository.list()
-    
-    def get_product(self, product_id: int):
-        product = self.product_repository.get(product_id)
+    async def list_products(self):
+        return await self.product_repository.list()
+
+    async def get_product(self, product_id: int):
+        product = await self.product_repository.get(product_id)
         if not product:
-            raise not_found("Product not found")
+            raise not_found("Product not found", code="products.not_found")
         return product
 
-    
-    def create_product(self, data: ProductCreate):
+    async def create_product(self, data: ProductCreate):
         # Guard FK integrity at service layer for clearer API errors.
         if data.category_id is not None:
-            category = self.category_service.get_category(data.category_id)
+            category = await self.category_service.get_category(data.category_id)
             if not category:
-                raise bad_request("Category does not exist")
+                raise bad_request("Category does not exist", code="products.category_not_found")
 
-        return self.product_repository.create(data.model_dump())
+        return await self.product_repository.create(data.model_dump())
 
-    
-    def update_product(self, product_id: int, data: ProductUpdate):
-        product = self.get_product(product_id)
+    async def update_product(self, product_id: int, data: ProductUpdate):
+        product = await self.get_product(product_id)
 
         if data.category_id is not None:
-            category = self.category_service.get_category(data.category_id)
+            category = await self.category_service.get_category(data.category_id)
             if not category:
-                raise bad_request("Category does not exist")
+                raise bad_request("Category does not exist", code="products.category_not_found")
 
         dataUpdate = data.model_dump(exclude_unset=True)
-        return self.product_repository.update(product, dataUpdate)
+        return await self.product_repository.update(product, dataUpdate)
 
-    def delete_product(self, product_id: int):
-        product = self.product_repository.get(product_id)
+    async def delete_product(self, product_id: int):
+        product = await self.product_repository.get(product_id)
         if not product:
-            raise not_found("Product not found")
-        self.product_repository.delete(product)
+            raise not_found("Product not found", code="products.not_found")
+        await self.product_repository.delete(product)
