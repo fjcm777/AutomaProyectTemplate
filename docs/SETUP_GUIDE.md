@@ -6,7 +6,7 @@ This is a complete template for a full-stack e-commerce application with React f
 
 ### Backend (FastAPI)
 - **Location**: `backend/`
-- **API**: RESTful API with products and categories endpoints
+- **API**: currently ships `products`/`categories` as a disposable example (see `docs/design/CODE_ALIGNMENT.md` and `DECISION_LOG.md`); the confirmed target modules live in `docs/design/07-modules.md`
 - **Database**: PostgreSQL
 - **Port**: 8000
 
@@ -29,7 +29,7 @@ This is a complete template for a full-stack e-commerce application with React f
 ### 1. Start Services
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 This will start:
@@ -106,10 +106,11 @@ npm run dev
 
 ### Backend Features
 ✅ FastAPI with CORS support
-✅ PostgreSQL database with SQLAlchemy ORM
+✅ PostgreSQL database with async SQLAlchemy (`AsyncSession`)
 ✅ Alembic migrations
-✅ RESTful API for Products and Categories
-✅ CRUD operations
+✅ Standard success/error response envelope (`docs/design/08-api-contracts.md`)
+✅ Module-boundary enforcement with `import-linter` (`docs/design/16-enforcement.md`)
+✅ Example CRUD module (`products`/`categories`) demonstrating the pattern above — disposable, see `docs/design/CODE_ALIGNMENT.md`
 ✅ Swagger/OpenAPI documentation
 
 ### Frontend Features
@@ -120,7 +121,7 @@ npm run dev
 ✅ Form validation
 ✅ Error handling
 ✅ Loading states
-✅ Complete CRUD UI for products
+✅ Example CRUD UI (`products`) consuming the standard envelope
 
 ## Folder Structure
 
@@ -184,24 +185,23 @@ VITE_API_URL=http://localhost:8000/api/v1
 
 ## API Documentation
 
-### Endpoints
+Full, current endpoint list: `http://localhost:8000/docs` (Swagger UI). All responses use the envelope described in `docs/design/08-api-contracts.md`.
+
+### Endpoints (current example module)
 
 #### Health Check
 - `GET /api/v1/health` - Health check endpoint
 
 #### Products
-- `GET /api/v1/products/` - List all products
+- `GET /api/v1/products/?page=&page_size=&is_active=` - Paginated list
 - `GET /api/v1/products/{id}` - Get product by ID
 - `POST /api/v1/products/` - Create product
 - `PUT /api/v1/products/{id}` - Update product
-- `DELETE /api/v1/products/{id}` - Delete product
+- `DELETE /api/v1/products/{id}` - Logical delete (`is_active=false`, row is kept)
 
 #### Categories
-- `GET /api/v1/categories/` - List all categories
-- `GET /api/v1/categories/{id}` - Get category by ID
+- `GET /api/v1/categories/?page=&page_size=&is_active=` - Paginated list
 - `POST /api/v1/categories/` - Create category
-- `PUT /api/v1/categories/{id}` - Update category
-- `DELETE /api/v1/categories/{id}` - Delete category
 
 ## Frontend Routes
 
@@ -213,17 +213,14 @@ VITE_API_URL=http://localhost:8000/api/v1
 
 ## Development Workflow
 
-### Adding a New Feature (e.g., Customers)
+### Adding a new MVP module
 
-1. **Backend**:
-   - Create `backend/app/modules/customers/` directory
-   - Add models, schemas, repository, service, and API
-   - Include in `backend/app/main.py` router
+Before starting the first real module, remove the disposable example code (see `docs/design/DECISION_LOG.md`, Decision 92). Then follow:
 
-2. **Frontend**:
-   - Create `frontend/src/features/customers/` directory
-   - Add pages, components, hooks, and API functions
-   - Add routes to `frontend/src/app/router/router.tsx`
+- `docs/design/07-modules.md` for the layering pattern (`api.py` → `service.py` → `repository.py`), the confirmed module list, and inter-module communication rules.
+- `docs/design/16-enforcement.md` to register the new module's `import-linter` contract in `backend/.importlinter`.
+- `docs/design/08-api-contracts.md` for the request/response envelope every endpoint must follow.
+- `docs/design/13-development-roadmap.md` for the confirmed implementation order.
 
 ## Build for Production
 

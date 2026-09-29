@@ -1,112 +1,31 @@
 # AutomaProyectTemplate
 
-Template base para iniciar un proyecto full-stack con FastAPI (backend) y React + TypeScript (frontend).
+Sistema de gestión (inventario, ventas, caja, compras y más) para Calzado Norita.
+Stack: **FastAPI + PostgreSQL** (backend) · **React + TypeScript** (frontend) · **Docker Compose** (infraestructura).
 
-## Estado del template
-
-Este template ya incluye:
-- Estructura por modulos en backend (`modules/<feature>`)
-- Estructura por features en frontend (`features/<feature>`)
-- CRUD de productos en frontend y backend
-- Docker Compose para levantar DB + API + UI
-- Compilacion frontend validada (`npm run build`)
-
-## Estructura principal
-
-```text
-AutomaProyectTemplate/
-|-- backend/
-|   |-- app/
-|   |   |-- core/          # Configuracion, DB y dependencias compartidas
-|   |   |-- modules/       # Features del dominio (products, categories, health)
-|   |   |-- shared/        # Utilidades transversales
-|   |   `-- main.py        # Entrypoint de FastAPI
-|   |-- migrations/        # Alembic
-|   |-- requirements.txt
-|   `-- Dockerfile
-|-- frontend/
-|   |-- src/
-|   |   |-- app/           # Router y composicion principal
-|   |   |-- features/      # Features de UI (products)
-|   |   |-- shared/        # Cliente API, tipos y utilidades
-|   |   `-- styles/
-|   |-- package.json
-|   `-- Dockerfile
-|-- docker-compose.yml
-`-- .env
-```
-
-## Como iniciar rapido
-
-### Opcion 1: Docker
+## Inicio rápido
 
 ```bash
 docker compose up --build
 ```
 
-Servicios:
-- Frontend: `http://localhost:5173`
-- Backend: `http://localhost:8000`
-- Docs API: `http://localhost:8000/docs`
+- Frontend: http://localhost:5173
+- Backend: http://localhost:8000
+- Docs API (Swagger): http://localhost:8000/docs
 
-### Opcion 2: Local
+Para el setup manual (sin Docker), variables de entorno y troubleshooting, ver la [guía de instalación](docs/SETUP_GUIDE.md).
 
-Backend:
-```bash
-cd backend
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
-alembic upgrade head
-python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
+## Documentación
 
-Frontend:
-```bash
-cd frontend
-npm install
-npm run dev
-```
+Toda la documentación del proyecto vive en [`docs/`](docs/):
 
-## Convenciones del template
+- [`docs/SETUP_GUIDE.md`](docs/SETUP_GUIDE.md) — cómo levantar el proyecto localmente.
+- [`docs/design/`](docs/design/) — diseño confirmado del sistema (reglas de negocio, arquitectura, base de datos, contratos de API, roadmap, etc.). Empezar por [`docs/design/README.md`](docs/design/README.md).
 
-### Backend
-- Cada feature vive en `backend/app/modules/<feature>/`
-- Patron recomendado por feature:
-  - `models.py`: entidades SQLAlchemy
-  - `schemas.py`: contratos de entrada/salida
-  - `repository.py`: acceso a datos
-  - `service.py`: reglas de negocio
-  - `api.py`: endpoints HTTP
+## Estado actual del código
 
-### Frontend
-- Cada feature vive en `frontend/src/features/<feature>/`
-- Patron recomendado por feature:
-  - `api/`: llamadas HTTP
-  - `hooks/`: react-query + logica de consumo
-  - `components/`: componentes UI reutilizables
-  - `pages/`: paginas de ruta
-  - `types/`: tipos TS del feature
+El backend y frontend incluyen un módulo de ejemplo desechable (`products`/`categories`) usado únicamente para validar que el patrón técnico confirmado (capas, envoltorio de respuesta, sesiones async, enforcement de límites entre módulos) funciona de extremo a extremo antes de construir los módulos reales del MVP. Ver `docs/design/CODE_ALIGNMENT.md` y la Decisión 92 en `docs/design/DECISION_LOG.md`: ese código se elimina, no se extiende, al iniciar desarrollo oficial.
 
-## Antes de iniciar desarrollo
+## Licencia
 
-1. Define el modelo de dominio inicial (tablas, campos, relaciones).
-2. Crea migraciones por cada cambio de esquema.
-3. Define contratos API en `schemas.py` antes de codificar UI.
-4. Extiende primero backend y luego conecta frontend por feature.
-
-## Contexto importado de ChatGPT
-
-El contexto recuperado del proyecto web de ChatGPT `Sistema proyect` esta guardado en:
-
-- [Resumen de importacion](docs/chatgpt-import/README.md)
-- [Contexto tecnico consolidado](docs/chatgpt-import/project-context.md)
-- [Instrucciones locales para agentes](AGENTS.md)
-
-Ese import es una recuperacion de contexto, no un clon archivo-por-archivo del proyecto web.
-
-## Documentacion adicional
-
-- [Playbook de arquitectura](docs/TEMPLATE_PLAYBOOK.md)
-- [Guia backend](backend/README.md)
-- [Guia frontend](frontend/README.md)
+MIT
