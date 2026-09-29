@@ -21,6 +21,7 @@ class ProductCreate(ProductBase):
 
 class ProductResponse(ProductBase):
     id: int
+    is_active: bool
 
     model_config = {"from_attributes": True}
 

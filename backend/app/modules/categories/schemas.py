@@ -11,5 +11,6 @@ class CategoryCreate(CategoryBase):
 
 class CategoryResponse(CategoryBase):
     id: int
+    is_active: bool
 
     model_config = {"from_attributes": True}

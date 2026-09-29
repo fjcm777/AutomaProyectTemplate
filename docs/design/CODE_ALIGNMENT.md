@@ -439,7 +439,22 @@ A review confirmed that the example modules (`categories`, `products`) are meant
 |---|---|
 | No endpoint returned the `{status_code, message, data}` success envelope required by `08-api-contracts.md` §2 | Added `app/shared/responses.py` (`SuccessResponse[T]`, `success()`); wired into `health`, `categories`, `products` |
 | Errors used FastAPI's native `{"detail": "..."}` instead of `{status_code, code, message, details}` | Replaced `HTTPException` usage in `app/shared/exceptions.py` with a custom `AppError`; added global exception handlers in `main.py` for `AppError`, `RequestValidationError` (→ `validation.invalid_input`) and unhandled exceptions (→ `system.internal_error` with `trace_id`) |
-| `app/shared/pagination.py` used `items/total/limit/offset` instead of the documented `items/total/page/page_size` | Corrected field names to match `08-api-contracts.md` §2.3 (not wired into list endpoints yet — no module needs pagination today) |
+| `app/shared/pagination.py` used `items/total/limit/offset` instead of the documented `items/total/page/page_size` | Corrected field names to match `08-api-contracts.md` §2.3 and wired into `GET /products`/`GET /categories` (see v15 below — initially left unwired, then connected once §4 was re-checked) |
 | Backend used synchronous SQLAlchemy (`Session`, `create_engine`) instead of the `AsyncSession` required throughout `04-architecture.md` and `07-modules.md` (including the multi-module transaction rule) | Migrated `core/database.py`, `core/dependencies.py`, and every layer of `categories`/`products` to `create_async_engine` / `AsyncSession`; `DATABASE_URL` stays driver-less so Alembic keeps using sync psycopg2 unchanged |
 
 Verified end-to-end against a real PostgreSQL instance: full CRUD on `products`, `categories` listing, `404`/`400`/`422` error shapes, and `import-linter` contracts all pass after the migration.
+
+---
+
+## v15 - Second alignment pass: pagination and logical delete
+
+A follow-up check against `08-api-contracts.md` §4 ("Reglas CRUD comunes") found two more gaps missed in v14:
+
+| Gap found | Fix applied |
+|---|---|
+| §4 requires "Listar" to return `items/total/page/page_size`; `GET /products` and `GET /categories` returned a bare array | Added `page`/`page_size`/`is_active` query params; both endpoints now return `PaginatedResponse` inside the success envelope |
+| §4 requires "Desactivar (DELETE)" to be a logical delete; `DELETE /products/{id}` removed the row physically | Added `is_active` column to `products`/`categories` (Alembic migration `2eab12afd94d`); `ProductRepository.deactivate()` replaces the old `delete()`; listings default to `is_active=true` unless the query param says otherwise |
+
+Also added `resource`/`id` (or `name`) to error `details`, matching the shape shown in `08-api-contracts.md` §2.4's example, previously left as an empty `{}`.
+
+Verified end-to-end: pagination envelope confirmed on both list endpoints; confirmed a deactivated product disappears from the default listing but its row still exists and is returned with `is_active=false` when explicitly queried; `import-linter` contracts still pass.

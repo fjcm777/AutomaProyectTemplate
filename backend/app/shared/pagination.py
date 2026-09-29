@@ -15,3 +15,11 @@ class PaginatedResponse(BaseModel, Generic[T]):
     total: int
     page: int
     page_size: int
+
+
+def clamp_page_size(page_size: int) -> int:
+    return max(1, min(page_size, MAX_PAGE_SIZE))
+
+
+def clamp_page(page: int) -> int:
+    return max(1, page)

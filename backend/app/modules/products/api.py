@@ -7,6 +7,7 @@ from app.modules.products.schemas import ProductCreate, ProductResponse, Product
 from app.modules.products.service import ProductService
 
 from app.modules.categories.service import get_category_service
+from app.shared.pagination import DEFAULT_PAGE_SIZE, PaginatedResponse
 from app.shared.responses import SuccessResponse, success
 
 
@@ -18,11 +19,16 @@ def get_product_service(db: AsyncSession) -> ProductService:
     return ProductService(ProductRepository(db), get_category_service(db))
 
 
-@router.get("/", response_model=SuccessResponse[list[ProductResponse]])
-async def list_products(db: AsyncSession = Depends(get_db)):
+@router.get("/", response_model=SuccessResponse[PaginatedResponse[ProductResponse]])
+async def list_products(
+    page: int = 1,
+    page_size: int = DEFAULT_PAGE_SIZE,
+    is_active: bool | None = True,
+    db: AsyncSession = Depends(get_db),
+):
     service = get_product_service(db)
-    products = await service.list_products()
-    return success(data=products)
+    items, total, page, page_size = await service.list_products(page, page_size, is_active)
+    return success(data={"items": items, "total": total, "page": page, "page_size": page_size})
 
 
 @router.get("/{product_id}", response_model=SuccessResponse[ProductResponse])

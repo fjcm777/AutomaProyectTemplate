@@ -277,3 +277,20 @@ This is a traceability correction only. It does not introduce new functional sco
 Enforcement runs in three layers: manual (`lint-imports`), a local pre-commit hook, and CI as a final safety net. This is quality/tooling infrastructure; it does not introduce new functional scope or change business behavior.
 
 As part of this change, `products.service` and `products.api` were corrected to stop importing `categories.repository` directly (pre-existing violation found while designing the contracts) and now use `categories.service.get_category_service()` instead.
+
+---
+
+## v18 - Template base alignment
+
+### Decision 91 - Align template base with documented architecture
+
+**Status:** CONFIRMED
+**Decision:** The example modules (`categories`, `products`) are the literal pattern future business modules will copy, so their shared base was corrected to match confirmed documentation instead of documenting the gap and moving on:
+
+- `core/database.py`/`dependencies.py` migrated from synchronous SQLAlchemy (`Session`) to `AsyncSession`, per the multi-module transaction rule in `07-modules.md`.
+- Added `shared/responses.py` (`SuccessResponse[T]`) so every endpoint returns the `{status_code, message, data}` envelope required by `08-api-contracts.md`.
+- Replaced `HTTPException`-based errors with a custom `AppError` and global exception handlers in `main.py`, producing `{status_code, code, message, details}` for `AppError`, `RequestValidationError` and unhandled exceptions.
+- Corrected `shared/pagination.py` to `items/total/page/page_size` and wired it into `GET /products` and `GET /categories`, per the "Listar" rule in `08-api-contracts.md` §4.
+- Added `is_active` to `products`/`categories` (Alembic migration `2eab12afd94d`) so `DELETE` performs a logical deactivation instead of a physical row removal, per `08-api-contracts.md` §4 and the "no eliminación física" rule for catalogs in `CODE_ALIGNMENT.md`.
+
+This is a correction to match already-confirmed documentation; it does not introduce new functional scope. Verified end-to-end against a real PostgreSQL instance and confirmed `import-linter` contracts still pass.
