@@ -1,18 +1,22 @@
+import { ErrorEnvelope, SuccessEnvelope } from "./types"
+
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000/api/v1"
 
 export class ApiError extends Error {
   status: number
+  code?: string
   details?: unknown
 
-  constructor(message: string, status: number, details?: unknown) {
+  constructor(message: string, status: number, code?: string, details?: unknown) {
     super(message)
     this.name = "ApiError"
     this.status = status
+    this.code = code
     this.details = details
   }
 }
 
-async function parseErrorPayload(response: Response): Promise<unknown> {
+async function parseJsonSafe(response: Response): Promise<unknown> {
   const contentType = response.headers.get("content-type") ?? ""
 
   if (contentType.includes("application/json")) {
@@ -35,22 +39,22 @@ export async function apiFetch<T>(
   })
 
   if (!response.ok) {
-    const payload = await parseErrorPayload(response)
+    const payload = await parseJsonSafe(response)
 
-    const message =
-      typeof payload === "object" &&
-      payload !== null &&
-      "detail" in payload &&
-      typeof (payload as { detail?: unknown }).detail === "string"
-        ? (payload as { detail: string }).detail
-        : "Request failed"
+    // Backend error envelope: { status_code, code, message, details }.
+    if (typeof payload === "object" && payload !== null && "message" in payload) {
+      const errorPayload = payload as ErrorEnvelope
+      throw new ApiError(errorPayload.message, response.status, errorPayload.code, errorPayload.details)
+    }
 
-    throw new ApiError(message, response.status, payload)
+    throw new ApiError("Request failed", response.status)
   }
 
   if (response.status === 204) {
     return null as T
   }
 
-  return response.json()
+  // Backend success envelope: { status_code, message, data, warnings }.
+  const envelope = (await response.json()) as SuccessEnvelope<T>
+  return envelope.data
 }

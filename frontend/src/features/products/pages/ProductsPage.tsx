@@ -34,7 +34,7 @@ export function ProductsPage() {
       </div>
       {/*products table component comes here, the file is ProductTable.tsx */}
       <ProductTable
-        products={data || []}
+        products={data?.items ?? []}
       />
     </div>
   )

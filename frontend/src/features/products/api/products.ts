@@ -1,4 +1,5 @@
 import { apiFetch } from "@/shared/api/clients"
+import { Paginated } from "@/shared/api/types"
 
 import {
   Product,
@@ -7,7 +8,7 @@ import {
 } from "../types/product.types"
 
 export function getProducts() {
-  return apiFetch<Product[]>("/products/")
+  return apiFetch<Paginated<Product>>("/products/")
 }
 
 export function getProductById(id: number) {

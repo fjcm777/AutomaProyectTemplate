@@ -5,6 +5,7 @@ export type Product = {
   price: number
   category_id: number
   image_url?: string | null
+  is_active: boolean
 }
 
 export type CreateProductPayload = {
