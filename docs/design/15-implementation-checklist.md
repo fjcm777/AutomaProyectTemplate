@@ -80,6 +80,7 @@ Before implementing functional modules, the technical foundation must be stable.
 | Numeric types | Monetary fields use numeric/decimal, not float. |
 | Accounting | Accounting is not implemented in the MVP. |
 | External integrations | No mandatory external integrations are implemented in the MVP. |
+| Module enforcement | `import-linter` and its pre-commit hook are configured with the contracts from `16-enforcement.md` before the first business module is implemented. |
 
 Minimum Docker log visibility expected for the MVP:
 

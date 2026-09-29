@@ -69,6 +69,24 @@ alembic upgrade head
 python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
+### Module Boundary Enforcement (import-linter)
+
+One-time setup, from the repo root, to enable the module-boundary checks described in `docs/design/16-enforcement.md`:
+
+```bash
+cd backend
+pip install -r requirements-dev.txt
+cd ..
+pre-commit install
+```
+
+After this, `git commit` automatically runs `lint-imports` and blocks the commit if a module reaches into another module's `repository.py`/`models.py`. Run it manually anytime with:
+
+```bash
+cd backend
+lint-imports
+```
+
 ### Frontend Setup
 
 ```bash

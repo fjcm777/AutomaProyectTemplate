@@ -410,6 +410,7 @@ Antes de entregar una implementación, verificar:
 - ¿Incluye migración Alembic si cambia DB?
 - ¿Incluye seeds Alembic si agrega datos base?
 - ¿Actualiza documentación si cambia una decisión?
+- ¿Corrí `lint-imports` (ver `16-enforcement.md`) tras tocar `service.py`/`repository.py` de algún módulo, y pasó sin violaciones?
 
 ---
 

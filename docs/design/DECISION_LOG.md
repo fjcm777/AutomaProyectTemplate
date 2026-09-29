@@ -264,3 +264,16 @@ This prevents AI-assisted implementation from reintroducing obsolete use cases, 
 **Decision:** Add the missing v15 correction decisions to `DECISION_LOG.md` so that the highest-precedence document reflects the consistency corrections already applied in the v15 documentation package.
 
 This is a traceability correction only. It does not introduce new functional scope or change implementation behavior.
+
+---
+
+## v17 - Module boundary enforcement
+
+### Decision 90 - Add import-linter as automated module-boundary enforcement
+
+**Status:** CONFIRMED
+**Decision:** Add `16-enforcement.md` and an `import-linter` configuration (`backend/.importlinter`) to verify, automatically, the module independence rules already defined in `07-modules.md` sections 7 and 9 (no cross-module `repository.py`/`models.py` imports, `repository.py` never imports `service.py`).
+
+Enforcement runs in three layers: manual (`lint-imports`), a local pre-commit hook, and CI as a final safety net. This is quality/tooling infrastructure; it does not introduce new functional scope or change business behavior.
+
+As part of this change, `products.service` and `products.api` were corrected to stop importing `categories.repository` directly (pre-existing violation found while designing the contracts) and now use `categories.service.get_category_service()` instead.

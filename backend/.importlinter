@@ -1,0 +1,40 @@
+[importlinter]
+root_package = app
+
+; --- Layers within each module: api -> service -> repository ---
+; See docs/design/16-enforcement.md for the full explanation and how to add a new module.
+
+[importlinter:contract:layers-categories]
+name = categories: api -> service -> repository
+type = layers
+layers =
+    app.modules.categories.api
+    app.modules.categories.service
+    app.modules.categories.repository
+
+[importlinter:contract:layers-products]
+name = products: api -> service -> repository
+type = layers
+layers =
+    app.modules.products.api
+    app.modules.products.service
+    app.modules.products.repository
+
+; --- Module boundary: nobody touches another module's repository/models directly ---
+
+[importlinter:contract:cross-module-boundary]
+name = Modules cannot import another module's repository or models directly
+type = forbidden
+source_modules =
+    app.modules.categories
+    app.modules.products
+forbidden_modules =
+    app.modules.categories.repository
+    app.modules.categories.models
+    app.modules.products.repository
+    app.modules.products.models
+ignore_imports =
+    app.modules.categories.* -> app.modules.categories.repository
+    app.modules.categories.* -> app.modules.categories.models
+    app.modules.products.* -> app.modules.products.repository
+    app.modules.products.* -> app.modules.products.models

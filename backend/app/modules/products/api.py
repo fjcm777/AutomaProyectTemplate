@@ -6,7 +6,7 @@ from app.modules.products.repository import ProductRepository
 from app.modules.products.schemas import ProductCreate, ProductResponse, ProductUpdate
 from app.modules.products.service import ProductService
 
-from app.modules.categories.repository import CategoryRepository
+from app.modules.categories.service import get_category_service
 
 
 router = APIRouter(prefix="/products", tags=["products"])
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/products", tags=["products"])
 
 def get_product_service(db: Session) -> ProductService:
     # Build dependencies here so routes stay thin and easy to test.
-    return ProductService(ProductRepository(db), CategoryRepository(db))
+    return ProductService(ProductRepository(db), get_category_service(db))
 
 
 @router.get("/", response_model=list[ProductResponse])

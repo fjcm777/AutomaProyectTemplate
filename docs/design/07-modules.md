@@ -477,6 +477,8 @@ models.py no debe importar services.
 schemas.py no debe importar services.
 ```
 
+Estas reglas se verifican automáticamente con `import-linter`. Ver `16-enforcement.md` para los contratos y cómo se ejecutan (manual, pre-commit, CI).
+
 ## 10. Separación entre core, shared, modules y jobs
 
 ### `core/`
@@ -753,6 +755,7 @@ Los módulos se comunican por services públicos.
 Los casos multi-módulo usan una sola transacción.
 Los services internos no hacen commit independiente.
 shared contiene utilidades transversales, no reglas específicas de negocio.
+Los límites entre módulos se verifican con import-linter (ver 16-enforcement.md).
 ```
 
 ---

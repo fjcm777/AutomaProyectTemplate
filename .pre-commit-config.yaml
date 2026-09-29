@@ -1,0 +1,10 @@
+repos:
+  - repo: local
+    hooks:
+      - id: import-linter
+        name: import-linter (module boundaries)
+        description: See docs/design/16-enforcement.md
+        entry: python -c "import os, subprocess, sys; os.chdir('backend'); sys.exit(subprocess.call(['lint-imports']))"
+        language: system
+        files: ^backend/app/.*\.py$
+        pass_filenames: false

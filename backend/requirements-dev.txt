@@ -1,0 +1,4 @@
+-r requirements.txt
+
+import-linter>=2.15
+pre-commit>=4.0.1
